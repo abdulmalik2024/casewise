@@ -36,3 +36,20 @@ create table if not exists case_decisions (
 );
 
 create index if not exists case_decisions_decided_idx on case_decisions (decided_date desc);
+
+-- Embedded retrieval chunks (RAG corpus), built from the source tables.
+create extension if not exists vector;
+
+create table if not exists chunks (
+    id           bigint generated always as identity primary key,
+    source_type  text    not null,             -- 'statute' | 'case'
+    source_id    bigint  not null,             -- statute_sections.id / case_decisions.id
+    chunk_index  int     not null default 0,
+    citation     text    not null,             -- e.g. 'RPP § 235-B' / '2026 NY Slip Op 26174'
+    heading      text,
+    text         text    not null,
+    embedding    vector(1024),
+    embed_model  text,
+    created_at   timestamptz not null default now(),
+    unique (source_type, source_id, chunk_index)
+);

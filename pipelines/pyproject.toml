@@ -27,3 +27,4 @@ packages = ["src/casewise_pipelines"]
 ingest-statutes = "casewise_pipelines.statutes.run:main"
 bootstrap-statutes = "casewise_pipelines.statutes.web_bootstrap:main"
 ingest-caselaw = "casewise_pipelines.caselaw.run:main"
+embed-corpus = "casewise_pipelines.embeddings.run:main"
