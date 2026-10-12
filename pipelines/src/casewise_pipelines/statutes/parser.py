@@ -20,6 +20,7 @@ class StatuteSection:
     text: str
     active_date: str
     source_url: str
+    source: str = "openleg_api"
 
 
 def _source_url(law_id: str, location_id: str) -> str:

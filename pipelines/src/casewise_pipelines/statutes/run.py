@@ -16,7 +16,7 @@ import psycopg
 from dotenv import find_dotenv, load_dotenv
 
 from .client import OpenLegClient
-from .loader import ensure_schema, load_sections
+from .loader import delete_source_rows, ensure_schema, load_sections
 from .parser import parse_law_tree
 
 # Launch corpus per docs/data/corpus-plan.md (CVP ingested whole; RAG scoping
@@ -54,6 +54,8 @@ def main() -> int:
             sections = parse_law_tree(result)
             if conn:
                 load_sections(conn, sections)
+                # The API is authoritative: drop any web-bootstrap rows it supersedes.
+                delete_source_rows(conn, law_id, "nysenate_web")
             total += len(sections)
             print(f"{law_id}: {len(sections)} sections" + (" (dry run)" if args.dry_run else ""))
     finally:

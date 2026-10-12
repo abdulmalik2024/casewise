@@ -14,6 +14,7 @@ create table if not exists statute_sections (
     active_date   date        not null,
     is_current    boolean     not null default true,
     source_url    text        not null,
+    source        text        not null default 'openleg_api',  -- or 'nysenate_web' (bootstrap/backup crawl)
     retrieved_at  timestamptz not null default now(),
     unique (law_id, location_id, active_date)
 );

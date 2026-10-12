@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Casewise corpus ingestion pipelines"
 requires-python = ">=3.12"
 dependencies = [
+    "beautifulsoup4>=4.12",
     "httpx>=0.27",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
@@ -23,3 +24,4 @@ packages = ["src/casewise_pipelines"]
 
 [project.scripts]
 ingest-statutes = "casewise_pipelines.statutes.run:main"
+bootstrap-statutes = "casewise_pipelines.statutes.web_bootstrap:main"
