@@ -25,6 +25,7 @@ Status: researched 2026-10-12. Companion to [corpus-plan.md](corpus-plan.md).
 - **Format**: JSON, structured by section — ideal for section-level chunking.
 - **Refresh**: weekly poll of the updates endpoint; on change, re-ingest affected sections, mark old version superseded.
 - **Licensing**: public government data, no restrictions. ✅ Lowest-risk source; build this pipeline first.
+- **Backup/bootstrap source (built, verified 2026-10-12)**: the public law pages at `www.nysenate.gov/legislation/laws/{lawId}/...` serve the same backend data as HTML, no key needed — used by `bootstrap-statutes` for the initial load while the API portal is down, and as a standing fallback whenever the API is unavailable. Pages expose real version dates (history dropdown) and breadcrumbs. Rows are tagged `source='nysenate_web'` and are replaced by the authoritative API load. Quirk: the site's WAF 403s all user agents except classic CLI ones (`curl/`, `Wget/`) — the crawler sends a curl-prefixed UA identifying the pipeline.
 
 ### 2. Regulations — DHCR publications (hcr.ny.gov)
 - **Access**: PDFs/HTML on [hcr.ny.gov](https://hcr.ny.gov) — Rent Stabilization Code, ETPA regs, Tenant Protection Regulations, [operational bulletins](https://hcr.ny.gov/operational-bulletin-2024-1), fact sheets, policy statements.
