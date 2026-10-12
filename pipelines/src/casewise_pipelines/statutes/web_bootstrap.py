@@ -9,11 +9,14 @@ authoritative API load replaces them (see run.py).
 from __future__ import annotations
 
 import argparse
+import dataclasses
+import json
 import os
 import re
 import sys
 import time
 from datetime import date
+from pathlib import Path
 
 import httpx
 import psycopg
@@ -33,20 +36,28 @@ LEAF_LABELS = ("SECTION", "RULE")
 SUBDIVISION_PATH_LABELS = ("ARTICLE", "TITLE", "PART", "SUBPART")
 
 
-def fetch(client: httpx.Client, url: str, retries: int = 4) -> str:
+def fetch(client: httpx.Client, url: str, retries: int = 6) -> str:
+    """GET with patient backoff. Cloudflare rate-limits sustained crawling
+    (429 + cf-mitigated: challenge); waiting it out works, so 429 sleeps
+    long (Retry-After when sent, else 60s/120s/240s...) instead of failing."""
     for attempt in range(retries):
         try:
             resp = client.get(url)
             if resp.status_code == 200:
                 return resp.text
-            if resp.status_code in (429, 500, 502, 503, 504):
-                time.sleep(2**attempt)
+            if resp.status_code == 429:
+                wait = float(resp.headers.get("retry-after") or 60 * 2**attempt)
+                print(f"  rate limited, sleeping {wait:.0f}s ({url})", flush=True)
+                time.sleep(min(wait, 600))
+                continue
+            if resp.status_code in (500, 502, 503, 504):
+                time.sleep(5 * 2**attempt)
                 continue
             resp.raise_for_status()
         except httpx.TransportError:
             if attempt == retries - 1:
                 raise
-            time.sleep(2**attempt)
+            time.sleep(5 * 2**attempt)
     raise RuntimeError(f"gave up fetching {url}")
 
 
@@ -119,20 +130,54 @@ def parse_section_page(
     )
 
 
-def crawl_law(client: httpx.Client, law_id: str, delay: float) -> list[StatuteSection]:
+def _state_path(law_id: str) -> Path:
+    return Path(__file__).parents[3] / "data" / "crawl-state" / f"{law_id}.json"
+
+
+def _load_state(law_id: str) -> dict | None:
+    path = _state_path(law_id)
+    if path.exists():
+        return json.loads(path.read_text())
+    return None
+
+
+def _save_state(law_id: str, visited: set, queue: list, sections: list) -> None:
+    path = _state_path(law_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(
+            {
+                "visited": sorted(visited),
+                "queue": queue,
+                "sections": [dataclasses.asdict(s) for s in sections],
+            }
+        )
+    )
+
+
+def crawl_law(
+    client: httpx.Client, law_id: str, delay: float, resume: bool = True
+) -> list[StatuteSection]:
     crawl_date = date.today().isoformat()
     law_prefix = f"/legislation/laws/{law_id}/"
-    visited: set[str] = set()
-    sections: list[StatuteSection] = []
-    # (url, is_leaf) — the law root is a listing
-    queue: list[tuple[str, bool]] = [(f"{SITE}/legislation/laws/{law_id}", False)]
 
+    state = _load_state(law_id) if resume else None
+    if state and state["queue"]:
+        visited = set(state["visited"])
+        queue = [tuple(x) for x in state["queue"]]
+        sections = [StatuteSection(**s) for s in state["sections"]]
+        print(f"  resuming {law_id}: {len(sections)} sections done, {len(queue)} urls queued")
+    else:
+        visited, sections = set(), []
+        queue = [(f"{SITE}/legislation/laws/{law_id}", False)]
+
+    since_checkpoint = 0
     while queue:
         url, is_leaf = queue.pop(0)
         if url in visited:
             continue
-        visited.add(url)
         html = fetch(client, url)
+        visited.add(url)
         time.sleep(delay)
 
         if is_leaf:
@@ -140,14 +185,18 @@ def crawl_law(client: httpx.Client, law_id: str, delay: float) -> list[StatuteSe
             section = parse_section_page(html, law_id, location_id, crawl_date)
             if section:
                 sections.append(section)
-            continue
+        else:
+            for label, href in parse_listing(html):
+                absolute = href if href.startswith("http") else SITE + href
+                if law_prefix in absolute:
+                    queue.append((absolute, label.startswith(LEAF_LABELS)))
 
-        for label, href in parse_listing(html):
-            absolute = href if href.startswith("http") else SITE + href
-            if law_prefix not in absolute:
-                continue
-            queue.append((absolute, label.startswith(LEAF_LABELS)))
+        since_checkpoint += 1
+        if since_checkpoint >= 25:
+            _save_state(law_id, visited, queue, sections)
+            since_checkpoint = 0
 
+    _save_state(law_id, visited, [], sections)
     return sections
 
 
@@ -155,8 +204,9 @@ def main() -> int:
     load_dotenv(find_dotenv(usecwd=True))
     ap = argparse.ArgumentParser(description="Bootstrap NY statutes from nysenate.gov HTML")
     ap.add_argument("--laws", default=",".join(DEFAULT_LAWS), help="comma-separated law ids")
-    ap.add_argument("--delay", type=float, default=0.7, help="seconds between requests")
+    ap.add_argument("--delay", type=float, default=3.0, help="seconds between requests")
     ap.add_argument("--dry-run", action="store_true", help="crawl and parse, skip the database")
+    ap.add_argument("--no-resume", action="store_true", help="ignore saved crawl state")
     args = ap.parse_args()
 
     conn = None
@@ -174,7 +224,7 @@ def main() -> int:
     total = 0
     try:
         for law_id in [x.strip().upper() for x in args.laws.split(",") if x.strip()]:
-            sections = crawl_law(client, law_id, delay=args.delay)
+            sections = crawl_law(client, law_id, delay=args.delay, resume=not args.no_resume)
             if conn:
                 load_sections(conn, sections)
             total += len(sections)
