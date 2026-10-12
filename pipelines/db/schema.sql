@@ -21,3 +21,18 @@ create table if not exists statute_sections (
 
 create index if not exists statute_sections_current_idx
     on statute_sections (law_id, location_id) where is_current;
+
+-- Case law (pipeline #2) — NY Official Reports slip opinions via RSS.
+create table if not exists case_decisions (
+    id             bigint generated always as identity primary key,
+    case_name      text        not null,
+    url            text        not null unique,
+    slip_citation  text,                     -- e.g. '2026 NY Slip Op 26174'
+    court          text,                     -- e.g. 'Supreme Court, New York County'
+    decided_date   date,
+    feed_code      text,                     -- RSS feed that surfaced it (COA, AT1, misc, ...)
+    text           text        not null,
+    retrieved_at   timestamptz not null default now()
+);
+
+create index if not exists case_decisions_decided_idx on case_decisions (decided_date desc);
