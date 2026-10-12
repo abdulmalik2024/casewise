@@ -162,6 +162,12 @@ def crawl_law(
     law_prefix = f"/legislation/laws/{law_id}/"
 
     state = _load_state(law_id) if resume else None
+    if state and not state["queue"] and state["sections"]:
+        # completed crawl — reuse it (e.g. a dry run followed by the DB load);
+        # --no-resume forces a fresh crawl
+        sections = [StatuteSection(**s) for s in state["sections"]]
+        print(f"  reusing completed crawl for {law_id}: {len(sections)} sections")
+        return sections
     if state and state["queue"]:
         visited = set(state["visited"])
         queue = [tuple(x) for x in state["queue"]]
