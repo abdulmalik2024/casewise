@@ -26,3 +26,6 @@ venv/
 # Data working files (corpus artifacts live in the DB, not the repo)
 pipelines/**/data/
 *.sqlite
+
+# Playwright MCP browser snapshots
+.playwright-mcp/
