@@ -21,7 +21,7 @@ Status: researched 2026-10-12. Companion to [corpus-plan.md](corpus-plan.md).
 ### 1. State statutes — NY Senate Open Legislation API
 - **Access**: REST API, free API key ([docs](https://legislation.nysenate.gov/static/docs/html/index.html), [laws endpoints](https://legislation.nysenate.gov/static/docs/html/laws.html)).
 - **Key endpoints**: `GET /api/3/laws` (list of law ids), `GET /api/3/laws/{lawId}` (structure; `full=true` for all text; **`date=` param returns point-in-time versions** — use this for the versioning requirement), plus a laws *updates* endpoint for detecting changes since a date.
-- **Law IDs to ingest**: RPL, RPP (RPAPL), CVP (CPLR — selected articles), MDW (Multiple Dwelling Law), GOB (General Obligations — selected), ETP (Emergency Tenant Protection Act).
+- **Law IDs to ingest**: RPP (Real Property Law — e.g., Article 7 is Landlord & Tenant: nysenate.gov/legislation/laws/RPP/A7), RPA (RPAPL), CVP (CPLR — selected articles), MDW (Multiple Dwelling Law), GOB (General Obligations — selected), ETP (Emergency Tenant Protection Act), RPT (Real Property Tax — if sub-domain requires). Human-readable mirror of the same data: www.nysenate.gov/legislation/laws/{lawId}.
 - **Format**: JSON, structured by section — ideal for section-level chunking.
 - **Refresh**: weekly poll of the updates endpoint; on change, re-ingest affected sections, mark old version superseded.
 - **Licensing**: public government data, no restrictions. ✅ Lowest-risk source; build this pipeline first.
