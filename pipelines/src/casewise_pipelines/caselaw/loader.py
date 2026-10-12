@@ -21,16 +21,20 @@ on conflict (url) do update set
 """
 
 
-def load_decisions(conn: psycopg.Connection, decisions: list[Decision]) -> int:
-    with conn.cursor() as cur:
-        cur.executemany(
-            UPSERT,
-            [
-                (d.case_name, d.url, d.slip_citation, d.court, d.decided_date, d.feed_code, d.text)
-                for d in decisions
-            ],
-        )
-    conn.commit()
+def load_decisions(conn: psycopg.Connection, decisions: list[Decision], batch_size: int = 25) -> int:
+    """Commit in small batches: decisions carry long opinion texts, and one
+    big executemany exceeds Supabase's statement timeout."""
+    for i in range(0, len(decisions), batch_size):
+        batch = decisions[i : i + batch_size]
+        with conn.cursor() as cur:
+            cur.executemany(
+                UPSERT,
+                [
+                    (d.case_name, d.url, d.slip_citation, d.court, d.decided_date, d.feed_code, d.text)
+                    for d in batch
+                ],
+            )
+        conn.commit()
     return len(decisions)
 
 
