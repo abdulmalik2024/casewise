@@ -36,7 +36,12 @@ where s.law_id = m.law_id and s.location_id = m.location_id
 
 def ensure_schema(conn: psycopg.Connection) -> None:
     schema = (Path(__file__).parents[3] / "db" / "schema.sql").read_text()
+    # `create extension` takes a catalog lock that deadlocks concurrent
+    # pipelines; skip it when the extension is already installed.
+    if conn.execute("select 1 from pg_extension where extname = 'vector'").fetchone():
+        schema = schema.replace("create extension if not exists vector;", "")
     conn.execute(schema)
+    conn.commit()
 
 
 def load_sections(conn: psycopg.Connection, sections: list[StatuteSection]) -> int:
