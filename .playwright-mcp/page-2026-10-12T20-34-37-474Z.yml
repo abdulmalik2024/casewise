@@ -1,0 +1,108 @@
+- generic [active] [ref=e1]:
+  - link "skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main"
+  - banner [ref=e4]:
+    - generic [ref=e6]:
+      - generic "Law Reporting Bureau Home Page" [ref=e7]:
+        - link "Law Reporting Bureau" [ref=e8] [cursor=pointer]:
+          - /url: /reporter/index.shtml#main
+      - navigation [ref=e9]:
+        - link "Court Decisions" [ref=e10] [cursor=pointer]:
+          - /url: /reporter/index.shtml#decisions-heading
+        - link "Resources" [ref=e11] [cursor=pointer]:
+          - /url: /reporter/index.shtml#resources-heading
+        - link "About" [ref=e12] [cursor=pointer]:
+          - /url: /reporter/index.shtml#about-heading
+  - navigation "breadcrumb" [ref=e14]:
+    - list [ref=e15]:
+      - listitem [ref=e16]:
+        - link "Home" [ref=e17] [cursor=pointer]:
+          - /url: /reporter/index.shtml
+      - listitem [ref=e18]: › RSS Feeds
+  - generic [ref=e19]:
+    - 'heading "New York Official Reports: RSS Feeds" [level=1] [ref=e20]'
+    - paragraph [ref=e21]: Official Reports RSS (Really Simple Syndication) feeds offer another way for you to stay current with New York decisional law. Official Reports RSS feeds are updated hourly over the course of each day to ensure that you have access to court decisions as soon as they become available. With RSS, there's no need to continually check our website for updates.
+    - paragraph [ref=e22]:
+      - text: When you subscribe to an Official Reports RSS feed, information on the most recent decisions for that court will be delivered directly to your web browser. Click the
+      - link "RSS links" [ref=e23] [cursor=pointer]:
+        - /url: "#rss-links"
+      - text: on this page to subscribe to the Official Reports RSS feeds that interest you.
+    - paragraph [ref=e25]:
+      - text: The Law Reporting Bureau RSS Feeds are compatible with the latest versions of Internet Explorer and Firefox. If you are using Google Chrome or Microsoft Edge, you may need to install a third-party browser extension to subscribe to our RSS Feeds. For mobile devices, you may have to download an application which allows you to read RSS Feeds. Please note that you may be able to subscribe to our RSS Feeds via Microsoft Outlook and other email services. If you have accessibility issues/concerns, please contact us at
+      - strong [ref=e26]:
+        - link "Reporter@nycourts.gov" [ref=e27] [cursor=pointer]:
+          - /url: mailto:reporter@nycourts.gov
+    - list [ref=e28]:
+      - listitem [ref=e29]:
+        - link "Court of Appeals Decisions" [ref=e30] [cursor=pointer]:
+          - /url: /reporter/RSS/COA.xml
+      - listitem [ref=e31]:
+        - link "Court of Appeals New Filings" [ref=e32] [cursor=pointer]:
+          - /url: /reporter/RSS/COANewFilings.xml
+      - listitem [ref=e33]:
+        - link "Appellate Division, First Department, Decisions" [ref=e34] [cursor=pointer]:
+          - /url: /reporter/RSS/AD1st.xml
+      - listitem [ref=e35]:
+        - link "Appellate Division, Second Department, Decisions" [ref=e36] [cursor=pointer]:
+          - /url: /reporter/RSS/AD2d.xml
+      - listitem [ref=e37]:
+        - link "Appellate Division, Third Department, Decisions" [ref=e38] [cursor=pointer]:
+          - /url: /reporter/RSS/AD3d.xml
+      - listitem [ref=e39]:
+        - link "Appellate Division, Fourth Department, Decisions" [ref=e40] [cursor=pointer]:
+          - /url: /reporter/RSS/AD4th.xml
+      - listitem [ref=e41]:
+        - link "Appellate Term, First Department, Decisions" [ref=e42] [cursor=pointer]:
+          - /url: /reporter/RSS/AT1.xml
+      - listitem [ref=e43]:
+        - link "Appellate Term, Second Department, Decisions" [ref=e44] [cursor=pointer]:
+          - /url: /reporter/RSS/AT2.xml
+      - listitem [ref=e45]:
+        - link "Selected Trial Courts Decisions" [ref=e46] [cursor=pointer]:
+          - /url: /reporter/RSS/misc.xml
+      - listitem [ref=e47]:
+        - link "Selected Commercial Division Decisions" [ref=e48] [cursor=pointer]:
+          - /url: /reporter/RSS/ComDiv.xml
+  - contentinfo [ref=e50]:
+    - generic [ref=e51]:
+      - paragraph [ref=e52]: Court Decisions
+      - link "All Court Decisions" [ref=e53] [cursor=pointer]:
+        - /url: /reporter/Decisions.shtml
+      - link "Official Reports Service" [ref=e54] [cursor=pointer]:
+        - /url: https://govt.westlaw.com/nyofficial/Index?__lrTS=20160610194954496
+      - link "Bound Volumes" [ref=e55] [cursor=pointer]:
+        - /url: /reporter/bound-volumes.shtml
+      - link "Decision Search" [ref=e56] [cursor=pointer]:
+        - /url: https://iapps.courts.state.ny.us/lawReporting/Search
+    - generic [ref=e57]:
+      - paragraph [ref=e58]: Resources
+      - link "RSS Feeds" [ref=e59] [cursor=pointer]:
+        - /url: /reporter/RSS.shtml
+      - link "Style Manual" [ref=e60] [cursor=pointer]:
+        - /url: /reporter/Styman_Menu.shtml
+      - link "Citation Tools" [ref=e61] [cursor=pointer]:
+        - /url: /reporter/Citator_Menu.shtml
+      - link "Opinion Formatting & Privacy Guidelines" [ref=e62] [cursor=pointer]:
+        - /url: /reporter/Format.shtml
+      - link "Opinion Selection Criteria" [ref=e63] [cursor=pointer]:
+        - /url: /reporter/Selection.shtml
+      - link "Legal Research Portal" [ref=e64] [cursor=pointer]:
+        - /url: /reporter/research.shtml
+      - link "Site Index" [ref=e65] [cursor=pointer]:
+        - /url: /reporter/Contents.shtml
+    - generic [ref=e66]:
+      - paragraph [ref=e67]: About
+      - link "About the Law Reporting Bureau" [ref=e68] [cursor=pointer]:
+        - /url: /reporter/About.shtml
+      - link "About our Operations" [ref=e69] [cursor=pointer]:
+        - /url: /reporter/Operations.shtml
+      - link "Contact Us" [ref=e70] [cursor=pointer]:
+        - /url: /reporter/contact.shtml
+      - link "Twitter" [ref=e71] [cursor=pointer]:
+        - /url: https://twitter.com/NYOfficialRpts?lang=en
+    - generic [ref=e72]:
+      - paragraph [ref=e73]: Quick Contact Info
+      - paragraph [ref=e74]: 17 Lodge Street
+      - paragraph [ref=e75]: Albany, NY 12207
+      - paragraph [ref=e76]: "Phone: (518) 453-6900"
+  - paragraph [ref=e78]: Links to or from other sites do not signify endorsement or relationship with them.

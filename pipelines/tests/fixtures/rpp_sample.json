@@ -1,0 +1,59 @@
+{
+  "info": {
+    "lawId": "RPP",
+    "name": "Real Property",
+    "lawType": "CONSOLIDATED",
+    "chapter": "50"
+  },
+  "documents": {
+    "lawId": "RPP",
+    "locationId": "-CH50",
+    "docType": "CHAPTER",
+    "title": "Real Property",
+    "activeDate": "2014-09-22",
+    "documents": {
+      "items": [
+        {
+          "lawId": "RPP",
+          "locationId": "A7",
+          "docType": "ARTICLE",
+          "title": "LANDLORD AND TENANT",
+          "activeDate": "2014-09-22",
+          "documents": {
+            "items": [
+              {
+                "lawId": "RPP",
+                "locationId": "227",
+                "docType": "SECTION",
+                "title": "When tenant may surrender premises",
+                "activeDate": "2014-09-22",
+                "text": "Where any building, which is leased or occupied, is destroyed or so injured by the elements, or any other cause as to be untenantable, and unfit for occupancy...",
+                "documents": { "items": [], "size": 0 }
+              },
+              {
+                "lawId": "RPP",
+                "locationId": "235-B",
+                "docType": "SECTION",
+                "title": "Warranty of habitability",
+                "activeDate": "2019-06-14",
+                "text": "1. In every written or oral lease or rental agreement for residential premises the landlord or lessor shall be deemed to covenant and warrant that the premises so leased or rented...",
+                "documents": { "items": [], "size": 0 }
+              },
+              {
+                "lawId": "RPP",
+                "locationId": "226-C",
+                "docType": "SECTION",
+                "title": "Notice of rent increase or non-renewal of residential tenancy",
+                "activeDate": "2019-06-14",
+                "text": "",
+                "documents": { "items": [], "size": 0 }
+              }
+            ],
+            "size": 3
+          }
+        }
+      ],
+      "size": 1
+    }
+  }
+}
