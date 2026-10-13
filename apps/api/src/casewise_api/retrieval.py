@@ -12,11 +12,12 @@ VOYAGE_URL = "https://api.voyageai.com/v1/embeddings"
 
 SEARCH_SQL = """
 select c.citation, c.heading, c.text, c.source_type,
-       coalesce(s.source_url, d.url) as url,
+       coalesce(s.source_url, d.url, a.url) as url,
        1 - (c.embedding <=> %s::vector) as score
 from chunks c
-left join statute_sections s on c.source_type = 'statute' and s.id = c.source_id
-left join case_decisions  d on c.source_type = 'case'    and d.id = c.source_id
+left join statute_sections s on c.source_type = 'statute'  and s.id = c.source_id
+left join case_decisions  d on c.source_type = 'case'     and d.id = c.source_id
+left join agency_documents a on c.source_type = 'guidance' and a.id = c.source_id
 where c.embedding is not null
   and (%s::text is null or c.source_type = %s)
 order by c.embedding <=> %s::vector

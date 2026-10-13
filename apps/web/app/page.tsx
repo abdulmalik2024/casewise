@@ -324,6 +324,9 @@ export default function Home() {
                           <span className="rounded bg-[#efede3] px-1.5 py-0.5 font-mono text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
                             {s.marker}
                           </span>
+                          <span className="shrink-0 rounded-full bg-[#efede3] px-2 py-0.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+                            {s.source_type === "case" ? "decision" : s.source_type}
+                          </span>
                           {s.url ? (
                             <a
                               href={s.url}
