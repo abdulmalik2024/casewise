@@ -178,7 +178,7 @@ export default function Home() {
         onChange={(e) => setQuery(e.target.value)}
         placeholder={
           mode === "ask"
-            ? "What would you like to research?"
+            ? 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
             : "Search statutes and decisions…"
         }
         className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
