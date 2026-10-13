@@ -30,7 +30,7 @@ type HistoryEntry = {
   id: string;
   mode: "ask" | "search";
   query: string;
-  sourceType: "" | "statute" | "case";
+  sourceType: "" | "statute" | "case" | "guidance";
   at: string;
   answer?: AskResponse;
   results?: SearchResult[];
@@ -81,7 +81,7 @@ function relevance(score: number): { label: string; cls: string } {
 
 export default function Home() {
   const [mode, setMode] = useState<"ask" | "search">("ask");
-  const [sourceType, setSourceType] = useState<"" | "statute" | "case">("");
+  const [sourceType, setSourceType] = useState<"" | "statute" | "case" | "guidance">("");
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<AskResponse | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -208,6 +208,7 @@ export default function Home() {
               <option value="">All sources</option>
               <option value="statute">Statutes</option>
               <option value="case">Court decisions</option>
+              <option value="guidance">DHCR guidance</option>
             </select>
           )}
         </div>

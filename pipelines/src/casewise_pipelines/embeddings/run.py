@@ -47,8 +47,15 @@ SOURCES = {
               select 1 from chunks c where c.source_type = 'case' and c.source_id = d.id))
         order by d.id
     """,
+    "dhcr": """
+        select a.id, a.citation, a.title, a.text
+        from agency_documents a
+        where ({re_embed} or not exists (
+              select 1 from chunks c where c.source_type = 'guidance' and c.source_id = a.id))
+        order by a.id
+    """,
 }
-SOURCE_TYPE = {"statutes": "statute", "caselaw": "case"}
+SOURCE_TYPE = {"statutes": "statute", "caselaw": "case", "dhcr": "guidance"}
 
 
 def embed_source(conn: psycopg.Connection, client: VoyageClient, source: str, re_embed: bool) -> int:
