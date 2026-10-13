@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.0.0** (2026-10-13)
+**Version: V-2.1.0** (2026-10-13)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -69,6 +69,9 @@ point-in-time questions ("what was the law when this lease was signed").
 | statute | `statute_sections` | RPP, RPA (RPAPL), CVP (CPLR), GOB, MDW, ETP — full text, versioned, from nysenate.gov | 2,062 sections |
 | case | `case_decisions` | NY Official Reports slip opinions (9 RSS feeds, daily refresh) + CourtListener 10-yr backfill in progress (Appellate Term 6,780 target, COA, Civil Ct) | 670 + backfill |
 | guidance | `agency_documents` | DHCR operational bulletins, policy statements, advisory opinions, fact sheets (English), RSC amendment rule-texts | 166 docs |
+| rule | `agency_documents` (doc_type court-rule) | Uniform Civil Rules Parts 208/210/212 (incl. housing part §208.42-.43), from committed seeds (`seeds/courtrules/*.txt`, captured via a real browser — nycourts.gov blocks bots) | 125 sections |
+| form | `agency_documents` (doc_type court-form) | Hand-curated landlord-tenant form catalog (`seeds/forms.yaml`, reviewable like the deadline rules) | 5 forms |
+| (feedback) | `answer_feedback` | Anonymous thumbs up/down + comments on answers; downvotes feed the future golden set | grows with use |
 | (curated) | `deadline_rules` | Hand-built deadline/notice rules, citation-validated against the statute corpus; source of truth is `pipelines/seeds/deadlines.yaml` (attorney reviews via git) | 5 drafts, **all unverified** |
 | (derived) | `chunks` | Embedded retrieval index over all of the above, 1024-dim pgvector | ~3,650+ |
 
@@ -100,6 +103,15 @@ point-in-time questions ("what was the law when this lease was signed").
   token-by-token answer, verified-citation sources list with type badges
   and links to official texts; copy-to-clipboard (rich text for Word +
   plain fallback, sources and caveat appended).
+- Conversation mode: follow-up questions carry up to 4 prior exchanges
+  (POST /ask/stream); retrieval sees the previous question; each turn
+  cites only its own freshly retrieved sources.
+- Thumbs up/down on every answer with optional what-was-wrong comment
+  (POST /feedback → answer_feedback).
+- Point-in-time (PARTIAL): optional "as of" date on Ask — decisions and
+  guidance after the date are excluded; statutes amended after it are
+  flagged ("amended after date" badge + model caveats). FULL historical
+  statute text awaits the Open Legislation API key (`date=` param).
 - Search: semantic search across all source types; filter (statutes /
   decisions / DHCR guidance) acting as pre-filter and live post-filter;
   relevance buckets (Strong match ≥0.50 / Relevant ≥0.40 / Related).

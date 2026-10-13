@@ -48,6 +48,7 @@ class Source(BaseModel):
     heading: str | None
     url: str | None
     source_type: str
+    amended_after: bool = False  # statute amended after the as-of date (text shown is current)
 
 
 class AskResponse(BaseModel):
@@ -68,21 +69,44 @@ def _dedupe(results: list[SearchResult], cap: int = 8) -> list[SearchResult]:
     return out
 
 
+def _amended_after(s: SearchResult, as_of: str | None) -> bool:
+    return bool(
+        as_of and s.source_type == "statute" and s.source_date and s.source_date > as_of
+    )
+
+
 def _build_prompt(
-    question: str, sources: list[SearchResult], history: list[dict] | None = None
+    question: str,
+    sources: list[SearchResult],
+    history: list[dict] | None = None,
+    as_of: str | None = None,
 ) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
         head = f" — {s.heading}" if s.heading else ""
-        parts.append(f"[S{i}] {s.citation}{head} ({s.source_type})\n{s.text}")
+        note = (
+            f"\n[NOTE: this section was amended effective {s.source_date}, AFTER the "
+            "as-of date; the text shown is the CURRENT version — historical wording "
+            "is not available. Caveat any reliance on it accordingly.]"
+            if _amended_after(s, as_of)
+            else ""
+        )
+        parts.append(f"[S{i}] {s.citation}{head} ({s.source_type}){note}\n{s.text}")
     joined = "\n\n".join(parts)
     prefix = ""
+    if as_of:
+        prefix += (
+            f"RESEARCH AS-OF DATE: {as_of}. Answer as of this date. Decisions and "
+            "guidance postdating it have been excluded from the sources. Statute "
+            "texts are the current versions; flagged sections changed after the "
+            "as-of date and must be caveated.\n\n"
+        )
     if history:
         exchanges = "\n\n".join(
             f"Earlier question: {h['question']}\nEarlier answer (context only):\n{h['answer'][:1500]}"
             for h in history[-4:]
         )
-        prefix = f"Conversation so far:\n\n{exchanges}\n\n---\n\n"
+        prefix += f"Conversation so far:\n\n{exchanges}\n\n---\n\n"
     return f"{prefix}Sources:\n\n{joined}\n\nCurrent question: {question}"
 
 
@@ -109,7 +133,9 @@ def _source_counts(retrieved: list[SearchResult]) -> str:
     return f"Found {len(retrieved)} sources: " + ", ".join(parts)
 
 
-def _sources_for(retrieved: list[SearchResult], used: set[int]) -> list[Source]:
+def _sources_for(
+    retrieved: list[SearchResult], used: set[int], as_of: str | None = None
+) -> list[Source]:
     return [
         Source(
             marker=f"S{i}",
@@ -117,18 +143,24 @@ def _sources_for(retrieved: list[SearchResult], used: set[int]) -> list[Source]:
             heading=retrieved[i - 1].heading,
             url=retrieved[i - 1].url,
             source_type=retrieved[i - 1].source_type,
+            amended_after=_amended_after(retrieved[i - 1], as_of),
         )
         for i in sorted(used)
     ]
 
 
-def ask_stream(pool: ConnectionPool, question: str, history: list[dict] | None = None):
+def ask_stream(
+    pool: ConnectionPool,
+    question: str,
+    history: list[dict] | None = None,
+    as_of: str | None = None,
+):
     """Yield SSE-able events: status -> delta* -> done. Real pipeline stages."""
     yield {"type": "status", "message": "Reading your question…"}
     # follow-ups often lean on the prior exchange ("what if rent-stabilized?"),
     # so retrieval sees the previous question too
     retrieval_q = f"{history[-1]['question']}\n{question}" if history else question
-    retrieved = _dedupe(search(pool, retrieval_q, k=16))
+    retrieved = _dedupe(search(pool, retrieval_q, k=16, as_of=as_of))
     if not retrieved:
         yield {
             "type": "done",
@@ -154,7 +186,9 @@ def ask_stream(pool: ConnectionPool, question: str, history: list[dict] | None =
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": _build_prompt(question, retrieved, history)}],
+        messages=[
+            {"role": "user", "content": _build_prompt(question, retrieved, history, as_of)}
+        ],
     ) as stream:
         for text in stream.text_stream:
             parts.append(text)
@@ -175,7 +209,7 @@ def ask_stream(pool: ConnectionPool, question: str, history: list[dict] | None =
     yield {
         "type": "done",
         "answer": answer.strip(),
-        "sources": [s.model_dump() for s in _sources_for(retrieved, used)],
+        "sources": [s.model_dump() for s in _sources_for(retrieved, used, as_of)],
         "model": final.model,
     }
 

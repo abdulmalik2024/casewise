@@ -13,6 +13,7 @@ type Source = {
   heading: string | null;
   url: string | null;
   source_type: string;
+  amended_after?: boolean;
 };
 
 type AskResponse = { answer: string; sources: Source[]; model: string };
@@ -91,6 +92,7 @@ function typeLabel(t: string): string {
 export default function Home() {
   const [mode, setMode] = useState<"ask" | "search">("ask");
   const [sourceType, setSourceType] = useState<SourceFilter>("");
+  const [asOf, setAsOf] = useState("");
   const [query, setQuery] = useState("");
   const [thread, setThread] = useState<Exchange[]>([]);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -181,7 +183,7 @@ export default function Home() {
     const res = await fetch(`${API_URL}/ask/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ q, history: historyTurns }),
+      body: JSON.stringify({ q, history: historyTurns, as_of: asOf || null }),
     });
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
     const reader = res.body.getReader();
@@ -383,6 +385,23 @@ export default function Home() {
               {m === "ask" ? "Ask" : "Search"}
             </button>
           ))}
+          {mode === "ask" && (
+            <label className="ml-1 flex items-center gap-1.5 text-xs text-[#8a8571] dark:text-neutral-400">
+              As of
+              <input
+                type="date"
+                value={asOf}
+                onChange={(e) => setAsOf(e.target.value)}
+                className="rounded-lg border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-[#e3e1d5] dark:hover:border-neutral-700"
+                title="Optional: research the law as of a past date. Decisions and guidance after this date are excluded; statutes amended after it are flagged."
+              />
+              {asOf && (
+                <button type="button" onClick={() => setAsOf("")} className="text-[#a39f8d] hover:text-[#c96442]">
+                  ✕
+                </button>
+              )}
+            </label>
+          )}
           {mode === "search" && (
             <select
               value={sourceType}
@@ -499,6 +518,14 @@ export default function Home() {
                 <span className="shrink-0 rounded-full bg-[#efede3] px-2 py-0.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
                   {typeLabel(s.source_type)}
                 </span>
+                {s.amended_after && (
+                  <span
+                    className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300"
+                    title="This section was amended after your as-of date; the text used is the current version."
+                  >
+                    amended after date
+                  </span>
+                )}
                 {s.url ? (
                   <a
                     href={s.url}

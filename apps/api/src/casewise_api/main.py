@@ -65,9 +65,10 @@ class HistoryTurn(BaseModel):
 class AskStreamIn(BaseModel):
     q: str = Field(min_length=3, max_length=500)
     history: list[HistoryTurn] = Field(default_factory=list, max_length=6)
+    as_of: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
-def _stream_response(q: str, history: list[dict] | None):
+def _stream_response(q: str, history: list[dict] | None, as_of: str | None = None):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:
@@ -75,7 +76,7 @@ def _stream_response(q: str, history: list[dict] | None):
 
     def gen():
         try:
-            for event in ask_stream(app.state.pool, q, history):
+            for event in ask_stream(app.state.pool, q, history, as_of):
                 yield f"data: {json.dumps(event)}\n\n"
         except httpx.HTTPStatusError as e:
             msg = (
@@ -102,7 +103,7 @@ def ask_stream_get(q: str = Query(min_length=3, max_length=500)):
 @app.post("/ask/stream")
 def ask_stream_post(body: AskStreamIn):
     history = [t.model_dump() for t in body.history]
-    return _stream_response(body.q, history or None)
+    return _stream_response(body.q, history or None, body.as_of)
 
 
 class FeedbackIn(BaseModel):
