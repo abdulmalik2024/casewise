@@ -29,3 +29,7 @@ pipelines/**/data/
 
 # Playwright MCP browser snapshots
 .playwright-mcp/
+
+# Vercel
+.vercel/
+.env.local

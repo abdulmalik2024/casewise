@@ -25,7 +25,8 @@ app = FastAPI(title="Casewise API", version="0.1.0", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "https://casewise-bice.vercel.app"],
+    allow_origin_regex=r"https://casewise-[a-z0-9]+-casewise1\.vercel\.app",  # preview deploys
     allow_methods=["*"],
     allow_headers=["*"],
 )
