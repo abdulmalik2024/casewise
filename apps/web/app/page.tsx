@@ -24,8 +24,26 @@ type SearchResult = {
   score: number;
 };
 
+function relevance(score: number): { label: string; cls: string } {
+  if (score >= 0.5)
+    return {
+      label: "Strong match",
+      cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+    };
+  if (score >= 0.4)
+    return {
+      label: "Relevant",
+      cls: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+    };
+  return {
+    label: "Related",
+    cls: "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500",
+  };
+}
+
 export default function Home() {
   const [mode, setMode] = useState<"ask" | "search">("ask");
+  const [sourceType, setSourceType] = useState<"" | "statute" | "case">("");
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<AskResponse | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -40,7 +58,10 @@ export default function Home() {
     setResults([]);
     try {
       const endpoint = mode === "ask" ? "ask" : "search";
-      const res = await fetch(`${API_URL}/${endpoint}?q=${encodeURIComponent(query)}`);
+      const typeParam = mode === "search" && sourceType ? `&type=${sourceType}` : "";
+      const res = await fetch(
+        `${API_URL}/${endpoint}?q=${encodeURIComponent(query)}${typeParam}`
+      );
       if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
       if (mode === "ask") setAnswer(await res.json());
       else setResults(await res.json());
@@ -96,6 +117,26 @@ export default function Home() {
           {status === "loading" ? (mode === "ask" ? "Researching…" : "Searching…") : "Go"}
         </button>
       </form>
+
+      {mode === "search" && (
+        <div className="mt-3 flex gap-1 text-xs">
+          {([["", "All sources"], ["statute", "Statutes"], ["case", "Court decisions"]] as const).map(
+            ([value, label]) => (
+              <button
+                key={value}
+                onClick={() => setSourceType(value)}
+                className={`rounded-full border px-3 py-1 ${
+                  sourceType === value
+                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                    : "border-neutral-300 text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
+                }`}
+              >
+                {label}
+              </button>
+            )
+          )}
+        </div>
+      )}
 
       {status === "loading" && mode === "ask" && (
         <p className="mt-6 text-sm text-neutral-500">
@@ -162,8 +203,13 @@ export default function Home() {
                   </span>
                 )}
               </div>
-              <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                {r.source_type} · {(r.score * 100).toFixed(0)}%
+              <span className="flex shrink-0 gap-1.5">
+                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                  {r.source_type === "case" ? "decision" : r.source_type}
+                </span>
+                <span className={`rounded-full px-2 py-0.5 text-xs ${relevance(r.score).cls}`}>
+                  {relevance(r.score).label}
+                </span>
               </span>
             </div>
             <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-300">

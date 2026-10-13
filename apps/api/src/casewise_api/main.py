@@ -39,12 +39,14 @@ def health() -> dict:
 
 @app.get("/search", response_model=list[SearchResult])
 def search_endpoint(
-    q: str = Query(min_length=3, max_length=500), k: int = Query(default=8, ge=1, le=25)
+    q: str = Query(min_length=3, max_length=500),
+    k: int = Query(default=8, ge=1, le=25),
+    type: str | None = Query(default=None, pattern="^(statute|case)$"),
 ):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     try:
-        return search(app.state.pool, q, k)
+        return search(app.state.pool, q, k, source_type=type)
     except httpx.HTTPStatusError as e:
         if e.response.status_code == 429:
             raise HTTPException(503, "embedding service is at its rate limit; retry shortly")

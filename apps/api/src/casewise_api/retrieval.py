@@ -18,6 +18,7 @@ from chunks c
 left join statute_sections s on c.source_type = 'statute' and s.id = c.source_id
 left join case_decisions  d on c.source_type = 'case'    and d.id = c.source_id
 where c.embedding is not null
+  and (%s::text is null or c.source_type = %s)
 order by c.embedding <=> %s::vector
 limit %s
 """
@@ -43,10 +44,12 @@ def embed_query(text: str) -> list[float]:
     return resp.json()["data"][0]["embedding"]
 
 
-def search(pool: ConnectionPool, query: str, k: int = 8) -> list[SearchResult]:
+def search(
+    pool: ConnectionPool, query: str, k: int = 8, source_type: str | None = None
+) -> list[SearchResult]:
     vec = str(embed_query(query))
     with pool.connection() as conn:
-        rows = conn.execute(SEARCH_SQL, (vec, vec, k)).fetchall()
+        rows = conn.execute(SEARCH_SQL, (vec, source_type, source_type, vec, k)).fetchall()
     return [
         SearchResult(
             citation=r[0], heading=r[1], text=r[2], source_type=r[3], url=r[4], score=r[5]
