@@ -30,7 +30,7 @@ type HistoryEntry = {
   id: string;
   mode: "ask" | "search";
   query: string;
-  sourceType: "" | "statute" | "case" | "guidance";
+  sourceType: "" | "statute" | "case" | "guidance" | "rule" | "form";
   at: string;
   answer?: AskResponse;
   results?: SearchResult[];
@@ -85,7 +85,9 @@ function typeLabel(t: string): string {
 
 export default function Home() {
   const [mode, setMode] = useState<"ask" | "search">("ask");
-  const [sourceType, setSourceType] = useState<"" | "statute" | "case" | "guidance">("");
+  const [sourceType, setSourceType] = useState<
+    "" | "statute" | "case" | "guidance" | "rule" | "form"
+  >("");
   const [query, setQuery] = useState("");
   const [answer, setAnswer] = useState<AskResponse | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -345,6 +347,8 @@ export default function Home() {
               <option value="statute">Statutes</option>
               <option value="case">Court decisions</option>
               <option value="guidance">DHCR guidance</option>
+              <option value="rule">Court rules</option>
+              <option value="form">Forms</option>
             </select>
           )}
         </div>

@@ -45,7 +45,7 @@ def health() -> dict:
 def search_endpoint(
     q: str = Query(min_length=3, max_length=500),
     k: int = Query(default=8, ge=1, le=25),
-    type: str | None = Query(default=None, pattern="^(statute|case|guidance)$"),
+    type: str | None = Query(default=None, pattern="^(statute|case|guidance|rule|form)$"),
 ):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")

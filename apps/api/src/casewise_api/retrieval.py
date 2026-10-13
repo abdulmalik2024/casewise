@@ -17,7 +17,7 @@ select c.citation, c.heading, c.text, c.source_type,
 from chunks c
 left join statute_sections s on c.source_type = 'statute'  and s.id = c.source_id
 left join case_decisions  d on c.source_type = 'case'     and d.id = c.source_id
-left join agency_documents a on c.source_type = 'guidance' and a.id = c.source_id
+left join agency_documents a on c.source_type in ('guidance', 'rule', 'form') and a.id = c.source_id
 where c.embedding is not null
   and (%s::text is null or c.source_type = %s)
 order by c.embedding <=> %s::vector

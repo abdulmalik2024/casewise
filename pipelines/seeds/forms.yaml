@@ -1,0 +1,50 @@
+# Court forms — curated seed (nycourts.gov blocks bots; the form catalog is
+# small and slow-changing, so it is maintained by hand here and reviewed like
+# the deadline rules). `ingest-courtrules` syncs this file to the database.
+#
+# url: the stable nycourts.gov form page (human-verified). Add new rows as
+# forms are discovered; description should say when the form is used.
+
+- slug: good-cause-eviction-law-notice
+  name: Good Cause Eviction Law Notice
+  category: Notices
+  url: https://www.nycourts.gov/forms/good-cause-eviction-law-notice
+  description: >
+    Notice required under RPL § 231-c to be appended to rent increase or
+    renewal/non-renewal notices (2024-2034), stating whether the unit is
+    covered by or exempt from the Good Cause Eviction Law (RPL Article 6-A)
+    and, where covered, the justification for an increase above the local
+    rent standard.
+
+- slug: written-demand-past-due-rent
+  name: Written Demand for Past Due Rent
+  category: Non-Payment — Landlord
+  url: https://www.nycourts.gov/forms/written-demand-past-due-rent
+  description: >
+    The written rent demand that must be served at least 14 days before
+    commencing a summary nonpayment proceeding (RPA § 711(2)).
+
+- slug: 5-day-notice-past-due-rent
+  name: 5-Day Notice of Past Due Rent
+  category: Non-Payment — Landlord
+  url: https://www.nycourts.gov/forms/5-day-notice-past-due-rent
+  description: >
+    Notice by certified mail when rent has not been received within five
+    days of the due date (RPP § 235-e(d)); failure to send it may be raised
+    as an affirmative defense in a nonpayment proceeding.
+
+- slug: notice-petition-non-payment-eviction
+  name: Notice of Petition for Non-Payment Eviction
+  category: Non-Payment — Landlord
+  url: https://www.nycourts.gov/forms/notice-petition-non-payment-eviction
+  description: >
+    Notice of petition commencing a summary nonpayment proceeding; service
+    window governed by RPA § 733 (10-17 days before the hearing).
+
+- slug: petition-non-payment-eviction
+  name: Petition for Non-Payment Eviction
+  category: Non-Payment — Landlord
+  url: https://www.nycourts.gov/forms/petition-non-payment-eviction
+  description: >
+    Petition for a summary nonpayment proceeding under RPA § 711(2),
+    served with the notice of petition.

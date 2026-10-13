@@ -45,13 +45,27 @@ class BrowserFetcher:
     def _prime(self, url: str) -> None:
         """Navigate once so Cloudflare's challenge runs and sets clearance cookies.
         Every navigation risks a fresh challenge, so after priming, all requests
-        go through in-page fetch() instead of page.goto()."""
-        self._page.goto(url, wait_until="domcontentloaded", timeout=self._timeout)
-        for _ in range(25):
-            if "just a moment" not in (self._page.title() or "").lower():
-                return
-            time.sleep(1)
+        go through in-page fetch() instead of page.goto(). Slow challenges get
+        a longer wait and one retry on a fresh page."""
+        for attempt in range(3):
+            self._page.goto(url, wait_until="domcontentloaded", timeout=self._timeout)
+            for _ in range(45):
+                if "just a moment" not in (self._page.title() or "").lower():
+                    return
+                time.sleep(1)
+            if attempt < 2:
+                self._page.close()
+                self._page = self._browser.new_page()
+                time.sleep(5)
         raise ChallengeNotCleared(self._page.url)
+
+    def get_page_html(self, url: str) -> str:
+        """Navigate and return the rendered DOM. For HTML pages on hosts where
+        in-page fetch() is challenged separately (the redesigned www pages);
+        feeds/raw bodies should keep using get_text()."""
+        self._prime(url)
+        time.sleep(self._delay)
+        return self._page.content()
 
     def get_text(self, url: str) -> str:
         """Raw response body (XML feeds and HTML pages alike)."""

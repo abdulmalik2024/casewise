@@ -50,12 +50,35 @@ SOURCES = {
     "dhcr": """
         select a.id, a.citation, a.title, a.text
         from agency_documents a
-        where ({re_embed} or not exists (
+        where a.doc_type not in ('court-rule', 'court-form')
+          and ({re_embed} or not exists (
               select 1 from chunks c where c.source_type = 'guidance' and c.source_id = a.id))
         order by a.id
     """,
+    "courtrules": """
+        select a.id, a.citation, a.title, a.text
+        from agency_documents a
+        where a.doc_type = 'court-rule'
+          and ({re_embed} or not exists (
+              select 1 from chunks c where c.source_type = 'rule' and c.source_id = a.id))
+        order by a.id
+    """,
+    "courtforms": """
+        select a.id, a.citation, a.title, a.text
+        from agency_documents a
+        where a.doc_type = 'court-form'
+          and ({re_embed} or not exists (
+              select 1 from chunks c where c.source_type = 'form' and c.source_id = a.id))
+        order by a.id
+    """,
 }
-SOURCE_TYPE = {"statutes": "statute", "caselaw": "case", "dhcr": "guidance"}
+SOURCE_TYPE = {
+    "statutes": "statute",
+    "caselaw": "case",
+    "dhcr": "guidance",
+    "courtrules": "rule",
+    "courtforms": "form",
+}
 
 
 def embed_source(conn: psycopg.Connection, client: VoyageClient, source: str, re_embed: bool) -> int:

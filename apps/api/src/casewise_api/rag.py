@@ -35,6 +35,9 @@ housing court practice), flag the distinction.
 - Be concise and precise; write for an attorney, not a consumer.
 - Never invent citations, case names, or section numbers. Only the [Sn] markers of \
 the provided sources are valid citations.
+- You may be continuing a research conversation; earlier exchanges, when provided, \
+are context for understanding the current question. Cite only the sources provided \
+with the CURRENT question, not sources from earlier answers.
 - End with: "Verify against the cited sources before relying on this answer."
 """
 
@@ -65,13 +68,22 @@ def _dedupe(results: list[SearchResult], cap: int = 8) -> list[SearchResult]:
     return out
 
 
-def _build_prompt(question: str, sources: list[SearchResult]) -> str:
+def _build_prompt(
+    question: str, sources: list[SearchResult], history: list[dict] | None = None
+) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
         head = f" — {s.heading}" if s.heading else ""
         parts.append(f"[S{i}] {s.citation}{head} ({s.source_type})\n{s.text}")
     joined = "\n\n".join(parts)
-    return f"Sources:\n\n{joined}\n\nQuestion: {question}"
+    prefix = ""
+    if history:
+        exchanges = "\n\n".join(
+            f"Earlier question: {h['question']}\nEarlier answer (context only):\n{h['answer'][:1500]}"
+            for h in history[-4:]
+        )
+        prefix = f"Conversation so far:\n\n{exchanges}\n\n---\n\n"
+    return f"{prefix}Sources:\n\n{joined}\n\nCurrent question: {question}"
 
 
 def _verify_markers(answer: str, n_sources: int) -> tuple[str, set[int]]:
@@ -110,10 +122,13 @@ def _sources_for(retrieved: list[SearchResult], used: set[int]) -> list[Source]:
     ]
 
 
-def ask_stream(pool: ConnectionPool, question: str):
+def ask_stream(pool: ConnectionPool, question: str, history: list[dict] | None = None):
     """Yield SSE-able events: status -> delta* -> done. Real pipeline stages."""
     yield {"type": "status", "message": "Reading your question…"}
-    retrieved = _dedupe(search(pool, question, k=16))
+    # follow-ups often lean on the prior exchange ("what if rent-stabilized?"),
+    # so retrieval sees the previous question too
+    retrieval_q = f"{history[-1]['question']}\n{question}" if history else question
+    retrieved = _dedupe(search(pool, retrieval_q, k=16))
     if not retrieved:
         yield {
             "type": "done",
@@ -139,7 +154,7 @@ def ask_stream(pool: ConnectionPool, question: str):
         betas=["server-side-fallback-2026-07-01"],
         fallbacks="default",
         system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": _build_prompt(question, retrieved)}],
+        messages=[{"role": "user", "content": _build_prompt(question, retrieved, history)}],
     ) as stream:
         for text in stream.text_stream:
             parts.append(text)
