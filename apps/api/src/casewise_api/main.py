@@ -1,12 +1,14 @@
+import json
 from contextlib import asynccontextmanager
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from psycopg_pool import ConnectionPool
 
 from .config import settings
-from .rag import AskResponse, ask
+from .rag import AskResponse, ask, ask_stream
 from .retrieval import SearchResult, search
 
 
@@ -51,6 +53,34 @@ def search_endpoint(
         if e.response.status_code == 429:
             raise HTTPException(503, "embedding service is at its rate limit; retry shortly")
         raise
+
+
+@app.get("/ask/stream")
+def ask_stream_endpoint(q: str = Query(min_length=3, max_length=500)):
+    if app.state.pool is None or not settings.voyage_api_key:
+        raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
+    if not settings.anthropic_api_key:
+        raise HTTPException(501, "answer generation not yet enabled; set ANTHROPIC_API_KEY")
+
+    def gen():
+        try:
+            for event in ask_stream(app.state.pool, q):
+                yield f"data: {json.dumps(event)}\n\n"
+        except httpx.HTTPStatusError as e:
+            msg = (
+                "embedding service is at its rate limit; retry shortly"
+                if e.response.status_code == 429
+                else "upstream error; retry shortly"
+            )
+            yield f"data: {json.dumps({'type': 'error', 'message': msg})}\n\n"
+        except Exception:
+            yield f"data: {json.dumps({'type': 'error', 'message': 'something went wrong; retry shortly'})}\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @app.get("/ask", response_model=AskResponse)

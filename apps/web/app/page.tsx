@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -79,6 +79,10 @@ function relevance(score: number): { label: string; cls: string } {
   };
 }
 
+function typeLabel(t: string): string {
+  return t === "case" ? "decision" : t;
+}
+
 export default function Home() {
   const [mode, setMode] = useState<"ask" | "search">("ask");
   const [sourceType, setSourceType] = useState<"" | "statute" | "case" | "guidance">("");
@@ -86,18 +90,35 @@ export default function Home() {
   const [answer, setAnswer] = useState<AskResponse | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
+  const [statusMsg, setStatusMsg] = useState("");
+  const [streamText, setStreamText] = useState("");
   const [error, setError] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [copied, setCopied] = useState(false);
+  const answerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     setHistory(loadHistory());
   }, []);
 
   const hasContent = status !== "idle" || answer !== null || results.length > 0;
+  const shownResults =
+    mode === "search" && sourceType
+      ? results.filter((r) => r.source_type === sourceType)
+      : results;
 
   function recordHistory(entry: HistoryEntry) {
     setHistory((prev) => {
       const next = [entry, ...prev.filter((e) => e.id !== entry.id)].slice(0, HISTORY_MAX);
+      saveHistory(next);
+      return next;
+    });
+  }
+
+  function deleteEntry(e: React.MouseEvent, entry: HistoryEntry) {
+    e.stopPropagation();
+    setHistory((prev) => {
+      const next = prev.filter((h) => !(h.id === entry.id && h.at === entry.at));
       saveHistory(next);
       return next;
     });
@@ -110,6 +131,7 @@ export default function Home() {
     setAnswer(entry.answer ?? null);
     setResults(entry.results ?? []);
     setError("");
+    setStreamText("");
     setStatus("done");
   }
 
@@ -118,12 +140,53 @@ export default function Home() {
     setAnswer(null);
     setResults([]);
     setError("");
+    setStreamText("");
     setStatus("idle");
   }
 
-  function clearHistory() {
-    setHistory([]);
-    saveHistory([]);
+  async function runAskStream(q: string) {
+    setStatusMsg("Connecting…");
+    const res = await fetch(`${API_URL}/ask/stream?q=${encodeURIComponent(q)}`);
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let acc = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+      for (const frame of frames) {
+        const line = frame.split("\n").find((l) => l.startsWith("data: "));
+        if (!line) continue;
+        const event = JSON.parse(line.slice(6));
+        if (event.type === "status") setStatusMsg(event.message);
+        else if (event.type === "delta") {
+          acc += event.text;
+          setStreamText(acc);
+        } else if (event.type === "done") {
+          const final: AskResponse = {
+            answer: event.answer,
+            sources: event.sources,
+            model: event.model,
+          };
+          setAnswer(final);
+          setStreamText("");
+          recordHistory({
+            id: `ask::${q}`,
+            mode: "ask",
+            query: q,
+            sourceType: "",
+            at: new Date().toISOString(),
+            answer: final,
+          });
+        } else if (event.type === "error") {
+          throw new Error(event.message);
+        }
+      }
+    }
   }
 
   async function run(e: React.FormEvent) {
@@ -133,31 +196,61 @@ export default function Home() {
     setStatus("loading");
     setAnswer(null);
     setResults([]);
+    setStreamText("");
+    setCopied(false);
     try {
-      const endpoint = mode === "ask" ? "ask" : "search";
-      const typeParam = mode === "search" && sourceType ? `&type=${sourceType}` : "";
-      const res = await fetch(`${API_URL}/${endpoint}?q=${encodeURIComponent(q)}${typeParam}`);
-      if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
-      const entry: HistoryEntry = {
-        id: `${mode}:${sourceType}:${q}`,
-        mode,
-        query: q,
-        sourceType,
-        at: new Date().toISOString(),
-      };
       if (mode === "ask") {
-        entry.answer = await res.json();
-        setAnswer(entry.answer!);
+        await runAskStream(q);
       } else {
-        entry.results = await res.json();
-        setResults(entry.results!);
+        const typeParam = sourceType ? `&type=${sourceType}` : "";
+        const res = await fetch(
+          `${API_URL}/search?q=${encodeURIComponent(q)}&k=12${typeParam}`
+        );
+        if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
+        const data: SearchResult[] = await res.json();
+        setResults(data);
+        recordHistory({
+          id: `search:${sourceType}:${q}`,
+          mode: "search",
+          query: q,
+          sourceType,
+          at: new Date().toISOString(),
+          results: data,
+        });
       }
-      recordHistory(entry);
       setStatus("done");
     } catch (err) {
       setError(err instanceof Error ? err.message : "request failed");
       setStatus("error");
     }
+  }
+
+  async function copyAnswer() {
+    if (!answer) return;
+    const sourcesPlain = answer.sources
+      .map((s) => `[${s.marker}] ${s.citation}${s.heading ? ` — ${s.heading}` : ""}${s.url ? ` (${s.url})` : ""}`)
+      .join("\n");
+    const plain = `${answer.answer}\n\nSources:\n${sourcesPlain}`;
+    const bodyHtml = answerRef.current?.innerHTML ?? "";
+    const sourcesHtml = answer.sources
+      .map(
+        (s) =>
+          `<li>[${s.marker}] ${s.url ? `<a href="${s.url}">${s.citation}</a>` : s.citation}${s.heading ? ` — ${s.heading}` : ""}</li>`
+      )
+      .join("");
+    const html = `<div>${bodyHtml}<p><strong>Sources:</strong></p><ul>${sourcesHtml}</ul></div>`;
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([plain], { type: "text/plain" }),
+        }),
+      ]);
+    } catch {
+      await navigator.clipboard.writeText(plain);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
   const grouped: [string, HistoryEntry[]][] = [];
@@ -167,6 +260,25 @@ export default function Home() {
     if (last && last[0] === label) last[1].push(h);
     else grouped.push([label, [h]]);
   }
+
+  const historyItem = (h: HistoryEntry) => (
+    <li key={h.id + h.at} className="group relative">
+      <button
+        onClick={() => restore(h)}
+        title={h.query}
+        className="w-full truncate rounded-lg px-2 py-1.5 pr-7 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+      >
+        {h.query}
+      </button>
+      <button
+        onClick={(e) => deleteEntry(e, h)}
+        title="Delete"
+        className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded px-1.5 text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:block"
+      >
+        ✕
+      </button>
+    </li>
+  );
 
   const inputCard = (
     <form
@@ -179,7 +291,7 @@ export default function Home() {
         placeholder={
           mode === "ask"
             ? 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
-            : "Search statutes and decisions…"
+            : "Search statutes, decisions, and DHCR guidance…"
         }
         className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
       />
@@ -237,39 +349,55 @@ export default function Home() {
         >
           <span className="text-base leading-none text-[#c96442]">+</span> New research
         </button>
+        <div className="mx-3 mt-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
+          <span>New case prep</span>
+          <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide dark:bg-neutral-800">
+            soon
+          </span>
+        </div>
 
-        <div className="mt-5 flex-1 overflow-y-auto px-3 pb-4">
+        <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
           {grouped.length === 0 ? (
             <p className="px-2 text-xs text-[#a39f8d] dark:text-neutral-500">
               Your questions and searches will appear here.
             </p>
           ) : (
-            grouped.map(([label, entries]) => (
-              <div key={label} className="mb-4">
-                <div className="px-2 pb-1 text-xs text-[#a39f8d] dark:text-neutral-500">
-                  {label}
+            grouped.map(([label, entries]) => {
+              const asks = entries.filter((h) => h.mode === "ask");
+              const searches = entries.filter((h) => h.mode === "search");
+              return (
+                <div key={label} className="mb-4">
+                  <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
+                    {label}
+                  </div>
+                  {asks.length > 0 && (
+                    <>
+                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                        Ask results
+                      </div>
+                      <ul>{asks.map(historyItem)}</ul>
+                    </>
+                  )}
+                  {searches.length > 0 && (
+                    <>
+                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                        Search results
+                      </div>
+                      <ul>{searches.map(historyItem)}</ul>
+                    </>
+                  )}
                 </div>
-                <ul>
-                  {entries.map((h) => (
-                    <li key={h.id + h.at}>
-                      <button
-                        onClick={() => restore(h)}
-                        title={h.query}
-                        className="w-full truncate rounded-lg px-2 py-1.5 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
-                      >
-                        {h.query}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
         {history.length > 0 && (
           <button
-            onClick={clearHistory}
+            onClick={() => {
+              setHistory([]);
+              saveHistory([]);
+            }}
             className="mx-3 mb-4 rounded-lg px-2 py-1 text-left text-xs text-[#a39f8d] hover:text-[#5d5848] dark:text-neutral-500 dark:hover:text-neutral-300"
           >
             Clear history
@@ -297,8 +425,9 @@ export default function Home() {
             {inputCard}
 
             {status === "loading" && mode === "ask" && (
-              <p className="mt-6 text-sm text-[#8a8571] dark:text-neutral-400">
-                Retrieving sources and drafting a cited answer. Typically 20–60 seconds…
+              <p className="mt-6 flex items-center gap-2 text-sm text-[#8a8571] dark:text-neutral-400">
+                <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#c96442]" />
+                {statusMsg}
               </p>
             )}
 
@@ -308,12 +437,25 @@ export default function Home() {
               </p>
             )}
 
-            {answer && (
+            {(streamText || answer) && (
               <div className="mt-6">
-                <article className="prose prose-sm max-w-none rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e] [&_table]:text-xs">
-                  <ReactMarkdown>{answer.answer}</ReactMarkdown>
+                <article
+                  ref={answerRef}
+                  className="prose prose-sm max-w-none rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e] [&_table]:text-xs"
+                >
+                  <ReactMarkdown>{answer ? answer.answer : streamText}</ReactMarkdown>
                 </article>
-                {answer.sources.length > 0 && (
+                {answer && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <button
+                      onClick={copyAnswer}
+                      className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    >
+                      {copied ? "Copied ✓" : "Copy answer"}
+                    </button>
+                  </div>
+                )}
+                {answer && answer.sources.length > 0 && (
                   <div className="mt-4">
                     <h2 className="text-xs font-semibold uppercase tracking-wide text-[#8a8571] dark:text-neutral-400">
                       Verified sources
@@ -325,7 +467,7 @@ export default function Home() {
                             {s.marker}
                           </span>
                           <span className="shrink-0 rounded-full bg-[#efede3] px-2 py-0.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
-                            {s.source_type === "case" ? "decision" : s.source_type}
+                            {typeLabel(s.source_type)}
                           </span>
                           {s.url ? (
                             <a
@@ -350,12 +492,14 @@ export default function Home() {
               </div>
             )}
 
-            {mode === "search" && status === "done" && results.length === 0 && (
-              <p className="mt-6 text-sm text-[#8a8571]">No results.</p>
+            {mode === "search" && status === "done" && shownResults.length === 0 && (
+              <p className="mt-6 text-sm text-[#8a8571]">
+                {results.length > 0 ? "No results of this type — change the filter." : "No results."}
+              </p>
             )}
 
             <ul className="mt-6 space-y-4">
-              {results.map((r, i) => (
+              {shownResults.map((r, i) => (
                 <li
                   key={i}
                   className="rounded-2xl border border-[#e3e1d5] bg-white p-4 dark:border-neutral-700 dark:bg-[#30302e]"
@@ -371,7 +515,7 @@ export default function Home() {
                     </div>
                     <span className="flex shrink-0 gap-1.5">
                       <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
-                        {r.source_type === "case" ? "decision" : r.source_type}
+                        {typeLabel(r.source_type)}
                       </span>
                       <span
                         className={`rounded-full px-2 py-0.5 text-xs ${relevance(r.score).cls}`}

@@ -88,6 +88,83 @@ def _verify_markers(answer: str, n_sources: int) -> tuple[str, set[int]]:
     return re.sub(r"\[S(\d+)\]", repl, answer), used
 
 
+def _source_counts(retrieved: list[SearchResult]) -> str:
+    counts: dict[str, int] = {}
+    for r in retrieved:
+        counts[r.source_type] = counts.get(r.source_type, 0) + 1
+    names = {"statute": "statutes", "case": "decisions", "guidance": "DHCR guidance"}
+    parts = [f"{n} {names.get(t, t)}" for t, n in counts.items()]
+    return f"Found {len(retrieved)} sources: " + ", ".join(parts)
+
+
+def _sources_for(retrieved: list[SearchResult], used: set[int]) -> list[Source]:
+    return [
+        Source(
+            marker=f"S{i}",
+            citation=retrieved[i - 1].citation,
+            heading=retrieved[i - 1].heading,
+            url=retrieved[i - 1].url,
+            source_type=retrieved[i - 1].source_type,
+        )
+        for i in sorted(used)
+    ]
+
+
+def ask_stream(pool: ConnectionPool, question: str):
+    """Yield SSE-able events: status -> delta* -> done. Real pipeline stages."""
+    yield {"type": "status", "message": "Reading your question…"}
+    retrieved = _dedupe(search(pool, question, k=16))
+    if not retrieved:
+        yield {
+            "type": "done",
+            "answer": "No relevant sources found in the corpus for this question.",
+            "sources": [],
+            "model": ANSWER_MODEL,
+        }
+        return
+    yield {"type": "status", "message": _source_counts(retrieved)}
+    yield {"type": "status", "message": "Reading the sources and drafting a cited answer…"}
+
+    headers = (
+        {"anthropic-workspace-id": settings.anthropic_workspace_id}
+        if settings.anthropic_workspace_id
+        else None
+    )
+    client = anthropic.Anthropic(api_key=settings.anthropic_api_key, default_headers=headers)
+    parts: list[str] = []
+    with client.beta.messages.stream(
+        model=ANSWER_MODEL,
+        max_tokens=4096,
+        output_config={"effort": "high"},
+        betas=["server-side-fallback-2026-07-01"],
+        fallbacks="default",
+        system=SYSTEM_PROMPT,
+        messages=[{"role": "user", "content": _build_prompt(question, retrieved)}],
+    ) as stream:
+        for text in stream.text_stream:
+            parts.append(text)
+            yield {"type": "delta", "text": text}
+        final = stream.get_final_message()
+
+    if final.stop_reason == "refusal":
+        yield {
+            "type": "done",
+            "answer": "The model declined to answer this question. Try rephrasing, or use Search to review sources directly.",
+            "sources": [],
+            "model": final.model,
+        }
+        return
+
+    yield {"type": "status", "message": "Verifying citations against the corpus…"}
+    answer, used = _verify_markers("".join(parts), len(retrieved))
+    yield {
+        "type": "done",
+        "answer": answer.strip(),
+        "sources": [s.model_dump() for s in _sources_for(retrieved, used)],
+        "model": final.model,
+    }
+
+
 def ask(pool: ConnectionPool, question: str) -> AskResponse:
     retrieved = _dedupe(search(pool, question, k=16))
     if not retrieved:
@@ -122,14 +199,6 @@ def ask(pool: ConnectionPool, question: str) -> AskResponse:
 
     text = "".join(b.text for b in response.content if b.type == "text")
     answer, used = _verify_markers(text, len(retrieved))
-    sources = [
-        Source(
-            marker=f"S{i}",
-            citation=retrieved[i - 1].citation,
-            heading=retrieved[i - 1].heading,
-            url=retrieved[i - 1].url,
-            source_type=retrieved[i - 1].source_type,
-        )
-        for i in sorted(used)
-    ]
-    return AskResponse(answer=answer.strip(), sources=sources, model=response.model)
+    return AskResponse(
+        answer=answer.strip(), sources=_sources_for(retrieved, used), model=response.model
+    )
