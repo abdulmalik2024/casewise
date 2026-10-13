@@ -1,8 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+type Source = {
+  marker: string;
+  citation: string;
+  heading: string | null;
+  url: string | null;
+  source_type: string;
+};
+
+type AskResponse = { answer: string; sources: Source[]; model: string };
 
 type SearchResult = {
   citation: string;
@@ -14,22 +25,28 @@ type SearchResult = {
 };
 
 export default function Home() {
+  const [mode, setMode] = useState<"ask" | "search">("ask");
   const [query, setQuery] = useState("");
+  const [answer, setAnswer] = useState<AskResponse | null>(null);
   const [results, setResults] = useState<SearchResult[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "done">("idle");
   const [error, setError] = useState("");
 
-  async function runSearch(e: React.FormEvent) {
+  async function run(e: React.FormEvent) {
     e.preventDefault();
     if (query.trim().length < 3) return;
     setStatus("loading");
+    setAnswer(null);
+    setResults([]);
     try {
-      const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(query)}&k=8`);
+      const endpoint = mode === "ask" ? "ask" : "search";
+      const res = await fetch(`${API_URL}/${endpoint}?q=${encodeURIComponent(query)}`);
       if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
-      setResults(await res.json());
+      if (mode === "ask") setAnswer(await res.json());
+      else setResults(await res.json());
       setStatus("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "search failed");
+      setError(err instanceof Error ? err.message : "request failed");
       setStatus("error");
     }
   }
@@ -39,16 +56,36 @@ export default function Home() {
       <header className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight">Casewise</h1>
         <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-          Semantic search over New York property law — statutes and recent decisions.
-          For licensed attorneys; not legal advice.
+          AI research assistant for New York property law. For licensed attorneys;
+          not legal advice — verify all citations.
         </p>
       </header>
 
-      <form onSubmit={runSearch} className="flex gap-2">
+      <div className="mb-3 flex gap-1 text-sm">
+        {(["ask", "search"] as const).map((m) => (
+          <button
+            key={m}
+            onClick={() => setMode(m)}
+            className={`rounded-full px-4 py-1.5 capitalize ${
+              mode === m
+                ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
+                : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            }`}
+          >
+            {m === "ask" ? "Ask" : "Search sources"}
+          </button>
+        ))}
+      </div>
+
+      <form onSubmit={run} className="flex gap-2">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder='e.g. "notice required before raising rent"'
+          placeholder={
+            mode === "ask"
+              ? 'e.g. "How much notice before an 8% rent increase?"'
+              : 'e.g. "warranty of habitability"'
+          }
           className="flex-1 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900"
         />
         <button
@@ -56,9 +93,15 @@ export default function Home() {
           disabled={status === "loading"}
           className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
         >
-          {status === "loading" ? "Searching…" : "Search"}
+          {status === "loading" ? (mode === "ask" ? "Researching…" : "Searching…") : "Go"}
         </button>
       </form>
+
+      {status === "loading" && mode === "ask" && (
+        <p className="mt-6 text-sm text-neutral-500">
+          Retrieving sources and drafting a cited answer — typically 20–60 seconds…
+        </p>
+      )}
 
       {status === "error" && (
         <p className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
@@ -66,16 +109,50 @@ export default function Home() {
         </p>
       )}
 
-      {status === "done" && results.length === 0 && (
+      {answer && (
+        <div className="mt-6">
+          <article className="prose prose-sm prose-neutral max-w-none rounded-xl border border-neutral-200 p-5 dark:prose-invert dark:border-neutral-800 [&_table]:text-xs">
+            <ReactMarkdown>{answer.answer}</ReactMarkdown>
+          </article>
+          {answer.sources.length > 0 && (
+            <div className="mt-4">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                Verified sources
+              </h2>
+              <ul className="mt-2 space-y-1.5">
+                {answer.sources.map((s) => (
+                  <li key={s.marker} className="flex items-baseline gap-2 text-sm">
+                    <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
+                      {s.marker}
+                    </span>
+                    {s.url ? (
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono font-medium text-blue-600 hover:underline dark:text-blue-400"
+                      >
+                        {s.citation}
+                      </a>
+                    ) : (
+                      <span className="font-mono font-medium">{s.citation}</span>
+                    )}
+                    <span className="text-neutral-500">{s.heading}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
+      {mode === "search" && status === "done" && results.length === 0 && (
         <p className="mt-6 text-sm text-neutral-500">No results.</p>
       )}
 
       <ul className="mt-6 space-y-4">
         {results.map((r, i) => (
-          <li
-            key={i}
-            className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800"
-          >
+          <li key={i} className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800">
             <div className="flex items-baseline justify-between gap-3">
               <div>
                 <span className="font-mono text-sm font-semibold">{r.citation}</span>
