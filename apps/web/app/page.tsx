@@ -48,8 +48,18 @@ function saveHistory(entries: HistoryEntry[]) {
   try {
     localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, HISTORY_MAX)));
   } catch {
-    /* private mode / storage blocked — history just doesn't persist */
+    /* storage unavailable — history just doesn't persist */
   }
+}
+
+function groupLabel(iso: string): string {
+  const d = new Date(iso);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  if (d.toDateString() === today.toDateString()) return "Today";
+  if (d.toDateString() === yesterday.toDateString()) return "Yesterday";
+  return "Earlier";
 }
 
 function relevance(score: number): { label: string; cls: string } {
@@ -61,11 +71,11 @@ function relevance(score: number): { label: string; cls: string } {
   if (score >= 0.4)
     return {
       label: "Relevant",
-      cls: "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300",
+      cls: "bg-[#efede3] text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-300",
     };
   return {
     label: "Related",
-    cls: "bg-neutral-100 text-neutral-400 dark:bg-neutral-800 dark:text-neutral-500",
+    cls: "bg-[#efede3] text-[#a39f8d] dark:bg-neutral-800 dark:text-neutral-500",
   };
 }
 
@@ -83,6 +93,8 @@ export default function Home() {
     setHistory(loadHistory());
   }, []);
 
+  const hasContent = status !== "idle" || answer !== null || results.length > 0;
+
   function recordHistory(entry: HistoryEntry) {
     setHistory((prev) => {
       const next = [entry, ...prev.filter((e) => e.id !== entry.id)].slice(0, HISTORY_MAX);
@@ -99,6 +111,14 @@ export default function Home() {
     setResults(entry.results ?? []);
     setError("");
     setStatus("done");
+  }
+
+  function reset() {
+    setQuery("");
+    setAnswer(null);
+    setResults([]);
+    setError("");
+    setStatus("idle");
   }
 
   function clearHistory() {
@@ -140,210 +160,240 @@ export default function Home() {
     }
   }
 
-  return (
-    <div className="mx-auto flex w-full max-w-5xl gap-8 px-4 py-10">
-      <aside className="hidden w-56 shrink-0 md:block">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-            History
-          </h2>
-          {history.length > 0 && (
-            <button
-              onClick={clearHistory}
-              className="text-xs text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300"
-            >
-              Clear
-            </button>
-          )}
-        </div>
-        {history.length === 0 ? (
-          <p className="mt-3 text-xs text-neutral-400">
-            Your questions and searches will appear here.
-          </p>
-        ) : (
-          <ul className="mt-3 space-y-1">
-            {history.map((h) => (
-              <li key={h.id + h.at}>
-                <button
-                  onClick={() => restore(h)}
-                  className="w-full rounded-lg px-2 py-1.5 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-neutral-300 dark:hover:bg-neutral-800"
-                  title={h.query}
-                >
-                  <span className="mr-1.5 text-xs text-neutral-400">
-                    {h.mode === "ask" ? "Q" : "S"}
-                  </span>
-                  <span className="line-clamp-2">{h.query}</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </aside>
+  const grouped: [string, HistoryEntry[]][] = [];
+  for (const h of history) {
+    const label = groupLabel(h.at);
+    const last = grouped[grouped.length - 1];
+    if (last && last[0] === label) last[1].push(h);
+    else grouped.push([label, [h]]);
+  }
 
-      <main className="min-w-0 flex-1">
-        <header className="mb-8">
-          <h1 className="text-3xl font-semibold tracking-tight [font-family:var(--font-serif)]">
-            Casewise
-          </h1>
-          <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
-            SI research assistant for New York property law. For licensed attorneys; not
-            legal advice. Verify all citations.
-          </p>
-        </header>
-
-        <div className="mb-3 flex gap-1 text-sm">
+  const inputCard = (
+    <form
+      onSubmit={run}
+      className="rounded-2xl border border-[#e3e1d5] bg-white shadow-[0_2px_12px_rgba(61,57,41,0.06)] dark:border-neutral-700 dark:bg-[#30302e]"
+    >
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={
+          mode === "ask"
+            ? "What would you like to research?"
+            : "Search statutes and decisions…"
+        }
+        className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+      />
+      <div className="flex items-center justify-between px-3 pb-3">
+        <div className="flex items-center gap-1 text-xs">
           {(["ask", "search"] as const).map((m) => (
             <button
+              type="button"
               key={m}
               onClick={() => setMode(m)}
-              className={`rounded-full px-4 py-1.5 capitalize ${
+              className={`rounded-lg px-3 py-1.5 ${
                 mode === m
-                  ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-                  : "text-neutral-500 hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                  ? "bg-[#efede3] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
+                  : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400 dark:hover:bg-neutral-800"
               }`}
             >
-              {m === "ask" ? "Ask" : "Search sources"}
+              {m === "ask" ? "Ask" : "Search"}
             </button>
           ))}
+          {mode === "search" && (
+            <select
+              value={sourceType}
+              onChange={(e) => setSourceType(e.target.value as typeof sourceType)}
+              className="ml-1 rounded-lg bg-transparent px-2 py-1.5 text-xs text-[#8a8571] outline-none dark:text-neutral-400"
+            >
+              <option value="">All sources</option>
+              <option value="statute">Statutes</option>
+              <option value="case">Court decisions</option>
+            </select>
+          )}
         </div>
+        <button
+          type="submit"
+          disabled={status === "loading"}
+          className="rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#b55a3a] disabled:opacity-50"
+        >
+          {status === "loading" ? "Working…" : mode === "ask" ? "Research" : "Search"}
+        </button>
+      </div>
+    </form>
+  );
 
-        <form onSubmit={run} className="flex gap-2">
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={
-              mode === "ask"
-                ? 'e.g. "How much notice before an 8% rent increase?"'
-                : 'e.g. "warranty of habitability"'
-            }
-            className="flex-1 rounded-lg border border-neutral-300 bg-white px-4 py-2.5 text-sm outline-none focus:border-neutral-500 dark:border-neutral-700 dark:bg-neutral-900"
-          />
-          <button
-            type="submit"
-            disabled={status === "loading"}
-            className="rounded-lg bg-neutral-900 px-5 py-2.5 text-sm font-medium text-white hover:bg-neutral-700 disabled:opacity-50 dark:bg-neutral-100 dark:text-neutral-900"
-          >
-            {status === "loading" ? (mode === "ask" ? "Researching…" : "Searching…") : "Go"}
-          </button>
-        </form>
+  return (
+    <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
+        <div className="px-4 pb-2 pt-5">
+          <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
+            Casewise
+          </span>
+        </div>
+        <button
+          onClick={reset}
+          className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+        >
+          <span className="text-base leading-none text-[#c96442]">+</span> New research
+        </button>
 
-        {mode === "search" && (
-          <div className="mt-3 flex gap-1 text-xs">
-            {(
-              [
-                ["", "All sources"],
-                ["statute", "Statutes"],
-                ["case", "Court decisions"],
-              ] as const
-            ).map(([value, label]) => (
-              <button
-                key={value}
-                onClick={() => setSourceType(value)}
-                className={`rounded-full border px-3 py-1 ${
-                  sourceType === value
-                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
-                    : "border-neutral-300 text-neutral-500 hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-800"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {status === "loading" && mode === "ask" && (
-          <p className="mt-6 text-sm text-neutral-500">
-            Retrieving sources and drafting a cited answer. Typically 20–60 seconds…
-          </p>
-        )}
-
-        {status === "error" && (
-          <p className="mt-6 rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
-            {error}
-          </p>
-        )}
-
-        {answer && (
-          <div className="mt-6">
-            <article className="prose prose-sm prose-neutral max-w-none rounded-xl border border-neutral-200 p-5 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-800 [&_table]:text-xs">
-              <ReactMarkdown>{answer.answer}</ReactMarkdown>
-            </article>
-            {answer.sources.length > 0 && (
-              <div className="mt-4">
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
-                  Verified sources
-                </h2>
-                <ul className="mt-2 space-y-1.5">
-                  {answer.sources.map((s) => (
-                    <li key={s.marker} className="flex items-baseline gap-2 text-sm">
-                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                        {s.marker}
-                      </span>
-                      {s.url ? (
-                        <a
-                          href={s.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="font-mono font-medium text-blue-600 hover:underline dark:text-blue-400"
-                        >
-                          {s.citation}
-                        </a>
-                      ) : (
-                        <span className="font-mono font-medium">{s.citation}</span>
-                      )}
-                      <span className="text-neutral-500">{s.heading}</span>
+        <div className="mt-5 flex-1 overflow-y-auto px-3 pb-4">
+          {grouped.length === 0 ? (
+            <p className="px-2 text-xs text-[#a39f8d] dark:text-neutral-500">
+              Your questions and searches will appear here.
+            </p>
+          ) : (
+            grouped.map(([label, entries]) => (
+              <div key={label} className="mb-4">
+                <div className="px-2 pb-1 text-xs text-[#a39f8d] dark:text-neutral-500">
+                  {label}
+                </div>
+                <ul>
+                  {entries.map((h) => (
+                    <li key={h.id + h.at}>
+                      <button
+                        onClick={() => restore(h)}
+                        title={h.query}
+                        className="w-full truncate rounded-lg px-2 py-1.5 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                      >
+                        {h.query}
+                      </button>
                     </li>
                   ))}
                 </ul>
               </div>
+            ))
+          )}
+        </div>
+
+        {history.length > 0 && (
+          <button
+            onClick={clearHistory}
+            className="mx-3 mb-4 rounded-lg px-2 py-1 text-left text-xs text-[#a39f8d] hover:text-[#5d5848] dark:text-neutral-500 dark:hover:text-neutral-300"
+          >
+            Clear history
+          </button>
+        )}
+      </aside>
+
+      <main className="flex-1 overflow-y-auto">
+        {!hasContent ? (
+          <div className="flex h-full flex-col items-center justify-center px-4">
+            <div className="w-full max-w-2xl">
+              <h1 className="mb-8 text-center text-4xl tracking-tight [font-family:var(--font-serif)]">
+                <span className="mr-3 text-[#c96442]">✳</span>
+                What are you researching?
+              </h1>
+              {inputCard}
+              <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
+                SI research assistant for New York property law. For licensed attorneys;
+                not legal advice. Verify all citations.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-3xl px-4 py-8">
+            {inputCard}
+
+            {status === "loading" && mode === "ask" && (
+              <p className="mt-6 text-sm text-[#8a8571] dark:text-neutral-400">
+                Retrieving sources and drafting a cited answer. Typically 20–60 seconds…
+              </p>
             )}
+
+            {status === "error" && (
+              <p className="mt-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950 dark:text-red-300">
+                {error}
+              </p>
+            )}
+
+            {answer && (
+              <div className="mt-6">
+                <article className="prose prose-sm max-w-none rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e] [&_table]:text-xs">
+                  <ReactMarkdown>{answer.answer}</ReactMarkdown>
+                </article>
+                {answer.sources.length > 0 && (
+                  <div className="mt-4">
+                    <h2 className="text-xs font-semibold uppercase tracking-wide text-[#8a8571] dark:text-neutral-400">
+                      Verified sources
+                    </h2>
+                    <ul className="mt-2 space-y-1.5">
+                      {answer.sources.map((s) => (
+                        <li key={s.marker} className="flex items-baseline gap-2 text-sm">
+                          <span className="rounded bg-[#efede3] px-1.5 py-0.5 font-mono text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+                            {s.marker}
+                          </span>
+                          {s.url ? (
+                            <a
+                              href={s.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-mono font-medium text-[#c96442] hover:underline"
+                            >
+                              {s.citation}
+                            </a>
+                          ) : (
+                            <span className="font-mono font-medium">{s.citation}</span>
+                          )}
+                          <span className="text-[#8a8571] dark:text-neutral-400">
+                            {s.heading}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {mode === "search" && status === "done" && results.length === 0 && (
+              <p className="mt-6 text-sm text-[#8a8571]">No results.</p>
+            )}
+
+            <ul className="mt-6 space-y-4">
+              {results.map((r, i) => (
+                <li
+                  key={i}
+                  className="rounded-2xl border border-[#e3e1d5] bg-white p-4 dark:border-neutral-700 dark:bg-[#30302e]"
+                >
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div>
+                      <span className="font-mono text-sm font-semibold">{r.citation}</span>
+                      {r.heading && (
+                        <span className="ml-2 text-sm text-[#6b6450] dark:text-neutral-300">
+                          {r.heading}
+                        </span>
+                      )}
+                    </div>
+                    <span className="flex shrink-0 gap-1.5">
+                      <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+                        {r.source_type === "case" ? "decision" : r.source_type}
+                      </span>
+                      <span
+                        className={`rounded-full px-2 py-0.5 text-xs ${relevance(r.score).cls}`}
+                      >
+                        {relevance(r.score).label}
+                      </span>
+                    </span>
+                  </div>
+                  <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-[#5d5848] dark:text-neutral-300">
+                    {r.text}
+                  </p>
+                  {r.url && (
+                    <a
+                      href={r.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-block text-xs text-[#c96442] hover:underline"
+                    >
+                      View source ↗
+                    </a>
+                  )}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
-
-        {mode === "search" && status === "done" && results.length === 0 && (
-          <p className="mt-6 text-sm text-neutral-500">No results.</p>
-        )}
-
-        <ul className="mt-6 space-y-4">
-          {results.map((r, i) => (
-            <li
-              key={i}
-              className="rounded-xl border border-neutral-200 p-4 dark:border-neutral-800"
-            >
-              <div className="flex items-baseline justify-between gap-3">
-                <div>
-                  <span className="font-mono text-sm font-semibold">{r.citation}</span>
-                  {r.heading && (
-                    <span className="ml-2 text-sm text-neutral-600 dark:text-neutral-300">
-                      {r.heading}
-                    </span>
-                  )}
-                </div>
-                <span className="flex shrink-0 gap-1.5">
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400">
-                    {r.source_type === "case" ? "decision" : r.source_type}
-                  </span>
-                  <span className={`rounded-full px-2 py-0.5 text-xs ${relevance(r.score).cls}`}>
-                    {relevance(r.score).label}
-                  </span>
-                </span>
-              </div>
-              <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-neutral-700 dark:text-neutral-300">
-                {r.text}
-              </p>
-              {r.url && (
-                <a
-                  href={r.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="mt-2 inline-block text-xs text-blue-600 hover:underline dark:text-blue-400"
-                >
-                  View source ↗
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
       </main>
     </div>
   );
