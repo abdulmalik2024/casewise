@@ -67,21 +67,24 @@ class CLClient:
         self._pace = pace
 
     def get(self, url: str, **params) -> dict:
-        for attempt in range(8):
+        # 429s are quota pacing, not failures — wait them out indefinitely
+        # (checkpointing makes long waits safe); only real errors burn attempts.
+        attempt = 0
+        while True:
             resp = self._http.get(url, params=params or None)
             if resp.status_code == 200:
                 time.sleep(self._pace)
                 return resp.json()
             if resp.status_code == 429:
-                wait = float(resp.headers.get("retry-after") or 60)
+                wait = float(resp.headers.get("retry-after") or 120)
                 print(f"  rate limited, sleeping {wait:.0f}s", flush=True)
-                time.sleep(min(wait + 1, 3600))
+                time.sleep(min(wait + 2, 3900))
                 continue
-            if resp.status_code >= 500:
-                time.sleep(10 * (attempt + 1))
+            attempt += 1
+            if resp.status_code >= 500 and attempt < 8:
+                time.sleep(15 * attempt)
                 continue
             resp.raise_for_status()
-        raise RuntimeError(f"gave up on {url}")
 
 
 def _state_path(court: str) -> Path:
