@@ -60,8 +60,9 @@ def best_text(opinion: dict) -> str | None:
 
 class CLClient:
     def __init__(self, token: str, pace: float):
+        # CourtListener's filtered cluster queries can take minutes server-side
         self._http = httpx.Client(
-            headers={"Authorization": f"Token {token}"}, timeout=60.0
+            headers={"Authorization": f"Token {token}"}, timeout=300.0
         )
         self._pace = pace
 
