@@ -281,8 +281,7 @@ export default function Home() {
           <div className="flex h-full flex-col items-center justify-center px-4">
             <div className="w-full max-w-2xl">
               <h1 className="mb-8 text-center text-4xl tracking-tight [font-family:var(--font-serif)]">
-                <span className="mr-3 text-[#c96442]">✳</span>
-                What are you researching?
+                What&rsquo;s on your docket today?
               </h1>
               {inputCard}
               <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
