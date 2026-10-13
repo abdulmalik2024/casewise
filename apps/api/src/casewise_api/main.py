@@ -57,8 +57,17 @@ def search_endpoint(
         raise
 
 
-@app.get("/ask/stream")
-def ask_stream_endpoint(q: str = Query(min_length=3, max_length=500)):
+class HistoryTurn(BaseModel):
+    question: str = Field(min_length=1, max_length=500)
+    answer: str = Field(min_length=1, max_length=50_000)
+
+
+class AskStreamIn(BaseModel):
+    q: str = Field(min_length=3, max_length=500)
+    history: list[HistoryTurn] = Field(default_factory=list, max_length=6)
+
+
+def _stream_response(q: str, history: list[dict] | None):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:
@@ -66,7 +75,7 @@ def ask_stream_endpoint(q: str = Query(min_length=3, max_length=500)):
 
     def gen():
         try:
-            for event in ask_stream(app.state.pool, q):
+            for event in ask_stream(app.state.pool, q, history):
                 yield f"data: {json.dumps(event)}\n\n"
         except httpx.HTTPStatusError as e:
             msg = (
@@ -83,6 +92,17 @@ def ask_stream_endpoint(q: str = Query(min_length=3, max_length=500)):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@app.get("/ask/stream")
+def ask_stream_get(q: str = Query(min_length=3, max_length=500)):
+    return _stream_response(q, None)
+
+
+@app.post("/ask/stream")
+def ask_stream_post(body: AskStreamIn):
+    history = [t.model_dump() for t in body.history]
+    return _stream_response(body.q, history or None)
 
 
 class FeedbackIn(BaseModel):
