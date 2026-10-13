@@ -280,8 +280,9 @@ export default function Home() {
         {!hasContent ? (
           <div className="flex h-full flex-col items-center justify-center px-4">
             <div className="w-full max-w-2xl">
-              <h1 className="mb-8 text-center text-4xl tracking-tight [font-family:var(--font-serif)]">
-                What&rsquo;s on your docket today?
+              <h1 className="mb-8 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
+                Find the law. Understand the precedent.
+                <br className="hidden md:block" /> Build your case.
               </h1>
               {inputCard}
               <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
