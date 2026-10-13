@@ -1,5 +1,6 @@
 from contextlib import asynccontextmanager
 
+import httpx
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from psycopg_pool import ConnectionPool
@@ -40,7 +41,12 @@ def search_endpoint(
 ):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
-    return search(app.state.pool, q, k)
+    try:
+        return search(app.state.pool, q, k)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            raise HTTPException(503, "embedding service is at its rate limit; retry shortly")
+        raise
 
 
 @app.get("/ask")

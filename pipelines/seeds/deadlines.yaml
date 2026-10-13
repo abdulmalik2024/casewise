@@ -1,0 +1,61 @@
+# Casewise deadline & notice rules — the curated, attorney-verified table.
+#
+# This file is the source of truth; `load-deadlines` syncs it to Postgres.
+# Every row MUST be reviewed by the attorney partner before `verified: true`.
+# Unverified rows are served with an explicit "unverified" warning, or not at
+# all, per product policy. Each rule cites its controlling provision, which
+# must exist in statute_sections (the loader checks).
+#
+# Drafted 2026-10-12 from statute text as initial WORKING DRAFTS — all
+# verified: false until attorney review.
+
+- topic: rent-increase-notice
+  question: How much advance notice must a landlord give before raising rent 5% or more, or not renewing?
+  jurisdiction: NY
+  rule: >
+    Written notice required before raising rent by 5% or more or declining to
+    renew: at least 30 days if the tenant has occupied less than one year and
+    has no lease term of at least one year; at least 60 days if occupancy is
+    between one and two years or a lease term of between one and two years;
+    at least 90 days if occupancy or lease term is two years or more.
+  citation: RPP § 226-C
+  verified: false
+
+- topic: rent-demand-before-nonpayment
+  question: What demand is required before starting a nonpayment proceeding?
+  jurisdiction: NY
+  rule: >
+    A written demand for the rent must be served at least 14 days before
+    commencing a summary nonpayment proceeding.
+  citation: RPA § 711
+  verified: false
+
+- topic: late-rent-notice
+  question: When must a landlord notify a tenant that rent has not been received?
+  jurisdiction: NY
+  rule: >
+    If rent is not received within five days of the due date, the landlord
+    must send the tenant written notice of non-receipt by certified mail;
+    failure to do so may be used as an affirmative defense.
+  citation: RPP § 235-E
+  verified: false
+
+- topic: notice-of-petition-window
+  question: How long before the hearing must the notice of petition be served in a holdover or nonpayment case?
+  jurisdiction: NY
+  rule: >
+    The notice of petition and petition must be served at least ten and not
+    more than seventeen days before the time at which the petition is noticed
+    to be heard.
+  citation: RPA § 733
+  verified: false
+
+- topic: security-deposit-return
+  question: How quickly must a security deposit be returned after the tenant vacates?
+  jurisdiction: NY
+  rule: >
+    The landlord must return the security deposit within fourteen days of the
+    tenant vacating, with an itemized statement for any amount retained;
+    failure to comply forfeits the right to retain any portion.
+  citation: GOB § 7-108
+  verified: false

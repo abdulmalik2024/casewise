@@ -9,6 +9,7 @@ dependencies = [
     "playwright>=1.47",
     "psycopg[binary]>=3.2",
     "python-dotenv>=1.0",
+    "pyyaml>=6.0",
 ]
 
 [dependency-groups]
@@ -28,3 +29,4 @@ ingest-statutes = "casewise_pipelines.statutes.run:main"
 bootstrap-statutes = "casewise_pipelines.statutes.web_bootstrap:main"
 ingest-caselaw = "casewise_pipelines.caselaw.run:main"
 embed-corpus = "casewise_pipelines.embeddings.run:main"
+load-deadlines = "casewise_pipelines.deadlines.run:main"

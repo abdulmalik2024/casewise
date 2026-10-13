@@ -1,0 +1,25 @@
+# Golden question set — authored and verified by the attorney partner.
+# See README.md in this directory for instructions. Two worked examples below
+# (drafted by the team, NOT yet attorney-verified) show the format; replace
+# and extend with real ones.
+
+- id: 1
+  question: My client's landlord wants to raise the rent 8% — how much notice does the tenant get?
+  jurisdiction: NY
+  expected_citations: ["RPP § 226-C"]
+  expected_answer: >
+    Because the increase is 5% or more, written notice is required: 30 days if
+    the tenant has occupied for under one year, 60 days for one to two years,
+    90 days for two years or more. Without proper notice the existing rent
+    remains due until the notice period runs.
+  trap: Answering with a flat 30 days regardless of tenancy length (pre-2019 HSTPA rule).
+  verified: false
+
+- id: 2
+  question: How many days' rent demand do I need before filing a nonpayment petition?
+  jurisdiction: NY
+  expected_citations: ["RPA § 711"]
+  expected_answer: >
+    A written demand served at least 14 days before commencing the proceeding.
+  trap: Citing the old 3-day oral/written demand (pre-HSTPA).
+  verified: false

@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
+import os
 import time
 
 import httpx
 
 API_URL = "https://api.voyageai.com/v1/embeddings"
 DEFAULT_MODEL = "voyage-law-2"  # legal-domain; 1024 dims (same as voyage-4 family)
-# Free-tier accounts (no payment method) are capped at a few requests/min and
-# ~10K tokens/min; small batches + long 429 waits keep us inside it. Adding a
-# card bumps limits ~1000x — raise VOYAGE_BATCH_SIZE then.
-BATCH_SIZE = int(__import__("os").environ.get("VOYAGE_BATCH_SIZE", "8"))
+# Accounts without a payment method are capped at 3 requests/min and ~10K
+# tokens/min (the API says so explicitly on 429). Small batches + a fixed
+# pause between requests glide under both caps. With a card on file, set
+# VOYAGE_BATCH_SIZE=64 and VOYAGE_REQUEST_INTERVAL=0.
+BATCH_SIZE = int(os.environ.get("VOYAGE_BATCH_SIZE", "4"))
+REQUEST_INTERVAL = float(os.environ.get("VOYAGE_REQUEST_INTERVAL", "21"))
 
 
 class VoyageClient:
@@ -25,6 +28,8 @@ class VoyageClient:
         """Embed texts in order. input_type: 'document' for corpus, 'query' for questions."""
         out: list[list[float]] = []
         for i in range(0, len(texts), BATCH_SIZE):
+            if i:
+                time.sleep(REQUEST_INTERVAL)
             batch = texts[i : i + BATCH_SIZE]
             for attempt in range(8):
                 resp = self._http.post(
