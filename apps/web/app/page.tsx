@@ -338,10 +338,11 @@ export default function Home() {
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
-        <div className="px-4 pb-2 pt-5">
+        <div className="flex items-baseline gap-2 px-4 pb-2 pt-5">
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.0.0</span>
         </div>
         <button
           onClick={reset}
