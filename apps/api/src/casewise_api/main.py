@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from psycopg_pool import ConnectionPool
 
 from .config import settings
+from .rag import AskResponse, ask
 from .retrieval import SearchResult, search
 
 
@@ -49,7 +50,15 @@ def search_endpoint(
         raise
 
 
-@app.get("/ask")
+@app.get("/ask", response_model=AskResponse)
 def ask_endpoint(q: str = Query(min_length=3, max_length=500)):
-    # RAG answer generation lands once ANTHROPIC_API_KEY is configured
-    raise HTTPException(501, "answer generation not yet enabled; use /search")
+    if app.state.pool is None or not settings.voyage_api_key:
+        raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
+    if not settings.anthropic_api_key:
+        raise HTTPException(501, "answer generation not yet enabled; set ANTHROPIC_API_KEY")
+    try:
+        return ask(app.state.pool, q)
+    except httpx.HTTPStatusError as e:
+        if e.response.status_code == 429:
+            raise HTTPException(503, "embedding service is at its rate limit; retry shortly")
+        raise

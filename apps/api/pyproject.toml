@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Casewise API — RAG, retrieval, citation verification"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=1.0",
     "fastapi>=0.115",
     "uvicorn[standard]>=0.30",
     "pydantic-settings>=2.4",

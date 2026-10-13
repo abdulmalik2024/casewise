@@ -8,6 +8,6 @@ def test_search_validates_query_length():
         assert client.get("/search", params={"q": "ab"}).status_code == 422
 
 
-def test_ask_is_not_enabled_yet():
+def test_ask_validates_query_length():
     with TestClient(app) as client:
-        assert client.get("/ask", params={"q": "warranty of habitability"}).status_code == 501
+        assert client.get("/ask", params={"q": "ab"}).status_code == 422
