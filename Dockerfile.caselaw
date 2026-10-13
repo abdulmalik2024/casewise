@@ -1,0 +1,21 @@
+# Case-law refresh worker — runs ingest-caselaw daily.
+# nycourts.gov's Cloudflare challenge requires a HEADED browser, so the job
+# runs Playwright Chromium under xvfb (virtual display). Built from the repo
+# root; the service selects this file via RAILWAY_DOCKERFILE_PATH.
+FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
+
+WORKDIR /app
+ENV UV_COMPILE_BYTECODE=1
+
+RUN apt-get update && apt-get install -y --no-install-recommends xvfb \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY pipelines/pyproject.toml pipelines/uv.lock ./
+RUN uv sync --frozen --no-dev --no-install-project
+
+COPY pipelines/ .
+RUN uv sync --frozen --no-dev
+RUN uv run playwright install --with-deps chromium
+
+# run on start, then every 24h; restart policy covers crashes
+CMD ["bash", "-c", "while true; do xvfb-run -a uv run ingest-caselaw || echo 'refresh failed'; sleep 86400; done"]
