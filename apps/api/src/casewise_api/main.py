@@ -1,8 +1,10 @@
 import json
 from contextlib import asynccontextmanager
+from typing import Literal
 
 import httpx
 from fastapi import FastAPI, HTTPException, Query
+from pydantic import BaseModel, Field
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from psycopg_pool import ConnectionPool
@@ -81,6 +83,25 @@ def ask_stream_endpoint(q: str = Query(min_length=3, max_length=500)):
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+class FeedbackIn(BaseModel):
+    question: str = Field(min_length=3, max_length=500)
+    answer: str = Field(min_length=1, max_length=50_000)
+    model: str | None = Field(default=None, max_length=100)
+    rating: Literal["up", "down"]
+    comment: str | None = Field(default=None, max_length=2000)
+
+
+@app.post("/feedback", status_code=204)
+def feedback_endpoint(body: FeedbackIn):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    with app.state.pool.connection() as conn:
+        conn.execute(
+            "insert into answer_feedback (question, answer, model, rating, comment) values (%s, %s, %s, %s, %s)",
+            (body.question, body.answer, body.model, body.rating, body.comment or None),
+        )
 
 
 @app.get("/ask", response_model=AskResponse)

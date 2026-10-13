@@ -37,6 +37,17 @@ create table if not exists case_decisions (
 
 create index if not exists case_decisions_decided_idx on case_decisions (decided_date desc);
 
+-- Attorney feedback on Ask answers (anonymous until accounts exist).
+create table if not exists answer_feedback (
+    id          bigint generated always as identity primary key,
+    question    text not null,
+    answer      text not null,
+    model       text,
+    rating      text not null check (rating in ('up', 'down')),
+    comment     text,
+    created_at  timestamptz not null default now()
+);
+
 -- Embedded retrieval chunks (RAG corpus), built from the source tables.
 create extension if not exists vector;
 

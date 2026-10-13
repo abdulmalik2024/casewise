@@ -95,6 +95,8 @@ export default function Home() {
   const [error, setError] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"" | "up" | "down" | "sent">("");
+  const [feedbackComment, setFeedbackComment] = useState("");
   const answerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -198,6 +200,8 @@ export default function Home() {
     setResults([]);
     setStreamText("");
     setCopied(false);
+    setFeedback("");
+    setFeedbackComment("");
     try {
       if (mode === "ask") {
         await runAskStream(q);
@@ -251,6 +255,26 @@ export default function Home() {
     }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function sendFeedback(rating: "up" | "down", comment?: string) {
+    if (!answer) return;
+    try {
+      await fetch(`${API_URL}/feedback`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: query.trim(),
+          answer: answer.answer,
+          model: answer.model,
+          rating,
+          comment: comment || null,
+        }),
+      });
+    } catch {
+      /* feedback is best-effort */
+    }
+    setFeedback(rating === "down" && !comment ? "down" : "sent");
   }
 
   const grouped: [string, HistoryEntry[]][] = [];
@@ -447,13 +471,53 @@ export default function Home() {
                   <ReactMarkdown>{answer ? answer.answer : streamText}</ReactMarkdown>
                 </article>
                 {answer && (
-                  <div className="mt-3 flex items-center justify-between">
-                    <button
-                      onClick={copyAnswer}
-                      className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
-                    >
-                      {copied ? "Copied ✓" : "Copy answer"}
-                    </button>
+                  <div className="mt-3">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={copyAnswer}
+                        className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                      >
+                        {copied ? "Copied ✓" : "Copy answer"}
+                      </button>
+                      {feedback === "sent" ? (
+                        <span className="text-xs text-[#8a8571] dark:text-neutral-400">
+                          Thanks for the feedback ✓
+                        </span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => sendFeedback("up")}
+                            title="Good answer"
+                            className="rounded-lg border border-[#e3e1d5] bg-white px-2.5 py-1.5 text-xs hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:hover:bg-neutral-800"
+                          >
+                            👍
+                          </button>
+                          <button
+                            onClick={() => sendFeedback("down")}
+                            title="Something's wrong"
+                            className="rounded-lg border border-[#e3e1d5] bg-white px-2.5 py-1.5 text-xs hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:hover:bg-neutral-800"
+                          >
+                            👎
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {feedback === "down" && (
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          value={feedbackComment}
+                          onChange={(e) => setFeedbackComment(e.target.value)}
+                          placeholder="What was wrong or missing? (optional)"
+                          className="flex-1 rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs outline-none placeholder:text-[#a39f8d] dark:border-neutral-700 dark:bg-[#30302e]"
+                        />
+                        <button
+                          onClick={() => sendFeedback("down", feedbackComment.trim() || "(no comment)")}
+                          className="rounded-lg bg-[#c96442] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#b55a3a]"
+                        >
+                          Send
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
                 {answer && answer.sources.length > 0 && (
