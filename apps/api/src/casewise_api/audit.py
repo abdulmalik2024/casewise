@@ -170,34 +170,67 @@ def audit_text(pool: ConnectionPool, text: str) -> AuditResponse:
     for m in REPORTER_RE.finditer(text):
         reporter_cites.setdefault(_norm_cite(m.group(0)), m.group(0))
 
-    cl = _check_courtlistener(text) if reporter_cites else {}
-    cl_norm = {_norm_cite(k): v for k, v in cl.items()} if cl else {}
-    for norm, cite in reporter_cites.items():
-        # our own corpus first (backfilled decisions store reporter citations)
-        with pool.connection() as conn:
+    pending: dict[str, str] = {}
+    with pool.connection() as conn:
+        for norm, cite in reporter_cites.items():
+            # 1) our own corpus (backfilled decisions store reporter citations)
             local = conn.execute(
                 "select case_name, url from case_decisions "
                 "where regexp_replace(lower(slip_citation), '[^a-z0-9]', '', 'g') = %s limit 1",
                 (norm,),
             ).fetchone()
-        if local:
-            rows.append(AuditRow(citation=cite, kind="reporter", status="found_corpus",
-                                 detail=local[0], url=local[1]))
-            continue
-        if cl is None:
-            rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
-                                 detail="CourtListener is rate-limited right now — re-run the check in a few minutes"))
-            continue
-        hit = cl_norm.get(norm)
-        if hit is None:
-            rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
-                                 detail="CourtListener did not recognize this citation format"))
-        elif hit[0].startswith("found:"):
-            rows.append(AuditRow(citation=cite, kind="reporter", status="found_courtlistener",
-                                 detail=hit[0][6:], url=hit[1]))
-        else:
-            rows.append(AuditRow(citation=cite, kind="reporter", status="not_found",
-                                 detail="No matching case found — possible fabricated citation"))
+            if local:
+                rows.append(AuditRow(citation=cite, kind="reporter", status="found_corpus",
+                                     detail=local[0], url=local[1]))
+                continue
+            # 2) permanent lookup cache (found = forever; not_found = 30 days)
+            cached = conn.execute(
+                "select status, case_name, url from citation_lookups "
+                "where norm_cite = %s and (status = 'found' or checked_at > now() - interval '30 days')",
+                (norm,),
+            ).fetchone()
+            if cached:
+                if cached[0] == "found":
+                    rows.append(AuditRow(citation=cite, kind="reporter", status="found_courtlistener",
+                                         detail=cached[1], url=cached[2]))
+                else:
+                    rows.append(AuditRow(citation=cite, kind="reporter", status="not_found",
+                                         detail="No matching case found — possible fabricated citation"))
+                continue
+            pending[norm] = cite
+
+    # 3) live CourtListener only for never-seen citations; results are stored
+    cl = _check_courtlistener(text) if pending else {}
+    cl_norm = {_norm_cite(k): v for k, v in cl.items()} if cl else {}
+    with pool.connection() as conn:
+        for norm, cite in pending.items():
+            if cl is None:
+                rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
+                                     detail="CourtListener is rate-limited right now — re-run the check in a few minutes"))
+                continue
+            hit = cl_norm.get(norm)
+            if hit is None:
+                rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
+                                     detail="CourtListener did not recognize this citation format"))
+                continue
+            if hit[0].startswith("found:"):
+                rows.append(AuditRow(citation=cite, kind="reporter", status="found_courtlistener",
+                                     detail=hit[0][6:], url=hit[1]))
+                conn.execute(
+                    "insert into citation_lookups (norm_cite, display, status, case_name, url) "
+                    "values (%s, %s, 'found', %s, %s) on conflict (norm_cite) do update set "
+                    "status = 'found', case_name = excluded.case_name, url = excluded.url, checked_at = now()",
+                    (norm, cite, hit[0][6:], hit[1]),
+                )
+            else:
+                rows.append(AuditRow(citation=cite, kind="reporter", status="not_found",
+                                     detail="No matching case found — possible fabricated citation"))
+                conn.execute(
+                    "insert into citation_lookups (norm_cite, display, status) values (%s, %s, 'not_found') "
+                    "on conflict (norm_cite) do update set status = 'not_found', checked_at = now()",
+                    (norm, cite),
+                )
+        conn.commit()
 
     quotes = check_quotes(text, resolved_texts) if resolved_texts else QuoteCheck(
         total=0, verified=0, unverified=[]

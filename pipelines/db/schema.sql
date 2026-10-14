@@ -48,6 +48,18 @@ create table if not exists answer_feedback (
     created_at  timestamptz not null default now()
 );
 
+-- Permanent cache of external citation lookups (CourtListener): a citation's
+-- existence is static, so each is fetched live at most once, then served
+-- from here. not_found entries are re-checked after 30 days.
+create table if not exists citation_lookups (
+    norm_cite   text primary key,          -- punctuation-stripped lowercase key
+    display     text not null,             -- as first seen, e.g. '47 N.Y.2d 316'
+    status      text not null check (status in ('found', 'not_found')),
+    case_name   text,
+    url         text,
+    checked_at  timestamptz not null default now()
+);
+
 -- Embedded retrieval chunks (RAG corpus), built from the source tables.
 create extension if not exists vector;
 
