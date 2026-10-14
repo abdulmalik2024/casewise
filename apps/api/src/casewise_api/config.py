@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     voyage_api_key: str = ""
     voyage_model: str = "voyage-law-2"
     anthropic_api_key: str = ""
+    courtlistener_api_token: str = ""
     # needed only when the key is org-scoped rather than workspace-scoped
     anthropic_workspace_id: str = ""
 

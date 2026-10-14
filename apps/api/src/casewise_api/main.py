@@ -1,10 +1,14 @@
+import io
 import json
 from contextlib import asynccontextmanager
 from typing import Literal
 
 import httpx
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
+from pypdf import PdfReader
+
+from .audit import AuditResponse, audit_text
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from psycopg_pool import ConnectionPool
@@ -104,6 +108,34 @@ def ask_stream_get(q: str = Query(min_length=3, max_length=500)):
 def ask_stream_post(body: AskStreamIn):
     history = [t.model_dump() for t in body.history]
     return _stream_response(body.q, history or None, body.as_of)
+
+
+class AuditIn(BaseModel):
+    text: str = Field(min_length=50, max_length=300_000)
+
+
+@app.post("/audit", response_model=AuditResponse)
+def audit_endpoint(body: AuditIn):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    return audit_text(app.state.pool, body.text)
+
+
+@app.post("/audit/pdf", response_model=AuditResponse)
+async def audit_pdf_endpoint(file: UploadFile):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    data = await file.read()
+    if len(data) > 20_000_000:
+        raise HTTPException(413, "file too large (20MB max)")
+    try:
+        reader = PdfReader(io.BytesIO(data))
+        text = "\n".join(page.extract_text() or "" for page in reader.pages)
+    except Exception:
+        raise HTTPException(422, "could not read this PDF")
+    if len(text.strip()) < 50:
+        raise HTTPException(422, "no extractable text in this PDF (scanned image?)")
+    return audit_text(app.state.pool, text)
 
 
 class FeedbackIn(BaseModel):

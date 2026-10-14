@@ -38,16 +38,46 @@ type SearchResult = {
 
 type SourceFilter = "" | "statute" | "case" | "guidance" | "rule" | "form";
 
+type AuditRow = {
+  citation: string;
+  kind: string;
+  status: string;
+  detail: string | null;
+  url: string | null;
+};
+
+type AuditResponse = { rows: AuditRow[]; quotes: QuoteCheck };
+
 type HistoryEntry = {
   id: string;
-  mode: "ask" | "search";
+  mode: "ask" | "search" | "audit";
   query: string;
   sourceType: SourceFilter;
   at: string;
   answer?: AskResponse; // legacy single-answer entries
   thread?: Exchange[];
   results?: SearchResult[];
+  audit?: AuditResponse;
   pinned?: boolean;
+};
+
+const AUDIT_STATUS: Record<string, { label: string; cls: string }> = {
+  found_corpus: {
+    label: "verified in corpus",
+    cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+  },
+  found_courtlistener: {
+    label: "verified (CourtListener)",
+    cls: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+  },
+  not_found: {
+    label: "NOT FOUND",
+    cls: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-300",
+  },
+  unchecked: {
+    label: "verify manually",
+    cls: "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300",
+  },
 };
 
 function loadHistory(): HistoryEntry[] {
@@ -98,7 +128,9 @@ function typeLabel(t: string): string {
 }
 
 export default function Home() {
-  const [mode, setMode] = useState<"ask" | "search">("ask");
+  const [mode, setMode] = useState<"ask" | "search" | "audit">("ask");
+  const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
+  const [auditFile, setAuditFile] = useState<File | null>(null);
   const [sourceType, setSourceType] = useState<SourceFilter>("");
   const [asOf, setAsOf] = useState("");
   const [query, setQuery] = useState("");
@@ -155,7 +187,12 @@ export default function Home() {
     setMode(entry.mode);
     setQuery("");
     setSourceType(entry.sourceType);
-    if (entry.mode === "ask") {
+    if (entry.mode === "audit") {
+      setAuditResult(entry.audit ?? null);
+      setThread([]);
+      setResults([]);
+      threadIdRef.current = "";
+    } else if (entry.mode === "ask") {
       const t =
         entry.thread ??
         (entry.answer ? [{ question: entry.query, answer: entry.answer }] : []);
@@ -188,6 +225,8 @@ export default function Home() {
 
   function reset() {
     setQuery("");
+    setAuditResult(null);
+    setAuditFile(null);
     setThread([]);
     threadIdRef.current = "";
     setResults([]);
@@ -256,13 +295,44 @@ export default function Home() {
   async function run(e: React.FormEvent) {
     e.preventDefault();
     const q = query.trim();
-    if (q.length < 3) return;
+    if (mode !== "audit" && q.length < 3) return;
+    if (mode === "audit" && !auditFile && q.length < 50) {
+      setError("Paste at least a paragraph of the document, or upload a PDF.");
+      setStatus("error");
+      return;
+    }
     setStatus("loading");
     setError("");
     setStreamText("");
     setCopiedIdx(null);
     try {
-      if (mode === "ask") {
+      if (mode === "audit") {
+        setAuditResult(null);
+        let res: Response;
+        if (auditFile) {
+          const fd = new FormData();
+          fd.append("file", auditFile);
+          res = await fetch(`${API_URL}/audit/pdf`, { method: "POST", body: fd });
+        } else {
+          res = await fetch(`${API_URL}/audit`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text: q }),
+          });
+        }
+        if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
+        const data: AuditResponse = await res.json();
+        setAuditResult(data);
+        const label = auditFile ? auditFile.name : q.slice(0, 60);
+        recordHistory({
+          id: `audit:${label}`,
+          mode: "audit",
+          query: `Audit: ${label}`,
+          sourceType: "",
+          at: new Date().toISOString(),
+          audit: data,
+        });
+      } else if (mode === "ask") {
         const prior = thread.filter((x) => x.answer);
         setThread([...prior, { question: q, answer: null }]);
         setQuery("");
@@ -396,21 +466,31 @@ export default function Home() {
       onSubmit={run}
       className="rounded-2xl border border-[#e3e1d5] bg-white shadow-[0_2px_12px_rgba(61,57,41,0.06)] dark:border-neutral-700 dark:bg-[#30302e]"
     >
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={
-          mode === "ask"
-            ? thread.length
-              ? "Ask a follow-up — the conversation is remembered…"
-              : 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
-            : "Search statutes, decisions, guidance, rules, forms…"
-        }
-        className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
-      />
+      {mode === "audit" ? (
+        <textarea
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          rows={5}
+          placeholder="Paste a brief, motion, or memo — yours or opposing counsel's. Every NY citation gets checked; quotes get matched to the sources. Or upload a PDF below."
+          className="w-full resize-y bg-transparent px-5 pb-2 pt-4 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+        />
+      ) : (
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={
+            mode === "ask"
+              ? thread.length
+                ? "Ask a follow-up — the conversation is remembered…"
+                : 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
+              : "Search statutes, decisions, guidance, rules, forms…"
+          }
+          className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+        />
+      )}
       <div className="flex items-center justify-between px-3 pb-3">
         <div className="flex items-center gap-1 text-xs">
-          {(["ask", "search"] as const).map((m) => (
+          {(["ask", "search", "audit"] as const).map((m) => (
             <button
               type="button"
               key={m}
@@ -421,9 +501,25 @@ export default function Home() {
                   : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400 dark:hover:bg-neutral-800"
               }`}
             >
-              {m === "ask" ? "Ask" : "Search"}
+              {m === "ask" ? "Ask" : m === "search" ? "Search" : "Check cites"}
             </button>
           ))}
+          {mode === "audit" && (
+            <label className="ml-1 cursor-pointer text-xs text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400">
+              {auditFile ? `📄 ${auditFile.name.slice(0, 24)}` : "Upload PDF"}
+              <input
+                type="file"
+                accept=".pdf"
+                className="hidden"
+                onChange={(e) => setAuditFile(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          )}
+          {mode === "audit" && auditFile && (
+            <button type="button" onClick={() => setAuditFile(null)} className="text-xs text-[#a39f8d] hover:text-[#c96442]">
+              ✕
+            </button>
+          )}
           {mode === "ask" && (
             <label className="ml-1 flex items-center gap-1.5 text-xs text-[#8a8571] dark:text-neutral-400">
               As of
@@ -463,11 +559,13 @@ export default function Home() {
         >
           {status === "loading"
             ? "Working…"
-            : mode === "ask"
-              ? thread.length
-                ? "Follow up"
-                : "Research"
-              : "Search"}
+            : mode === "audit"
+              ? "Check cites"
+              : mode === "ask"
+                ? thread.length
+                  ? "Follow up"
+                  : "Research"
+                : "Search"}
         </button>
       </div>
     </form>
@@ -666,6 +764,7 @@ export default function Home() {
             grouped.map(([label, entries]) => {
               const asks = entries.filter((h) => h.mode === "ask");
               const searches = entries.filter((h) => h.mode === "search");
+              const audits = entries.filter((h) => h.mode === "audit");
               return (
                 <div key={label} className="mb-4">
                   <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
@@ -685,6 +784,14 @@ export default function Home() {
                         Search results
                       </div>
                       <ul>{searches.map(historyItem)}</ul>
+                    </>
+                  )}
+                  {audits.length > 0 && (
+                    <>
+                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                        Cite checks
+                      </div>
+                      <ul>{audits.map(historyItem)}</ul>
                     </>
                   )}
                 </div>
@@ -735,6 +842,70 @@ export default function Home() {
               thread.map((x, idx) =>
                 answerCard(x, idx, status === "loading" && idx === thread.length - 1)
               )}
+
+            {mode === "audit" && auditResult && (
+              <div className="mt-6">
+                <div className="rounded-2xl border border-[#e3e1d5] bg-white p-5 dark:border-neutral-700 dark:bg-[#30302e]">
+                  <h2 className="text-sm font-semibold">
+                    Citation audit — {auditResult.rows.length} citation
+                    {auditResult.rows.length === 1 ? "" : "s"} found
+                    {auditResult.rows.some((r) => r.status === "not_found") && (
+                      <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-950 dark:text-red-300">
+                        {auditResult.rows.filter((r) => r.status === "not_found").length} not
+                        found
+                      </span>
+                    )}
+                  </h2>
+                  <table className="mt-3 w-full text-left text-sm">
+                    <tbody>
+                      {auditResult.rows.map((r, i) => (
+                        <tr key={i} className="border-t border-[#efede3] dark:border-neutral-800">
+                          <td className="py-2 pr-3 font-mono text-xs">{r.citation}</td>
+                          <td className="py-2 pr-3">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs ${(AUDIT_STATUS[r.status] ?? AUDIT_STATUS.unchecked).cls}`}
+                            >
+                              {(AUDIT_STATUS[r.status] ?? AUDIT_STATUS.unchecked).label}
+                            </span>
+                          </td>
+                          <td className="py-2 text-xs text-[#8a8571] dark:text-neutral-400">
+                            {r.url ? (
+                              <a href={r.url} target="_blank" rel="noreferrer" className="text-[#c96442] hover:underline">
+                                {r.detail}
+                              </a>
+                            ) : (
+                              r.detail
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {auditResult.quotes.total > 0 && (
+                    <p className="mt-3 text-xs">
+                      {auditResult.quotes.unverified.length === 0 ? (
+                        <span className="text-emerald-700 dark:text-emerald-400">
+                          ✓ {auditResult.quotes.verified} quotation
+                          {auditResult.quotes.verified === 1 ? "" : "s"} matched the cited
+                          sources word-for-word
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 dark:text-amber-400">
+                          ⚠ {auditResult.quotes.unverified.length} quotation
+                          {auditResult.quotes.unverified.length === 1 ? "" : "s"} did not match
+                          the cited sources
+                        </span>
+                      )}
+                    </p>
+                  )}
+                  <p className="mt-3 text-[11px] text-[#a39f8d] dark:text-neutral-500">
+                    Statutes, 22 NYCRR rules, and recent slip opinions are checked against the
+                    Casewise corpus; reporter citations via CourtListener. A verified citation
+                    is not an opinion on whether it remains good law.
+                  </p>
+                </div>
+              </div>
+            )}
 
             {mode === "search" && status === "done" && shownResults.length === 0 && (
               <p className="mt-6 text-sm text-[#8a8571]">
