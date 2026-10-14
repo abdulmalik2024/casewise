@@ -39,5 +39,14 @@ as items ship; move completed items to the log at the bottom.
   never tenants).
 
 ## Shipped log
+- **Now #1 — Quote verification** (V-2.2.0): deterministic, ellipsis-aware
+  matching of every quoted passage against retrieved sources; shown per answer.
+- **Now #2 — Check cites auditor** (V-2.2.0, exceeded scope): paste or upload
+  PDF/Word (streamed size caps); NY statutes/rules/slip-ops vs corpus;
+  reporter cites vs the **offline 5.1M-citation catalog** (CourtListener bulk
+  snapshot → SQLite on R2) with permanent lookup cache and live CL as rare
+  fallback; catalog-miss = suspect; per-citation copy buttons.
+- **Now #3 — Memo export** (V-2.2.0): .docx with Question Presented,
+  Discussion, Table of Authorities, Verification Appendix.
 - V-2.1.x: streaming answers, conversation mode, feedback, court rules & forms,
   point-in-time (partial), collapse/pin UX. See PROJECT.md.
