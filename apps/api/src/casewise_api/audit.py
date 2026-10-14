@@ -29,8 +29,12 @@ LAW_PATTERNS: list[tuple[re.Pattern, str]] = [
 NYCRR_RE = re.compile(r"(\d+)\s*N\.?Y\.?C\.?R\.?R\.?\s*§*\s*([\d]+\.[\d]+(?:-[a-z])?)")
 SLIP_RE = re.compile(r"(\d{4})\s*N\.?Y\.?\s*Slip\s*Op\.?\s*(\d{4,6})(\s*\(U\))?", re.I)
 REPORTER_RE = re.compile(
-    r"\b\d+\s+(?:A\.?D\.?\s?3d|N\.?Y\.?\s?3d|Misc\.?\s?3d|N\.?Y\.?S\.?\s?3d|A\.?D\.?\s?2d|N\.?Y\.?\s?2d)\s+\d+\b"
+    r"\b\d+\s+(?:A\.?\s?D\.?|N\.?\s?Y\.?\s?S\.?|N\.?\s?Y\.?|Misc\.?)\s*[23]d\.?\s+\d+\b"
 )
+
+
+def _norm_cite(cite: str) -> str:
+    return re.sub(r"[^a-z0-9]", "", cite.lower())
 
 CL_LOOKUP = "https://www.courtlistener.com/api/rest/v4/citation-lookup/"
 
@@ -74,21 +78,32 @@ def _lookup_statute(conn, law_id: str, loc: str):
     return None
 
 
-def _check_courtlistener(text: str) -> dict[str, tuple[str, str | None]]:
-    """reporter citation -> (status, url) via CourtListener's citation-lookup."""
+def _check_courtlistener(text: str) -> dict[str, tuple[str, str | None]] | None:
+    """reporter citation -> (status, url) via CourtListener's citation-lookup.
+    Returns None when the lookup itself failed (rate limit, network)."""
     token = settings.courtlistener_api_token
     if not token:
-        return {}
-    try:
-        resp = httpx.post(
-            CL_LOOKUP,
-            headers={"Authorization": f"Token {token}"},
-            data={"text": text[:60_000]},
-            timeout=120.0,
-        )
-        resp.raise_for_status()
-    except httpx.HTTPError:
-        return {}
+        return None
+    import time as _time
+
+    resp = None
+    for attempt in range(3):
+        try:
+            resp = httpx.post(
+                CL_LOOKUP,
+                headers={"Authorization": f"Token {token}"},
+                data={"text": text[:60_000]},
+                timeout=60.0,
+            )
+        except httpx.HTTPError:
+            return None
+        if resp.status_code == 429 and attempt < 2:
+            # bounded patience: our own backfill may be consuming the quota
+            _time.sleep(min(float(resp.headers.get("retry-after") or 8), 15))
+            continue
+        break
+    if resp is None or resp.status_code != 200:
+        return None
     results: dict[str, tuple[str, str | None]] = {}
     for item in resp.json():
         cite = item.get("citation") or ""
@@ -150,13 +165,33 @@ def audit_text(pool: ConnectionPool, text: str) -> AuditResponse:
                 rows.append(AuditRow(citation=m.group(0), kind="slip-op", status="unchecked",
                                      detail="Not in our decision window; verify on nycourts.gov"))
 
-    reporter_cites = list(dict.fromkeys(m.group(0) for m in REPORTER_RE.finditer(text)))
+    # dedupe punctuation variants ("250 AD2d 845" == "250 A.D.2d 845")
+    reporter_cites: dict[str, str] = {}
+    for m in REPORTER_RE.finditer(text):
+        reporter_cites.setdefault(_norm_cite(m.group(0)), m.group(0))
+
     cl = _check_courtlistener(text) if reporter_cites else {}
-    for cite in reporter_cites:
-        hit = next((v for k, v in cl.items() if k.replace(" ", "") == cite.replace(" ", "")), None)
+    cl_norm = {_norm_cite(k): v for k, v in cl.items()} if cl else {}
+    for norm, cite in reporter_cites.items():
+        # our own corpus first (backfilled decisions store reporter citations)
+        with pool.connection() as conn:
+            local = conn.execute(
+                "select case_name, url from case_decisions "
+                "where regexp_replace(lower(slip_citation), '[^a-z0-9]', '', 'g') = %s limit 1",
+                (norm,),
+            ).fetchone()
+        if local:
+            rows.append(AuditRow(citation=cite, kind="reporter", status="found_corpus",
+                                 detail=local[0], url=local[1]))
+            continue
+        if cl is None:
+            rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
+                                 detail="CourtListener is rate-limited right now — re-run the check in a few minutes"))
+            continue
+        hit = cl_norm.get(norm)
         if hit is None:
             rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
-                                 detail="CourtListener lookup unavailable"))
+                                 detail="CourtListener did not recognize this citation format"))
         elif hit[0].startswith("found:"):
             rows.append(AuditRow(citation=cite, kind="reporter", status="found_courtlistener",
                                  detail=hit[0][6:], url=hit[1]))

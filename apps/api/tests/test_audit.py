@@ -22,3 +22,23 @@ def test_statute_extraction_and_mapping():
 def test_slip_op_and_reporter_patterns():
     assert SLIP_RE.search(BRIEF).group(0).startswith("2026 NY Slip Op 51586")
     assert REPORTER_RE.search(BRIEF).group(0) == "230 AD3d 1145"
+
+
+# real answer text from a user test (V-2.2.0): Misc 2d + punctuation variants
+ANSWER_TEXT = """See Park West Mgt. Corp. v. Mitchell, 47 N.Y.2d 316, 327 (N.Y. 1979).
+See Edgemont Corp. v. Audet, 170 Misc. 2d 1040 (N.Y. App. Term, 1996).
+See also Committed Community Associates v. Croswell, 171 Misc.2d 340
+(N.Y. App. Term, 1997) aff'd 250 AD2d 845 (2nd Dep't, 1998);
+Committed Community Assocs v Croswell, 171 Misc. 2d 340 aff'd 250 A.D.2d 845."""
+
+
+def test_misc2d_matched_and_variants_deduped():
+    from casewise_api.audit import _norm_cite
+
+    found = {_norm_cite(m.group(0)) for m in REPORTER_RE.finditer(ANSWER_TEXT)}
+    assert _norm_cite("47 N.Y.2d 316") in found
+    assert _norm_cite("170 Misc. 2d 1040") in found
+    assert _norm_cite("171 Misc.2d 340") in found
+    # "250 AD2d 845" and "250 A.D.2d 845" normalize to one citation
+    assert _norm_cite("250 AD2d 845") == _norm_cite("250 A.D.2d 845")
+    assert len(found) == 4
