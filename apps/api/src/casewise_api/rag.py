@@ -14,6 +14,7 @@ import anthropic
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
+from .building import building_record
 from .config import settings
 from .quotecheck import QuoteCheck, check_quotes
 from .retrieval import SearchResult, search
@@ -32,6 +33,9 @@ what is missing instead of guessing. A partial, well-cited answer beats a comple
 uncited one.
 - Where New York City rules differ from the rest of the state (rent stabilization, \
 housing court practice), flag the distinction.
+- When a "Building record" source is provided for an address in the question, ground \
+your analysis in that building's facts (stabilization indicators, violations, owner) \
+and cite it; note that building data is an indicator to confirm, not proof.
 - Quote statutory language when the exact wording matters (deadlines, notice periods).
 - Be concise and precise; write for an attorney, not a consumer.
 - Never invent citations, case names, or section numbers. Only the [Sn] markers of \
@@ -163,6 +167,21 @@ def ask_stream(
     # so retrieval sees the previous question too
     retrieval_q = f"{history[-1]['question']}\n{question}" if history else question
     retrieved = _dedupe(search(pool, retrieval_q, k=16, as_of=as_of))
+
+    building = building_record(question)
+    if building:
+        yield {"type": "status", "message": f"Found building record: {building['label']}"}
+        retrieved.append(
+            SearchResult(
+                citation=f"Building record: {building['label'][:60]}",
+                heading=f"BBL {building['bbl']}",
+                text=building["text"],
+                source_type="building",
+                url=building["url"],
+                score=1.0,
+            )
+        )
+
     if not retrieved:
         yield {
             "type": "done",

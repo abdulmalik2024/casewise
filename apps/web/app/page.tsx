@@ -124,7 +124,9 @@ function relevance(score: number): { label: string; cls: string } {
 }
 
 function typeLabel(t: string): string {
-  return t === "case" ? "decision" : t;
+  if (t === "case") return "decision";
+  if (t === "building") return "building record";
+  return t;
 }
 
 export default function Home() {
