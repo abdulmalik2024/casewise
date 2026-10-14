@@ -72,6 +72,11 @@ def download(client: httpx.Client, name: str, snapshot: str) -> Path:
     return path
 
 
+def field(row: list, idx: dict, name: str) -> str:
+    i = idx.get(name)
+    return row[i] if i is not None and i < len(row) else ""
+
+
 def bz2_rows(path: Path):
     with bz2.open(path, "rt", newline="", encoding="utf-8", errors="replace") as f:
         reader = csv.reader(f)
@@ -97,12 +102,12 @@ def build(citations_path: Path, clusters_path: Path, out_path: Path) -> None:
     batch = []
     for idx, row in bz2_rows(clusters_path):
         try:
-            cid = int(row[idx["id"]])
-        except (ValueError, KeyError):
+            cid = int(field(row, idx, "id"))
+        except ValueError:
             continue
-        name = (row[idx.get("case_name", -1)] or row[idx.get("case_name_short", -1)] or "")[:120]
-        date = row[idx.get("date_filed", -1)] or ""
-        slug = (row[idx.get("slug", -1)] or "")[:80]
+        name = (field(row, idx, "case_name") or field(row, idx, "case_name_short"))[:120]
+        date = field(row, idx, "date_filed")
+        slug = field(row, idx, "slug")[:80]
         year = int(date[:4]) if re.match(r"\d{4}", date) else None
         batch.append((cid, name, year, slug))
         n += 1
@@ -119,13 +124,13 @@ def build(citations_path: Path, clusters_path: Path, out_path: Path) -> None:
     batch = []
     for idx, row in bz2_rows(citations_path):
         n += 1
-        reporter = row[idx.get("reporter", -1)]
-        if not REPORTER_KEEP.match(reporter or ""):
+        reporter = field(row, idx, "reporter")
+        if not REPORTER_KEEP.match(reporter):
             continue
-        norm = norm_cite(row[idx["volume"]], reporter, row[idx["page"]])
+        norm = norm_cite(field(row, idx, "volume"), reporter, field(row, idx, "page"))
         try:
-            batch.append((norm, int(row[idx["cluster_id"]])))
-        except (ValueError, KeyError):
+            batch.append((norm, int(field(row, idx, "cluster_id"))))
+        except ValueError:
             continue
         kept += 1
         if len(batch) >= 50_000:
