@@ -23,7 +23,7 @@ from .config import settings
 GEOSEARCH = "https://geosearch.planninglabs.nyc/v2/search"
 
 ADDRESS_RE = re.compile(
-    r"\b(\d{1,5}(?:-\d{1,4})?[A-Za-z]?\s+[A-Za-z][A-Za-z0-9.' -]{2,40}?"
+    r"\b(\d{1,5}(?:-\d{1,4})?[A-Za-z]?\s+[A-Za-z0-9][A-Za-z0-9.' -]{1,40}?"
     r"\s(?:Street|Avenue|Ave\.?|St\.?|Road|Rd\.?|Boulevard|Blvd\.?|Place|Pl\.?|"
     r"Drive|Dr\.?|Parkway|Pkwy\.?|Court|Ct\.?|Lane|Ln\.?|Terrace|Ter\.?|Way|Broadway)"
     r"(?:\s*,?\s*(?:in\s+)?(?:the\s+)?(Bronx|Brooklyn|Manhattan|Queens|Staten\s+Island))?)",
