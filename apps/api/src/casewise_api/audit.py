@@ -213,8 +213,12 @@ def audit_text(pool: ConnectionPool, text: str) -> AuditResponse:
     with pool.connection() as conn:
         for norm, cite in pending.items():
             if cl is None:
-                rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
-                                     detail="CourtListener is rate-limited right now — re-run the check in a few minutes"))
+                if catalog.available():
+                    rows.append(AuditRow(citation=cite, kind="reporter", status="not_found",
+                                         detail="Not among 5.1M published citations in the offline catalog — treat as suspect (live re-check unavailable right now)"))
+                else:
+                    rows.append(AuditRow(citation=cite, kind="reporter", status="unchecked",
+                                         detail="CourtListener is rate-limited right now — re-run the check in a few minutes"))
                 continue
             hit = cl_norm.get(norm)
             if hit is None:
