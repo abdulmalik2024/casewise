@@ -15,6 +15,7 @@ from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
 from .config import settings
+from .quotecheck import QuoteCheck, check_quotes
 from .retrieval import SearchResult, search
 
 ANSWER_MODEL = "claude-opus-5-5"
@@ -55,6 +56,7 @@ class AskResponse(BaseModel):
     answer: str
     sources: list[Source]
     model: str
+    quote_check: QuoteCheck | None = None
 
 
 def _dedupe(results: list[SearchResult], cap: int = 8) -> list[SearchResult]:
@@ -204,13 +206,15 @@ def ask_stream(
         }
         return
 
-    yield {"type": "status", "message": "Verifying citations against the corpus…"}
+    yield {"type": "status", "message": "Verifying citations and quotations against the corpus…"}
     answer, used = _verify_markers("".join(parts), len(retrieved))
+    qc = check_quotes(answer, [r.text for r in retrieved])
     yield {
         "type": "done",
         "answer": answer.strip(),
         "sources": [s.model_dump() for s in _sources_for(retrieved, used, as_of)],
         "model": final.model,
+        "quote_check": qc.model_dump(),
     }
 
 
@@ -249,5 +253,8 @@ def ask(pool: ConnectionPool, question: str) -> AskResponse:
     text = "".join(b.text for b in response.content if b.type == "text")
     answer, used = _verify_markers(text, len(retrieved))
     return AskResponse(
-        answer=answer.strip(), sources=_sources_for(retrieved, used), model=response.model
+        answer=answer.strip(),
+        sources=_sources_for(retrieved, used),
+        model=response.model,
+        quote_check=check_quotes(answer, [r.text for r in retrieved]),
     )

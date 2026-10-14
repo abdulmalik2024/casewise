@@ -16,7 +16,14 @@ type Source = {
   amended_after?: boolean;
 };
 
-type AskResponse = { answer: string; sources: Source[]; model: string };
+type QuoteCheck = { total: number; verified: number; unverified: string[] };
+
+type AskResponse = {
+  answer: string;
+  sources: Source[];
+  model: string;
+  quote_check?: QuoteCheck | null;
+};
 
 type Exchange = { question: string; answer: AskResponse | null };
 
@@ -225,6 +232,7 @@ export default function Home() {
             answer: event.answer,
             sources: event.sources,
             model: event.model,
+            quote_check: event.quote_check ?? null,
           };
           const newThread = [...priorThread, { question: q, answer: final }];
           setThread(newThread);
@@ -495,6 +503,29 @@ export default function Home() {
         >
           <ReactMarkdown>{x.answer ? x.answer.answer : streamText}</ReactMarkdown>
         </article>
+      )}
+      {x.answer && !collapsed[idx] && x.answer.quote_check && x.answer.quote_check.total > 0 && (
+        <div className="mt-2 text-xs">
+          {x.answer.quote_check.unverified.length === 0 ? (
+            <span className="text-emerald-700 dark:text-emerald-400">
+              ✓ All {x.answer.quote_check.total} quotation
+              {x.answer.quote_check.total > 1 ? "s" : ""} verified word-for-word against the
+              sources
+            </span>
+          ) : (
+            <details className="text-amber-700 dark:text-amber-400">
+              <summary className="cursor-pointer">
+                ⚠ {x.answer.quote_check.unverified.length} of {x.answer.quote_check.total}{" "}
+                quotations could not be matched to the sources — verify before relying
+              </summary>
+              <ul className="mt-1 list-disc pl-5">
+                {x.answer.quote_check.unverified.map((q, i) => (
+                  <li key={i} className="italic">&ldquo;{q}&rdquo;</li>
+                ))}
+              </ul>
+            </details>
+          )}
+        </div>
       )}
       {x.answer && !collapsed[idx] && (
         <div className="mt-3">
