@@ -87,6 +87,38 @@ class CLClient:
             resp.raise_for_status()
 
 
+class ReconnectingDB:
+    """Long quota naps outlive the pooler's idle timeout; reconnect on demand."""
+
+    def __init__(self, url: str):
+        self._url = url
+        self._conn = psycopg.connect(url)
+        ensure_schema(self._conn)
+
+    def write(self, sql: str, params: tuple) -> None:
+        for attempt in (0, 1):
+            try:
+                with self._conn.cursor() as cur:
+                    cur.execute(sql, params)
+                self._conn.commit()
+                return
+            except psycopg.OperationalError:
+                if attempt:
+                    raise
+                try:
+                    self._conn.close()
+                except Exception:
+                    pass
+                time.sleep(5)
+                self._conn = psycopg.connect(self._url)
+
+    def close(self) -> None:
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+
+
 def _state_path(court: str) -> Path:
     return Path(__file__).parents[3] / "data" / "backfill-state" / f"{court}.json"
 
@@ -105,7 +137,7 @@ def _save_state(court: str, state: dict) -> None:
 
 
 def backfill_court(
-    client: CLClient, conn: psycopg.Connection | None, court: str, since: str, limit: int
+    client: CLClient, db: ReconnectingDB | None, court: str, since: str, limit: int
 ) -> int:
     state = _load_state(court)
     if state["finished"]:
@@ -145,10 +177,8 @@ def backfill_court(
                 "backfill",
                 text,
             )
-            if conn:
-                with conn.cursor() as cur:
-                    cur.execute(UPSERT, row)
-                conn.commit()
+            if db:
+                db.write(UPSERT, row)
             loaded += 1
             state["loaded"] += 1
             if limit and loaded >= limit:
@@ -184,23 +214,22 @@ def main() -> int:
         print("COURTLISTENER_API_TOKEN is not set (free account: courtlistener.com)", file=sys.stderr)
         return 2
 
-    conn = None
+    db = None
     if not args.dry_run:
         db_url = os.environ.get("DATABASE_URL")
         if not db_url:
             print("DATABASE_URL is not set", file=sys.stderr)
             return 2
-        conn = psycopg.connect(db_url)
-        ensure_schema(conn)
+        db = ReconnectingDB(db_url)
 
     client = CLClient(token, pace=args.pace)
     total = 0
     try:
         for court in [c.strip() for c in args.courts.split(",") if c.strip()]:
-            total += backfill_court(client, conn, court, args.since, args.limit)
+            total += backfill_court(client, db, court, args.since, args.limit)
     finally:
-        if conn:
-            conn.close()
+        if db:
+            db.close()
     print(f"done: {total} decisions this run")
     return 0
 
