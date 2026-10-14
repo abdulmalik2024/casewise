@@ -15,6 +15,7 @@ import httpx
 from psycopg_pool import ConnectionPool
 from pydantic import BaseModel
 
+from . import catalog
 from .config import settings
 from .quotecheck import QuoteCheck, check_quotes
 
@@ -183,7 +184,14 @@ def audit_text(pool: ConnectionPool, text: str) -> AuditResponse:
                 rows.append(AuditRow(citation=cite, kind="reporter", status="found_corpus",
                                      detail=local[0], url=local[1]))
                 continue
-            # 2) permanent lookup cache (found = forever; not_found = 30 days)
+            # 2) offline catalog (all published citations, quarterly bulk snapshot)
+            hit = catalog.lookup(norm)
+            if hit:
+                year = f", {hit['year']}" if hit.get("year") else ""
+                rows.append(AuditRow(citation=cite, kind="reporter", status="found_corpus",
+                                     detail=f"{hit['case_name']}{year}", url=hit["url"]))
+                continue
+            # 3) permanent lookup cache (found = forever; not_found = 30 days)
             cached = conn.execute(
                 "select status, case_name, url from citation_lookups "
                 "where norm_cite = %s and (status = 'found' or checked_at > now() - interval '30 days')",

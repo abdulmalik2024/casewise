@@ -128,6 +128,30 @@ point-in-time questions ("what was the law when this lease was signed").
 - Eval scaffold: `evals/golden.yaml` awaiting attorney partner's 25–50
   golden questions (the project's quality bar; runner not yet built).
 
+## Bulk data layer (zero-subscription storage, added 2026-10-14)
+
+CourtListener publishes **quarterly full-database snapshots on public S3**
+(`com-courtlistener-storage.s3-us-west-2.amazonaws.com/bulk-data/`, see
+wiki.free.law → Bulk Data) — no API, no rate limits, free. This supersedes
+API crawling for historical data. Architecture decision (deliberate, to
+avoid monthly subscriptions until a pilot justifies Supabase Pro $25/mo):
+
+- **Offline citation catalog**: `build-citation-catalog` streams the
+  `citations` + `opinion-clusters` snapshots into a SQLite file
+  (pipelines/data/bulk/catalog.sqlite; NY + common federal reporters kept)
+  mapping every published citation → case name/year/CourtListener URL. The
+  API fetches it once from object storage (`CATALOG_URL` → local
+  `CATALOG_PATH`) and the cite auditor then verifies reporter citations
+  **offline**. Resolution order: corpus → catalog → `citation_lookups`
+  cache → live CourtListener (rare).
+- **NY decisions archive**: full-text NY extraction from the 55 GB
+  `opinions` snapshot is archived to **Cloudflare R2 free tier** (10 GB,
+  zero egress) rather than loaded into Supabase; it gets loaded into
+  RAG when the Supabase Pro upgrade happens. Appellate Division (~100K
+  decisions) is thereby acquired for free.
+- The API-based `backfill-caselaw` remains only as a fallback; bulk
+  snapshots are the primary historical path.
+
 ## Technology stack
 
 | Layer | Choice | Notes |
@@ -139,6 +163,7 @@ point-in-time questions ("what was the law when this lease was signed").
 | Embeddings | Voyage `voyage-law-2` (1024d), batch 64 w/ card, 200M free tokens | no-card tier = 3 RPM (env `VOYAGE_BATCH_SIZE`/`VOYAGE_REQUEST_INTERVAL`) |
 | Pipelines | Python/uv: httpx, BeautifulSoup, Playwright (headed), pypdf, pyyaml | `pipelines/`, 20 pytest tests |
 | Hosting | Railway project "casewise" (services: `api`, `caselaw-refresh`), Vercel, GitHub `abdulmalik2024/casewise` | Railway only auto-detects a ROOT `Dockerfile`; extra services select theirs via `RAILWAY_DOCKERFILE_PATH` var |
+| Bulk data | CourtListener quarterly S3 snapshots; SQLite citation catalog; Cloudflare R2 free tier (archive + catalog hosting) | See "Bulk data layer" section |
 
 **Secrets**: `.env` at repo root (gitignored), documented in `.env.example`.
 Keys: `DATABASE_URL` (pooler), `ANTHROPIC_API_KEY` (workspace-scoped),
