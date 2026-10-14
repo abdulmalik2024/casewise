@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.2.0** (2026-10-13)
+**Version: V-2.3.0** (2026-10-13)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -108,6 +108,11 @@ point-in-time questions ("what was the law when this lease was signed").
   cites only its own freshly retrieved sources.
 - Thumbs up/down on every answer with optional what-was-wrong comment
   (POST /feedback → answer_feedback).
+- Building-grounded answers: a NYC address in an Ask question resolves via
+  GeoSearch to its BBL; the building's record (rent-stabilized unit counts,
+  open HPD violations by class, registered owner, marshal evictions — from a
+  229K-building SQLite aggregate on R2) joins the sources as a citable
+  'Building record' linking to Who Owns What.
 - Point-in-time (PARTIAL): optional "as of" date on Ask — decisions and
   guidance after the date are excluded; statutes amended after it are
   flagged ("amended after date" badge + model caveats). FULL historical

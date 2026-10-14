@@ -46,6 +46,10 @@ as items ship; move completed items to the log at the bottom.
   reporter cites vs the **offline 5.1M-citation catalog** (CourtListener bulk
   snapshot → SQLite on R2) with permanent lookup cache and live CL as rare
   fallback; catalog-miss = suspect; per-citation copy buttons.
+- **Now #4 — Building-grounded answers** (V-2.3.0): address in the question
+  -> GeoSearch -> BBL -> building facts (rent-stab counts, open HPD
+  violations by class, owner, evictions; 229K-building SQLite on R2) injected
+  as a citable 'Building record' source linking to Who Owns What.
 - **Now #3 — Memo export** (V-2.2.0): .docx with Question Presented,
   Discussion, Table of Authorities, Verification Appendix.
 - V-2.1.x: streaming answers, conversation mode, feedback, court rules & forms,
