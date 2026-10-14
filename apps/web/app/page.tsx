@@ -394,6 +394,35 @@ export default function Home() {
     setTimeout(() => setCopiedIdx(null), 2000);
   }
 
+  async function exportMemo(idx: number) {
+    const x = thread[idx];
+    if (!x?.answer) return;
+    try {
+      const res = await fetch(`${API_URL}/memo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: x.question,
+          answer: x.answer.answer,
+          sources: x.answer.sources,
+          quote_check: x.answer.quote_check ?? null,
+          model: x.answer.model,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `casewise-memo-${new Date().toISOString().slice(0, 10)}.docx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setError("memo export failed; try again");
+      setStatus("error");
+    }
+  }
+
   async function sendFeedback(idx: number, rating: "up" | "down", comment?: string) {
     const x = thread[idx];
     if (!x?.answer) return;
@@ -634,6 +663,13 @@ export default function Home() {
             >
               {copiedIdx === idx ? "Copied ✓" : "Copy answer"}
             </button>
+            <button
+              onClick={() => exportMemo(idx)}
+              title="Download a Word research memo with a verification appendix"
+              className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+            >
+              Export memo
+            </button>
             {feedbackByIdx[idx] === "sent" ? (
               <span className="text-xs text-[#8a8571] dark:text-neutral-400">
                 Thanks for the feedback ✓
@@ -732,7 +768,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.1.1</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.2.0</span>
         </div>
         <button
           onClick={reset}

@@ -8,7 +8,10 @@ from fastapi import FastAPI, HTTPException, Query, UploadFile
 from pydantic import BaseModel, Field
 from pypdf import PdfReader
 
+from fastapi.responses import Response
+
 from .audit import AuditResponse, audit_text
+from .memo import MemoIn, build_memo
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from psycopg_pool import ConnectionPool
@@ -136,6 +139,16 @@ async def audit_pdf_endpoint(file: UploadFile):
     if len(text.strip()) < 50:
         raise HTTPException(422, "no extractable text in this PDF (scanned image?)")
     return audit_text(app.state.pool, text)
+
+
+@app.post("/memo")
+def memo_endpoint(body: MemoIn):
+    docx_bytes = build_memo(body)
+    return Response(
+        content=docx_bytes,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": 'attachment; filename="casewise-memo.docx"'},
+    )
 
 
 class FeedbackIn(BaseModel):
