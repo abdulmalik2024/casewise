@@ -40,7 +40,8 @@ class _HttpBz2Stream(io.RawIOBase):
 
     def __init__(self, url: str):
         self._client = httpx.Client(timeout=None, follow_redirects=True)
-        self._resp = self._client.stream("GET", url).__enter__()
+        req = self._client.build_request("GET", url)
+        self._resp = self._client.send(req, stream=True)
         self._resp.raise_for_status()
         self._iter = self._resp.iter_bytes(1 << 20)
         self._dec = bz2.BZ2Decompressor()
