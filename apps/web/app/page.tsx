@@ -40,6 +40,7 @@ type HistoryEntry = {
   answer?: AskResponse; // legacy single-answer entries
   thread?: Exchange[];
   results?: SearchResult[];
+  pinned?: boolean;
 };
 
 function loadHistory(): HistoryEntry[] {
@@ -104,6 +105,8 @@ export default function Home() {
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
   const [feedbackByIdx, setFeedbackByIdx] = useState<Record<number, "down" | "sent">>({});
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
+  const [sourcesCollapsed, setSourcesCollapsed] = useState<Record<number, boolean>>({});
   const answerRefs = useRef<(HTMLElement | null)[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const threadIdRef = useRef<string>("");
@@ -160,7 +163,20 @@ export default function Home() {
     setError("");
     setStreamText("");
     setFeedbackByIdx({});
+    setCollapsed({});
+    setSourcesCollapsed({});
     setStatus("done");
+  }
+
+  function togglePin(e: React.MouseEvent, entry: HistoryEntry) {
+    e.stopPropagation();
+    setHistory((prev) => {
+      const next = prev.map((h) =>
+        h.id === entry.id && h.at === entry.at ? { ...h, pinned: !h.pinned } : h
+      );
+      saveHistory(next);
+      return next;
+    });
   }
 
   function reset() {
@@ -325,8 +341,10 @@ export default function Home() {
     if (comment) setFeedbackComment("");
   }
 
+  const pinned = history.filter((h) => h.pinned);
   const grouped: [string, HistoryEntry[]][] = [];
   for (const h of history) {
+    if (h.pinned) continue;
     const label = groupLabel(h.at);
     const last = grouped[grouped.length - 1];
     if (last && last[0] === label) last[1].push(h);
@@ -338,17 +356,30 @@ export default function Home() {
       <button
         onClick={() => restore(h)}
         title={h.query}
-        className="w-full truncate rounded-lg px-2 py-1.5 pr-7 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+        className="w-full truncate rounded-lg px-2 py-1.5 pr-12 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
       >
         {h.query}
       </button>
-      <button
-        onClick={(e) => deleteEntry(e, h)}
-        title="Delete"
-        className="absolute right-1 top-1/2 hidden -translate-y-1/2 rounded px-1.5 text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:block"
-      >
-        ✕
-      </button>
+      <span className="absolute right-1 top-1/2 -translate-y-1/2">
+        <button
+          onClick={(e) => togglePin(e, h)}
+          title={h.pinned ? "Unpin" : "Pin to top"}
+          className={`rounded px-1 text-xs ${
+            h.pinned
+              ? "text-[#c96442]"
+              : "hidden text-[#a39f8d] hover:text-[#c96442] group-hover:inline-block"
+          }`}
+        >
+          {h.pinned ? "★" : "☆"}
+        </button>
+        <button
+          onClick={(e) => deleteEntry(e, h)}
+          title="Delete"
+          className="hidden rounded px-1 text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:inline-block"
+        >
+          ✕
+        </button>
+      </span>
     </li>
   );
 
@@ -436,10 +467,21 @@ export default function Home() {
 
   const answerCard = (x: Exchange, idx: number, streaming: boolean) => (
     <div key={idx} className="mt-6">
-      <p className="mb-2 text-sm font-medium text-[#8a8571] dark:text-neutral-400">
-        {x.question}
-      </p>
-      {streaming && !streamText ? (
+      <button
+        onClick={() =>
+          !streaming && setCollapsed((p) => ({ ...p, [idx]: !p[idx] }))
+        }
+        className="mb-2 flex w-full items-baseline gap-2 text-left"
+        title={collapsed[idx] ? "Expand" : "Collapse"}
+      >
+        <span className="text-xs text-[#a39f8d] dark:text-neutral-500">
+          {streaming ? "●" : collapsed[idx] ? "▸" : "▾"}
+        </span>
+        <span className="text-sm font-medium text-[#8a8571] dark:text-neutral-400">
+          {x.question}
+        </span>
+      </button>
+      {collapsed[idx] && !streaming ? null : streaming && !streamText ? (
         <p className="flex items-center gap-2 text-sm text-[#8a8571] dark:text-neutral-400">
           <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#c96442]" />
           {statusMsg}
@@ -454,7 +496,7 @@ export default function Home() {
           <ReactMarkdown>{x.answer ? x.answer.answer : streamText}</ReactMarkdown>
         </article>
       )}
-      {x.answer && (
+      {x.answer && !collapsed[idx] && (
         <div className="mt-3">
           <div className="flex items-center gap-2">
             <button
@@ -504,11 +546,17 @@ export default function Home() {
           )}
         </div>
       )}
-      {x.answer && x.answer.sources.length > 0 && (
+      {x.answer && !collapsed[idx] && x.answer.sources.length > 0 && (
         <div className="mt-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wide text-[#8a8571] dark:text-neutral-400">
-            Verified sources
-          </h2>
+          <button
+            onClick={() => setSourcesCollapsed((p) => ({ ...p, [idx]: !p[idx] }))}
+            className="flex items-baseline gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400"
+            title={sourcesCollapsed[idx] ? "Show sources" : "Hide sources"}
+          >
+            <span>{sourcesCollapsed[idx] ? "▸" : "▾"}</span> Verified sources (
+            {x.answer.sources.length})
+          </button>
+          {sourcesCollapsed[idx] ? null : (
           <ul className="mt-2 space-y-1.5">
             {x.answer.sources.map((s) => (
               <li key={s.marker} className="flex items-baseline gap-2 text-sm">
@@ -542,6 +590,7 @@ export default function Home() {
               </li>
             ))}
           </ul>
+          )}
         </div>
       )}
     </div>
@@ -554,7 +603,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.1.0</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.1.1</span>
         </div>
         <button
           onClick={reset}
@@ -570,7 +619,15 @@ export default function Home() {
         </div>
 
         <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
-          {grouped.length === 0 ? (
+          {pinned.length > 0 && (
+            <div className="mb-4">
+              <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
+                Pinned
+              </div>
+              <ul>{pinned.map(historyItem)}</ul>
+            </div>
+          )}
+          {grouped.length === 0 && pinned.length === 0 ? (
             <p className="px-2 text-xs text-[#a39f8d] dark:text-neutral-500">
               Your questions and searches will appear here.
             </p>
@@ -586,7 +643,7 @@ export default function Home() {
                   {asks.length > 0 && (
                     <>
                       <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                        Ask results
+                        Chat results
                       </div>
                       <ul>{asks.map(historyItem)}</ul>
                     </>
