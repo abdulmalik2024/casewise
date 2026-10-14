@@ -7,6 +7,10 @@ def test_detects_nyc_addresses():
     ).startswith("350 Albany Avenue")
     assert extract_address("The building at 2854 Third Ave in the Bronx has violations")
     assert extract_address("Tenant lives at 41-20 54th St, Queens")
+    # suffix-less street names anchored by borough
+    assert extract_address(
+        "My client rents at 888 Grand Concourse, Bronx and has no heat"
+    ).startswith("888 Grand Concourse")
 
 
 def test_ignores_non_addresses():

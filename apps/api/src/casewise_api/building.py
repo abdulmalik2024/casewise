@@ -25,8 +25,16 @@ GEOSEARCH = "https://geosearch.planninglabs.nyc/v2/search"
 ADDRESS_RE = re.compile(
     r"\b(\d{1,5}(?:-\d{1,4})?[A-Za-z]?\s+[A-Za-z0-9][A-Za-z0-9.' -]{1,40}?"
     r"\s(?:Street|Avenue|Ave\.?|St\.?|Road|Rd\.?|Boulevard|Blvd\.?|Place|Pl\.?|"
-    r"Drive|Dr\.?|Parkway|Pkwy\.?|Court|Ct\.?|Lane|Ln\.?|Terrace|Ter\.?|Way|Broadway)"
-    r"(?:\s*,?\s*(?:in\s+)?(?:the\s+)?(Bronx|Brooklyn|Manhattan|Queens|Staten\s+Island))?)",
+    r"Drive|Dr\.?|Parkway|Pkwy\.?|Court|Ct\.?|Lane|Ln\.?|Terrace|Ter\.?|Way|"
+    r"Broadway|Concourse|Plaza|Bowery|Square|Walk|Row|Oval|Crescent|Slip|Loop)"
+    r"(?:\s*,?\s*(?:in\s+)?(?:the\s+)?(?:Bronx|Brooklyn|Manhattan|Queens|Staten\s+Island))?)",
+    re.I,
+)
+# suffix-less street names ("888 Grand Concourse, Bronx"): number + a few
+# words anchored by an explicit borough — the borough makes it unambiguous
+ADDRESS_BOROUGH_RE = re.compile(
+    r"\b(\d{1,5}(?:-\d{1,4})?[A-Za-z]?\s+[A-Za-z0-9][A-Za-z0-9.' -]{1,40}?)"
+    r"\s*,?\s*(?:in\s+)?(?:the\s+)?(Bronx|Brooklyn|Manhattan|Queens|Staten\s+Island)\b",
     re.I,
 )
 
@@ -73,7 +81,12 @@ def _get_conn() -> sqlite3.Connection | None:
 
 def extract_address(question: str) -> str | None:
     m = ADDRESS_RE.search(question)
-    return m.group(1).strip() if m else None
+    if m:
+        return m.group(1).strip()
+    m = ADDRESS_BOROUGH_RE.search(question)
+    if m:
+        return f"{m.group(1).strip()}, {m.group(2)}"
+    return None
 
 
 def building_record(question: str) -> dict | None:
