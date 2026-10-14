@@ -124,21 +124,58 @@ def audit_endpoint(body: AuditIn):
     return audit_text(app.state.pool, body.text)
 
 
+MAX_PDF_BYTES = 15_000_000
+MAX_DOCX_BYTES = 10_000_000
+MAX_PDF_PAGES = 300
+MAX_AUDIT_CHARS = 300_000
+
+
+async def _read_capped(file: UploadFile, cap: int) -> bytes:
+    """Stream the upload, rejecting at the cap instead of buffering past it."""
+    chunks: list[bytes] = []
+    size = 0
+    while chunk := await file.read(1 << 20):
+        size += len(chunk)
+        if size > cap:
+            raise HTTPException(413, f"file too large (limit {cap // 1_000_000}MB)")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 @app.post("/audit/pdf", response_model=AuditResponse)
-async def audit_pdf_endpoint(file: UploadFile):
+async def audit_file_endpoint(file: UploadFile):
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
-    data = await file.read()
-    if len(data) > 20_000_000:
-        raise HTTPException(413, "file too large (20MB max)")
-    try:
-        reader = PdfReader(io.BytesIO(data))
-        text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    except Exception:
-        raise HTTPException(422, "could not read this PDF")
+    name = (file.filename or "").lower()
+    if name.endswith(".docx"):
+        data = await _read_capped(file, MAX_DOCX_BYTES)
+        try:
+            from docx import Document as DocxDocument
+
+            doc = DocxDocument(io.BytesIO(data))
+            text = "\n".join(p.text for p in doc.paragraphs)
+        except Exception:
+            raise HTTPException(422, "could not read this Word document")
+    elif name.endswith(".pdf"):
+        data = await _read_capped(file, MAX_PDF_BYTES)
+        try:
+            reader = PdfReader(io.BytesIO(data))
+            if len(reader.pages) > MAX_PDF_PAGES:
+                raise HTTPException(413, f"PDF too long (limit {MAX_PDF_PAGES} pages)")
+            text = "\n".join(page.extract_text() or "" for page in reader.pages)
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(422, "could not read this PDF")
+    else:
+        raise HTTPException(415, "upload a .pdf or .docx file")
     if len(text.strip()) < 50:
-        raise HTTPException(422, "no extractable text in this PDF (scanned image?)")
-    return audit_text(app.state.pool, text)
+        raise HTTPException(
+            422,
+            "no extractable text found — if this is a scanned document, "
+            "OCR isn't supported yet; paste the text instead",
+        )
+    return audit_text(app.state.pool, text[:MAX_AUDIT_CHARS])
 
 
 @app.post("/memo")

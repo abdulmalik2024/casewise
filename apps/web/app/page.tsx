@@ -142,6 +142,7 @@ export default function Home() {
   const [error, setError] = useState("");
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [copiedCite, setCopiedCite] = useState<string | null>(null);
   const [feedbackByIdx, setFeedbackByIdx] = useState<Record<number, "down" | "sent">>({});
   const [feedbackComment, setFeedbackComment] = useState("");
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
@@ -297,9 +298,17 @@ export default function Home() {
     const q = query.trim();
     if (mode !== "audit" && q.length < 3) return;
     if (mode === "audit" && !auditFile && q.length < 50) {
-      setError("Paste at least a paragraph of the document, or upload a PDF.");
+      setError("Paste at least a paragraph of the document, or upload a PDF/Word file.");
       setStatus("error");
       return;
+    }
+    if (mode === "audit" && auditFile) {
+      const limit = auditFile.name.toLowerCase().endsWith(".docx") ? 10 : 15;
+      if (auditFile.size > limit * 1_000_000) {
+        setError(`File is too large — the limit is ${limit}MB for this type.`);
+        setStatus("error");
+        return;
+      }
     }
     setStatus("loading");
     setError("");
@@ -359,6 +368,16 @@ export default function Home() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "request failed");
       setStatus("error");
+    }
+  }
+
+  async function copyCite(key: string, text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCite(key);
+      setTimeout(() => setCopiedCite(null), 1500);
+    } catch {
+      /* clipboard unavailable */
     }
   }
 
@@ -535,10 +554,10 @@ export default function Home() {
           ))}
           {mode === "audit" && (
             <label className="ml-1 cursor-pointer text-xs text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400">
-              {auditFile ? `📄 ${auditFile.name.slice(0, 24)}` : "Upload PDF"}
+              {auditFile ? `📄 ${auditFile.name.slice(0, 24)}` : "Upload PDF/Word"}
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.docx"
                 className="hidden"
                 onChange={(e) => setAuditFile(e.target.files?.[0] ?? null)}
               />
@@ -724,7 +743,7 @@ export default function Home() {
           {sourcesCollapsed[idx] ? null : (
           <ul className="mt-2 space-y-1.5">
             {x.answer.sources.map((s) => (
-              <li key={s.marker} className="flex items-baseline gap-2 text-sm">
+              <li key={s.marker} className="group flex items-baseline gap-2 text-sm">
                 <span className="rounded bg-[#efede3] px-1.5 py-0.5 font-mono text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
                   {s.marker}
                 </span>
@@ -751,6 +770,13 @@ export default function Home() {
                 ) : (
                   <span className="font-mono font-medium">{s.citation}</span>
                 )}
+                <button
+                  onClick={() => copyCite(s.marker + idx, s.citation)}
+                  title="Copy citation"
+                  className="hidden text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:inline"
+                >
+                  {copiedCite === s.marker + idx ? "✓" : "⧉"}
+                </button>
                 <span className="text-[#8a8571] dark:text-neutral-400">{s.heading}</span>
               </li>
             ))}
@@ -895,8 +921,17 @@ export default function Home() {
                   <table className="mt-3 w-full text-left text-sm">
                     <tbody>
                       {auditResult.rows.map((r, i) => (
-                        <tr key={i} className="border-t border-[#efede3] dark:border-neutral-800">
-                          <td className="py-2 pr-3 font-mono text-xs">{r.citation}</td>
+                        <tr key={i} className="group border-t border-[#efede3] dark:border-neutral-800">
+                          <td className="py-2 pr-3 font-mono text-xs">
+                            {r.citation}
+                            <button
+                              onClick={() => copyCite(`audit${i}`, r.citation)}
+                              title="Copy citation"
+                              className="ml-1.5 hidden text-[#a39f8d] hover:text-[#c96442] group-hover:inline"
+                            >
+                              {copiedCite === `audit${i}` ? "✓" : "⧉"}
+                            </button>
+                          </td>
                           <td className="py-2 pr-3">
                             <span
                               className={`rounded-full px-2 py-0.5 text-xs ${(AUDIT_STATUS[r.status] ?? AUDIT_STATUS.unchecked).cls}`}
