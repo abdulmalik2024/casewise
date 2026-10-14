@@ -33,3 +33,7 @@ pipelines/**/data/
 # Vercel
 .vercel/
 .env.local
+
+# research outputs
+research_notes/
+reports/
