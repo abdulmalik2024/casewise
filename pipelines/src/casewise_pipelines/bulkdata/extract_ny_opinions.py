@@ -36,26 +36,70 @@ csv.field_size_limit(100_000_000)
 
 
 class _HttpBz2Stream(io.RawIOBase):
-    """File-like over an HTTP bz2 stream — the 55GB file is never stored."""
+    """File-like over an HTTP bz2 stream — the 55GB file is never stored.
+
+    Resumes with Range requests after connection drops (decompressor state
+    survives the reconnect), and handles multi-stream bz2 (pbzip2 output)."""
 
     def __init__(self, url: str):
-        self._client = httpx.Client(timeout=None, follow_redirects=True)
-        req = self._client.build_request("GET", url)
-        self._resp = self._client.send(req, stream=True)
-        self._resp.raise_for_status()
-        self._iter = self._resp.iter_bytes(1 << 20)
+        self._url = url
+        self._client = httpx.Client(timeout=httpx.Timeout(300, connect=60), follow_redirects=True)
         self._dec = bz2.BZ2Decompressor()
         self._buf = b""
         self.raw_read = 0
+        self.expected: int | None = None
+        self._connect()
+
+    def _connect(self) -> None:
+        import time
+
+        headers = {"Range": f"bytes={self.raw_read}-"} if self.raw_read else {}
+        for attempt in range(10):
+            try:
+                req = self._client.build_request("GET", self._url, headers=headers)
+                self._resp = self._client.send(req, stream=True)
+                self._resp.raise_for_status()
+                if self.expected is None:
+                    self.expected = int(self._resp.headers.get("content-length", 0)) or None
+                self._iter = self._resp.iter_bytes(1 << 20)
+                return
+            except httpx.HTTPError:
+                time.sleep(min(10 * (attempt + 1), 120))
+        raise RuntimeError("could not (re)connect to bulk stream")
+
+    def _next_chunk(self) -> bytes | None:
+        import time
+
+        for attempt in range(10):
+            try:
+                return next(self._iter)
+            except StopIteration:
+                if self.expected and self.raw_read < self.expected:
+                    print(f"  stream ended early at {self.raw_read/1e9:.1f} GB — resuming", flush=True)
+                    time.sleep(5)
+                    self._connect()
+                    continue
+                return None
+            except httpx.HTTPError:
+                print(f"  network error at {self.raw_read/1e9:.1f} GB — resuming", flush=True)
+                time.sleep(min(10 * (attempt + 1), 120))
+                self._connect()
+        raise RuntimeError("stream failed after repeated resumes")
 
     def readable(self):
         return True
 
     def readinto(self, b):
         while not self._buf:
-            try:
-                chunk = next(self._iter)
-            except StopIteration:
+            if self._dec.eof:
+                # multi-stream bz2: start the next stream with leftover bytes
+                leftover = self._dec.unused_data
+                self._dec = bz2.BZ2Decompressor()
+                if leftover:
+                    self._buf = self._dec.decompress(leftover)
+                    continue
+            chunk = self._next_chunk()
+            if chunk is None:
                 return 0
             self.raw_read += len(chunk)
             self._buf = self._dec.decompress(chunk)
@@ -166,7 +210,7 @@ def phase_opinions(snapshot: str) -> None:
     print(f"streaming {url}", flush=True)
     stream = _HttpBz2Stream(url)
     text_stream = io.TextIOWrapper(io.BufferedReader(stream, 1 << 22), encoding="utf-8", errors="replace", newline="")
-    reader = csv.reader(text_stream)
+    reader = csv.reader(text_stream, escapechar="\\", doublequote=False)
     header = next(reader)
     idx = {re.sub(r"[^a-z0-9]", "", h.lower()): i for i, h in enumerate(header)}
     n = kept = 0

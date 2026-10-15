@@ -78,8 +78,9 @@ def field(row: list, idx: dict, name: str) -> str:
 
 
 def bz2_rows(path: Path):
+    # CourtListener bulk CSVs escape quotes with backslash, not doubling
     with bz2.open(path, "rt", newline="", encoding="utf-8", errors="replace") as f:
-        reader = csv.reader(f)
+        reader = csv.reader(f, escapechar="\\", doublequote=False)
         header = next(reader)
         idx = {name: i for i, name in enumerate(header)}
         for row in reader:
