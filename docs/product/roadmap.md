@@ -15,6 +15,17 @@ as items ship; move completed items to the log at the bottom.
 | 4 | **Building-grounded answers (nycdb)** — address lookup grounds answers in the building: HPD violations, rent-stabilization indicators, owner portfolio, eviction filings | The moat: no generalist will build NYC-building-level grounding. Open data, plumbing already solved by nycdb/JustFix ecosystem | 1–2 wks | V-2.3 |
 | 5 | **DHCR rent-history parser + overcharge calculator** — upload the DHCR printout → parsed rent timeline, suspicious-jump flags, draft overcharge analysis (HSTPA lookback) | Sharpest wedge found: no commercial tool exists; attorneys do this by hand. Build with attorney-partner review | 2–3 wks | V-2.3 |
 
+## Platform track (V-3, in progress 2026-10-16) — prioritized over Now #5
+1. Move to casewise.si (Namecheap DNS -> Vercel frontend, api.casewise.si -> Railway)
+2. Marketing pages: landing, About, Features, Pricing; app moves to /app
+3. Auth: Supabase (Google + email/password); 7-day free trial, no card;
+   paid continuation flag (billing integration later)
+
+**Now #5 (DHCR parser) is PARKED pending a real rent-history printout** —
+official references secured in pipelines/seeds/dhcr-refs/ (RAI guide 07/2026
+incl. 2020-27 guideline rates, RGB chart through Order #57, RR-2A sample);
+resume the build when a genuine document arrives from a tester/attorney.
+
 ## Next — queued until the five above are done and tested
 
 1. **Saved-research alerts** — "authority behind your memo changed": re-run saved
