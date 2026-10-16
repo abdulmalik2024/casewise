@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.6.1** (2026-10-16)
+**Version: V-2.7.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -122,6 +122,16 @@ point-in-time questions ("what was the law when this lease was signed").
   returns plan + days left; sidebar shows account, trial countdown,
   Sign out. Env: SUPABASE_URL/SUPABASE_ANON_KEY (API, Railway) and
   NEXT_PUBLIC_SUPABASE_URL/_ANON_KEY (web, Vercel).
+- Attorney-feedback round 1 (V-2.7.0): concise answers by default — the
+  system prompt now opens with "**Short answer:**" + ≤5 cited bullets,
+  ~200-word target; a "Go deeper" button on the latest answer sends a
+  canned expand follow-up (prompt drops the length cap on such requests).
+  Search: quoted "exact phrases" additionally require a literal ILIKE
+  match in section text (semantic fallback if no verbatim hit); result
+  cards expand to the full section text with query-term highlighting and
+  a find-in-text box with match count. Pending from the same feedback:
+  IRAC Draft mode (issue + case facts → verified-citation IRAC, Word
+  export) — awaiting an anonymized fact pattern from the attorney.
 - Guest preview (V-2.6.0): anonymous visitors get 5 free Ask questions,
   no login. Server-tracked in `guest_usage` (auto-created table; keyed by
   a localStorage guest id AND the request IP — max across both, so

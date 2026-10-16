@@ -25,6 +25,16 @@ as items ship; move completed items to the log at the bottom.
 4. ✅ Guest preview: 5 free Ask questions without login (server-tracked
    by guest id + IP); Search/cite-check/memo require an account — V-2.6.0
 
+## Attorney feedback round 1 (2026-10-16)
+1. ✅ Concise answers (Short answer + ≤5 cited bullets) + "Go deeper"
+   expand button — V-2.7.0
+2. ✅ Search: quoted exact-phrase matching, full-section expand,
+   term highlighting, find-in-text — V-2.7.0
+3. ⬜ IRAC Draft mode (issue + case facts → verified-citation
+   Issue/Rule/Application/Conclusion, Word export) — V-2.8.0, NEXT;
+   waiting on an anonymized fact pattern from the attorney to build
+   against a real case
+
 **Now #5 (DHCR parser) is PARKED pending a real rent-history printout** —
 official references secured in pipelines/seeds/dhcr-refs/ (RAI guide 07/2026
 incl. 2020-27 guideline rates, RGB chart through Order #57, RR-2A sample);

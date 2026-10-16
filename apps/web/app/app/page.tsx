@@ -128,6 +128,42 @@ function relevance(score: number): { label: string; cls: string } {
 
 const GUEST_LIMIT = 5;
 
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function queryTerms(q: string): string[] {
+  const phrases = Array.from(q.matchAll(/["""]([^"""]{2,100})["""]/g), (m) => m[1]);
+  if (phrases.length) return phrases;
+  return q.split(/\s+/).filter((w) => w.length >= 4).slice(0, 6);
+}
+
+function countMatches(text: string, term: string): number {
+  const t = term.trim();
+  if (t.length < 2) return 0;
+  return (text.match(new RegExp(escapeRegExp(t), "gi")) ?? []).length;
+}
+
+function highlightText(text: string, terms: string[], findTerm: string): React.ReactNode {
+  const find = findTerm.trim();
+  const all = [...(find.length >= 2 ? [find] : []), ...terms].filter((t) => t.length >= 2);
+  if (all.length === 0) return text;
+  const re = new RegExp(`(${all.map(escapeRegExp).join("|")})`, "gi");
+  // split with a capturing group alternates non-match / match segments
+  return text.split(re).map((part, i) =>
+    i % 2 === 1 ? (
+      <mark
+        key={i}
+        className="rounded bg-[#f3e9c9] px-0.5 text-inherit dark:bg-[#5a4d1e]"
+      >
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+}
+
 function guestId(): string {
   try {
     let id = localStorage.getItem("casewise-guest-id");
@@ -173,6 +209,9 @@ export default function Home() {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [guestLeft, setGuestLeft] = useState<number | null>(null);
+  const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
+  const [findInResult, setFindInResult] = useState<Record<number, string>>({});
+  const [lastSearchQ, setLastSearchQ] = useState("");
   const answerRefs = useRef<(HTMLElement | null)[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const threadIdRef = useRef<string>("");
@@ -270,6 +309,9 @@ export default function Home() {
       setResults([]);
     } else {
       setResults(entry.results ?? []);
+      setExpandedResults({});
+      setFindInResult({});
+      setLastSearchQ(entry.query);
       setThread([]);
       threadIdRef.current = "";
     }
@@ -368,6 +410,25 @@ export default function Home() {
     }
   }
 
+  async function askMoreDetail() {
+    if (status === "loading") return;
+    const prior = thread.filter((x) => x.answer);
+    const lastQ = prior[prior.length - 1]?.question.slice(0, 380) ?? "";
+    const q = `Go deeper on ${lastQ || "the last answer"} — fuller analysis of the key authorities, exceptions, and edge cases.`;
+    setThread([...prior, { question: q, answer: null }]);
+    setStatus("loading");
+    setError("");
+    setStreamText("");
+    setCopiedIdx(null);
+    try {
+      await runAskStream(q, prior);
+      setStatus("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+      setStatus("error");
+    }
+  }
+
   async function run(e: React.FormEvent) {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
@@ -431,6 +492,9 @@ export default function Home() {
         await runAskStream(q, prior);
       } else {
         setResults([]);
+        setExpandedResults({});
+        setFindInResult({});
+        setLastSearchQ(q);
         const typeParam = sourceType ? `&type=${sourceType}` : "";
         const res = await fetch(
           `${API_URL}/search?q=${encodeURIComponent(q)}&k=12${typeParam}`,
@@ -615,7 +679,7 @@ export default function Home() {
               ? thread.length
                 ? "Ask a follow-up — the conversation is remembered…"
                 : 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
-              : "Search statutes, decisions, guidance, rules, forms…"
+              : 'Search statutes, decisions, guidance… put "exact phrases" in quotes'
           }
           className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
         />
@@ -766,6 +830,15 @@ export default function Home() {
             >
               {copiedIdx === idx ? "Copied ✓" : "Copy answer"}
             </button>
+            {idx === thread.length - 1 && (
+              <button
+                onClick={askMoreDetail}
+                title="Expand this answer: authorities, exceptions, edge cases"
+                className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                Go deeper
+              </button>
+            )}
             {authToken ? (
               <button
                 onClick={() => exportMemo(idx)}
@@ -899,7 +972,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.6.1</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.7.0</span>
         </Link>
         <button
           onClick={reset}
@@ -1167,19 +1240,51 @@ export default function Home() {
                         </span>
                       </span>
                     </div>
-                    <p className="mt-2 line-clamp-4 whitespace-pre-line text-sm text-[#5d5848] dark:text-neutral-300">
-                      {r.text}
+                    <p
+                      className={`mt-2 whitespace-pre-line text-sm text-[#5d5848] dark:text-neutral-300 ${
+                        expandedResults[i] ? "" : "line-clamp-4"
+                      }`}
+                    >
+                      {highlightText(r.text, queryTerms(lastSearchQ), findInResult[i] ?? "")}
                     </p>
-                    {r.url && (
-                      <a
-                        href={r.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="mt-2 inline-block text-xs text-[#1e3a5a] hover:underline"
+                    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
+                      <button
+                        onClick={() =>
+                          setExpandedResults((p) => ({ ...p, [i]: !p[i] }))
+                        }
+                        className="text-xs text-[#1e3a5a] hover:underline dark:text-blue-400"
                       >
-                        View source ↗
-                      </a>
-                    )}
+                        {expandedResults[i] ? "Collapse ▴" : "Read full text ▾"}
+                      </button>
+                      {expandedResults[i] && (
+                        <span className="flex items-center gap-2">
+                          <input
+                            value={findInResult[i] ?? ""}
+                            onChange={(e) =>
+                              setFindInResult((p) => ({ ...p, [i]: e.target.value }))
+                            }
+                            placeholder="Find a word or phrase in this text…"
+                            className="w-56 rounded-lg border border-[#e3e1d5] bg-white px-2.5 py-1 text-xs outline-none placeholder:text-[#a39f8d] focus:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#262624]"
+                          />
+                          {(findInResult[i] ?? "").trim().length >= 2 && (
+                            <span className="text-xs text-[#8a8571] dark:text-neutral-400">
+                              {countMatches(r.text, findInResult[i] ?? "")} match
+                              {countMatches(r.text, findInResult[i] ?? "") === 1 ? "" : "es"}
+                            </span>
+                          )}
+                        </span>
+                      )}
+                      {r.url && (
+                        <a
+                          href={r.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-xs text-[#1e3a5a] hover:underline"
+                        >
+                          View source ↗
+                        </a>
+                      )}
+                    </div>
                   </li>
                 ))}
               </ul>

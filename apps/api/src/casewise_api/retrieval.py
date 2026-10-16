@@ -1,6 +1,14 @@
-"""Semantic retrieval over the chunks table."""
+"""Semantic retrieval over the chunks table.
+
+Quoted phrases in the query ("…") additionally require a literal, case-insensitive
+match in the section text — attorneys argue from exact statutory language, and
+vector similarity alone is weak at exact wording. If the literal filter matches
+nothing, we fall back to pure semantic search rather than returning nothing.
+"""
 
 from __future__ import annotations
+
+import re
 
 import httpx
 from psycopg_pool import ConnectionPool
@@ -9,6 +17,8 @@ from pydantic import BaseModel
 from .config import settings
 
 VOYAGE_URL = "https://api.voyageai.com/v1/embeddings"
+
+PHRASE_RE = re.compile(r'[""]([^""\n]{2,100})[""]|"([^"\n]{2,100})"')
 
 SEARCH_SQL = """
 select c.citation, c.heading, c.text, c.source_type,
@@ -28,6 +38,7 @@ where c.embedding is not null
     or (c.source_type = 'guidance'
         and coalesce(a.revision_date, date '1900-01-01') <= %(as_of)s::date)
   )
+  {phrase_filter}
 order by c.embedding <=> %(vec)s::vector
 limit %(k)s
 """
@@ -54,6 +65,10 @@ def embed_query(text: str) -> list[float]:
     return resp.json()["data"][0]["embedding"]
 
 
+def _extract_phrases(query: str) -> list[str]:
+    return [a or b for a, b in PHRASE_RE.findall(query)][:3]
+
+
 def search(
     pool: ConnectionPool,
     query: str,
@@ -62,10 +77,21 @@ def search(
     as_of: str | None = None,
 ) -> list[SearchResult]:
     vec = str(embed_query(query))
+    params: dict = {"vec": vec, "stype": source_type, "as_of": as_of, "k": k}
+    filters = []
+    for i, ph in enumerate(_extract_phrases(query)):
+        escaped = ph.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        params[f"ph{i}"] = f"%{escaped}%"
+        filters.append(f"and c.text ilike %(ph{i})s")
     with pool.connection() as conn:
         rows = conn.execute(
-            SEARCH_SQL, {"vec": vec, "stype": source_type, "as_of": as_of, "k": k}
+            SEARCH_SQL.format(phrase_filter=" ".join(filters)), params
         ).fetchall()
+        if not rows and filters:  # phrase not in corpus verbatim — semantic fallback
+            rows = conn.execute(
+                SEARCH_SQL.format(phrase_filter=""),
+                {"vec": vec, "stype": source_type, "as_of": as_of, "k": k},
+            ).fetchall()
     return [
         SearchResult(
             citation=r[0], heading=r[1], text=r[2], source_type=r[3],
