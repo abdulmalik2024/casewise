@@ -19,8 +19,9 @@ as items ship; move completed items to the log at the bottom.
 1. ✅ casewise.si live (Vercel nameservers, SSL, app at /app) — V-2.4.0
 2. ✅ Marketing pages (landing w/ real-screenshot showcases, Features,
    Pricing, About; navy theme; capture script) — V-2.4.0
-3. ⬜ Auth: Supabase (Google + email/password); 7-day free trial, no card;
-   paid continuation flag (billing later) — NEXT
+3. ✅ Auth: Supabase email/password + 7-day trial enforced in the API
+   (402 after expiry); /login + /signup; session-gated app — V-2.5.0.
+   Remaining: Google OAuth provider config (button shipped), billing.
 
 **Now #5 (DHCR parser) is PARKED pending a real rent-history printout** —
 official references secured in pipelines/seeds/dhcr-refs/ (RAI guide 07/2026

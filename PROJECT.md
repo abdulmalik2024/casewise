@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.4.0** (2026-10-16)
+**Version: V-2.5.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -108,9 +108,18 @@ point-in-time questions ("what was the law when this lease was signed").
   `scripts/capture_marketing_shots.py` (runs real flows against prod).
 - Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
   palette; green/red/amber reserved for semantic states.
-- NOT yet built: signup/login (Supabase Auth planned: Google +
-  email/password) and trial enforcement — the pricing page's 7-day trial
-  is not enforced until then; the app is open at /app.
+- Auth (V-2.5.0): Supabase Auth — email/password live, Google OAuth
+  button present (provider config pending in Google Cloud + Supabase
+  dashboard). /login + /signup pages; marketing CTAs route to /signup.
+  The app at /app requires a session (redirects to /login signed out)
+  and sends the Supabase access token on every API call.
+- Trial enforcement (V-2.5.0): API validates tokens against Supabase
+  (`auth.py`, 300s cache, no JWT secret needed); `public.profiles` row
+  auto-created by `handle_new_user()` trigger; 7-day free trial, then
+  product endpoints return 402 pointing at casewise.si/pricing. `/me`
+  returns plan + days left; sidebar shows account, trial countdown,
+  Sign out. Env: SUPABASE_URL/SUPABASE_ANON_KEY (API, Railway) and
+  NEXT_PUBLIC_SUPABASE_URL/_ANON_KEY (web, Vercel).
 
 **Product (https://casewise.si/app):**
 - Ask: streaming RAG answers — live pipeline status (real source counts),
