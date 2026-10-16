@@ -1,4 +1,6 @@
-const features = [
+type Feature = { title: string; body: string; img?: string; imgAlt?: string };
+
+const features: Feature[] = [
   {
     title: "Ask — cited answers, streamed live",
     body: "Plain-English questions answered from NY statutes, ten years of court decisions, DHCR guidance, court rules and official forms. Answers stream in as they're drafted, every assertion carries a citation, and follow-up questions keep the conversation's context.",
@@ -6,14 +8,20 @@ const features = [
   {
     title: "Verification you can see",
     body: "Citations are mapped server-side to retrieved documents — markers that don't correspond to a real source are stripped before you see them. Every quoted passage is string-matched against the source text and the result is shown under each answer.",
+    img: "/shots/quotes-verified.png",
+    imgAlt: "Quote verification line: all quotations verified word-for-word against the sources",
   },
   {
     title: "Check cites — audit any document",
     body: "Paste text or upload a PDF/Word brief. Statutes, NYCRR rules, and slip opinions verify against the corpus; reporter citations check against an offline catalog of 5.1 million published citations. Fabricated citations are flagged in red — it works on opposing counsel's filings too.",
+    img: "/shots/check-cites.png",
+    imgAlt: "Citation audit table with verified citations and a fabricated citation flagged NOT FOUND",
   },
   {
     title: "Building-grounded answers",
     body: "Mention a NYC address and Casewise grounds the analysis in that building's public record: rent-stabilized unit indicators, open HPD violations by class, the registered owner, and marshal eviction history — cited as a source with a link to the underlying data.",
+    img: "/shots/building-sources.png",
+    imgAlt: "Verified sources including a building record for 888 Grand Concourse with statute and guidance citations",
   },
   {
     title: "Research memos in Word",
@@ -26,6 +34,8 @@ const features = [
   {
     title: "Search the sources directly",
     body: "Semantic search across statutes, decisions, DHCR guidance, court rules and forms — filter by source type, with relevance grading and links to official texts.",
+    img: "/shots/search.png",
+    imgAlt: "Semantic search results across statutes and decisions with relevance grades",
   },
   {
     title: "A corpus that maintains itself",
@@ -50,6 +60,15 @@ export default function Features() {
             <p className="mt-2 text-sm leading-relaxed text-[#5d5848] dark:text-neutral-300">
               {f.body}
             </p>
+            {f.img && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={f.img}
+                alt={f.imgAlt ?? f.title}
+                className="mt-4 w-full rounded-xl border border-[#efede3] shadow-sm dark:border-neutral-800"
+                loading="lazy"
+              />
+            )}
           </div>
         ))}
       </div>
