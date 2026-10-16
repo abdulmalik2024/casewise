@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     building_facts_path: str = "/tmp/buildingfacts.sqlite"
     # needed only when the key is org-scoped rather than workspace-scoped
     anthropic_workspace_id: str = ""
+    # Supabase Auth (token validation): project URL + anon/publishable key
+    supabase_url: str = ""
+    supabase_anon_key: str = ""
 
 
 settings = Settings()

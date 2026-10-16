@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { supabase } from "../../lib/supabase";
 import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -150,6 +152,11 @@ export default function Home() {
   const [feedbackComment, setFeedbackComment] = useState("");
   const [collapsed, setCollapsed] = useState<Record<number, boolean>>({});
   const [sourcesCollapsed, setSourcesCollapsed] = useState<Record<number, boolean>>({});
+  const router = useRouter();
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [authEmail, setAuthEmail] = useState("");
+  const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const answerRefs = useRef<(HTMLElement | null)[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const threadIdRef = useRef<string>("");
@@ -159,10 +166,46 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    const sb = supabase();
+    sb.auth.getSession().then(({ data }) => {
+      const sess = data.session;
+      if (!sess) {
+        router.replace("/login");
+        return;
+      }
+      setAuthToken(sess.access_token);
+      setAuthEmail(sess.user.email ?? "");
+      setAuthChecked(true);
+    });
+    const { data: sub } = sb.auth.onAuthStateChange((_event, sess) => {
+      if (!sess) router.replace("/login");
+      else {
+        setAuthToken(sess.access_token);
+        setAuthEmail(sess.user.email ?? "");
+        setAuthChecked(true);
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [router]);
+
+  useEffect(() => {
+    if (!authToken) return;
+    fetch(`${API_URL}/me`, { headers: { Authorization: `Bearer ${authToken}` } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && d.plan === "trial") setDaysLeft(d.days_left);
+      })
+      .catch(() => {});
+  }, [authToken]);
+
+  useEffect(() => {
     if (mode === "ask" && (streamText || status === "loading")) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [streamText, status, mode, thread.length]);
+
+  const authHeaders = (): Record<string, string> =>
+    authToken ? { Authorization: `Bearer ${authToken}` } : {};
 
   const hasContent = status !== "idle" || thread.length > 0 || results.length > 0;
   const shownResults =
@@ -248,9 +291,14 @@ export default function Home() {
       .map((x) => ({ question: x.question, answer: x.answer!.answer }));
     const res = await fetch(`${API_URL}/ask/stream`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...authHeaders() },
       body: JSON.stringify({ q, history: historyTurns, as_of: asOf || null }),
     });
+    if (res.status === 401) {
+      router.replace("/login");
+      throw new Error("Please sign in.");
+    }
+    if (res.status === 402) throw new Error((await res.json()).detail ?? "Your trial has ended.");
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
@@ -324,11 +372,11 @@ export default function Home() {
         if (auditFile) {
           const fd = new FormData();
           fd.append("file", auditFile);
-          res = await fetch(`${API_URL}/audit/pdf`, { method: "POST", body: fd });
+          res = await fetch(`${API_URL}/audit/pdf`, { method: "POST", body: fd, headers: authHeaders() });
         } else {
           res = await fetch(`${API_URL}/audit`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...authHeaders() },
             body: JSON.stringify({ text: q }),
           });
         }
@@ -353,7 +401,8 @@ export default function Home() {
         setResults([]);
         const typeParam = sourceType ? `&type=${sourceType}` : "";
         const res = await fetch(
-          `${API_URL}/search?q=${encodeURIComponent(q)}&k=12${typeParam}`
+          `${API_URL}/search?q=${encodeURIComponent(q)}&k=12${typeParam}`,
+          { headers: authHeaders() }
         );
         if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
         const data: SearchResult[] = await res.json();
@@ -422,7 +471,7 @@ export default function Home() {
     try {
       const res = await fetch(`${API_URL}/memo`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           question: x.question,
           answer: x.answer.answer,
@@ -451,7 +500,7 @@ export default function Home() {
     try {
       await fetch(`${API_URL}/feedback`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({
           question: x.question,
           answer: x.answer.answer,
@@ -790,6 +839,14 @@ export default function Home() {
     </div>
   );
 
+  if (!authChecked) {
+    return (
+      <div className="flex h-dvh items-center justify-center bg-[#faf9f5] text-sm text-[#a39f8d] dark:bg-[#262624] dark:text-neutral-500">
+        Signing you in…
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
@@ -880,6 +937,22 @@ export default function Home() {
             Clear history
           </button>
         )}
+        <div className="border-t border-[#e8e6dc] px-4 py-3 text-xs dark:border-neutral-800">
+          <div className="truncate text-[#5d5848] dark:text-neutral-300">{authEmail}</div>
+          {daysLeft !== null && (
+            <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
+              Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+            </div>
+          )}
+          <button
+            onClick={async () => {
+              await supabase().auth.signOut();
+            }}
+            className="mt-1 text-[#1e3a5a] hover:underline dark:text-blue-400"
+          >
+            Sign out
+          </button>
+        </div>
       </aside>
 
       <main className="flex-1 overflow-y-auto">

@@ -81,7 +81,7 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link
-            href="/app"
+            href="/signup"
             className="rounded-full bg-[#3d3929] px-7 py-3 font-medium text-[#faf9f5] transition-colors hover:bg-[#2a271c] dark:bg-neutral-100 dark:text-neutral-900"
           >
             Try it now
@@ -209,7 +209,7 @@ export default function Landing() {
         </h2>
         <div className="mt-8">
           <Link
-            href="/app"
+            href="/signup"
             className="rounded-full bg-[#1e3a5a] px-8 py-3.5 font-medium text-white transition-colors hover:bg-[#16304b]"
           >
             Start researching — free

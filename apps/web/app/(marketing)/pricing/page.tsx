@@ -20,7 +20,7 @@ export default function Pricing() {
             <li>✓ Cancel by simply walking away</li>
           </ul>
           <Link
-            href="/app"
+            href="/signup"
             className="mt-6 block rounded-xl bg-[#1e3a5a] px-5 py-2.5 text-center font-medium text-white hover:bg-[#16304b]"
           >
             Start free

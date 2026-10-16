@@ -11,6 +11,7 @@ from pypdf import PdfReader
 from fastapi.responses import Response
 
 from .audit import AuditResponse, audit_text
+from .auth import require_active, trial_status, validate_token
 from .memo import MemoIn, build_memo
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -43,6 +44,25 @@ app.add_middleware(
 )
 
 
+from fastapi import Depends
+
+
+def gated(user: dict = Depends(validate_token)) -> dict:
+    """Signed-in + active trial/paid. 401/402 otherwise."""
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    require_active(app.state.pool, user)
+    return user
+
+
+@app.get("/me")
+def me_endpoint(user: dict = Depends(validate_token)):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    status = trial_status(app.state.pool, user["id"])
+    return {"email": user.get("email"), **status}
+
+
 @app.get("/health")
 def health() -> dict:
     return {"status": "ok"}
@@ -53,6 +73,7 @@ def search_endpoint(
     q: str = Query(min_length=3, max_length=500),
     k: int = Query(default=8, ge=1, le=25),
     type: str | None = Query(default=None, pattern="^(statute|case|guidance|rule|form)$"),
+    user: dict = Depends(gated),
 ):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
@@ -103,12 +124,12 @@ def _stream_response(q: str, history: list[dict] | None, as_of: str | None = Non
 
 
 @app.get("/ask/stream")
-def ask_stream_get(q: str = Query(min_length=3, max_length=500)):
+def ask_stream_get(q: str = Query(min_length=3, max_length=500), user: dict = Depends(gated)):
     return _stream_response(q, None)
 
 
 @app.post("/ask/stream")
-def ask_stream_post(body: AskStreamIn):
+def ask_stream_post(body: AskStreamIn, user: dict = Depends(gated)):
     history = [t.model_dump() for t in body.history]
     return _stream_response(body.q, history or None, body.as_of)
 
@@ -118,7 +139,7 @@ class AuditIn(BaseModel):
 
 
 @app.post("/audit", response_model=AuditResponse)
-def audit_endpoint(body: AuditIn):
+def audit_endpoint(body: AuditIn, user: dict = Depends(gated)):
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
     return audit_text(app.state.pool, body.text)
@@ -143,7 +164,7 @@ async def _read_capped(file: UploadFile, cap: int) -> bytes:
 
 
 @app.post("/audit/pdf", response_model=AuditResponse)
-async def audit_file_endpoint(file: UploadFile):
+async def audit_file_endpoint(file: UploadFile, user: dict = Depends(gated)):
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
     name = (file.filename or "").lower()
@@ -179,7 +200,7 @@ async def audit_file_endpoint(file: UploadFile):
 
 
 @app.post("/memo")
-def memo_endpoint(body: MemoIn):
+def memo_endpoint(body: MemoIn, user: dict = Depends(gated)):
     docx_bytes = build_memo(body)
     return Response(
         content=docx_bytes,
@@ -197,7 +218,7 @@ class FeedbackIn(BaseModel):
 
 
 @app.post("/feedback", status_code=204)
-def feedback_endpoint(body: FeedbackIn):
+def feedback_endpoint(body: FeedbackIn, user: dict = Depends(validate_token)):
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
     with app.state.pool.connection() as conn:
@@ -208,7 +229,7 @@ def feedback_endpoint(body: FeedbackIn):
 
 
 @app.get("/ask", response_model=AskResponse)
-def ask_endpoint(q: str = Query(min_length=3, max_length=500)):
+def ask_endpoint(q: str = Query(min_length=3, max_length=500), user: dict = Depends(gated)):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:
