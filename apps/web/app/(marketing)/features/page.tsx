@@ -52,7 +52,7 @@ export default function Features() {
       <p className="mt-2 text-[#6b6450] dark:text-neutral-400">
         Built for one job: trustworthy New York property-law research for working attorneys.
       </p>
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
+      <div className="mt-10 grid gap-6">
         {features.map((f) => (
           <div
             key={f.title}
