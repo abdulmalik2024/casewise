@@ -4,6 +4,8 @@ const features: Feature[] = [
   {
     title: "Ask — cited answers, streamed live",
     body: "Plain-English questions answered from NY statutes, ten years of court decisions, DHCR guidance, court rules and official forms. Answers stream in as they're drafted, every assertion carries a citation, and follow-up questions keep the conversation's context.",
+    img: "/shots/ask-verified.png",
+    imgAlt: "A Casewise answer on the warranty of habitability with inline source citations",
   },
   {
     title: "Verification you can see",
