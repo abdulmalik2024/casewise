@@ -270,9 +270,17 @@ def phase_load(courts: set[str]) -> None:
             continue
         n = 0
         batch = []
+        # one row per cluster, preferring combined/lead opinions over
+        # concurrences/dissents (rank by CL type prefix)
+        best: dict[str, tuple[int, dict]] = {}
         with gzip.open(path, "rt", encoding="utf-8") as f:
             for line in f:
                 r = json.loads(line)
+                rank = {"010": 0, "015": 1, "020": 2}.get((r.get("type") or "")[:3], 9)
+                cur = best.get(r["cluster_id"])
+                if cur is None or rank < cur[0]:
+                    best[r["cluster_id"]] = (rank, r)
+        for _, r in best.values():
                 batch.append((r["case_name"] or "Unknown", r["url"], r["citation"],
                               court_names[c], r["date"], "bulk", r["text"]))
                 if len(batch) >= 25:
