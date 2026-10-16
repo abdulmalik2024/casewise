@@ -77,8 +77,9 @@ def main() -> None:
         page.get_by_role("button", name="Research", exact=True).click()
         page.wait_for_selector("text=building record", timeout=240_000)
         page.wait_for_timeout(500)
-        sources = page.locator("text=Verified sources").locator("xpath=ancestor::div[1]")
-        element_shot(sources.first, OUT / "building-sources.png")
+        page.wait_for_timeout(1500)
+        sources = page.locator("xpath=//div[contains(@class,'mt-4')][.//text()[contains(., 'Verified sources')]]")
+        element_shot(sources.last, OUT / "building-sources.png")
 
         # 3) Check cites audit with a fabricated citation flagged
         page.get_by_role("button", name="New research").click()
