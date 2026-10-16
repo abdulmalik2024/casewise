@@ -126,6 +126,21 @@ function relevance(score: number): { label: string; cls: string } {
   };
 }
 
+const GUEST_LIMIT = 5;
+
+function guestId(): string {
+  try {
+    let id = localStorage.getItem("casewise-guest-id");
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem("casewise-guest-id", id);
+    }
+    return id;
+  } catch {
+    return "anon";
+  }
+}
+
 function typeLabel(t: string): string {
   if (t === "case") return "decision";
   if (t === "building") return "building record";
@@ -157,6 +172,7 @@ export default function Home() {
   const [authEmail, setAuthEmail] = useState("");
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [guestLeft, setGuestLeft] = useState<number | null>(null);
   const answerRefs = useRef<(HTMLElement | null)[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
   const threadIdRef = useRef<string>("");
@@ -167,26 +183,22 @@ export default function Home() {
 
   useEffect(() => {
     const sb = supabase();
+    // no session = guest preview (GUEST_LIMIT free questions), not a redirect
     sb.auth.getSession().then(({ data }) => {
       const sess = data.session;
-      if (!sess) {
-        router.replace("/login");
-        return;
-      }
-      setAuthToken(sess.access_token);
-      setAuthEmail(sess.user.email ?? "");
+      setAuthToken(sess?.access_token ?? null);
+      setAuthEmail(sess?.user.email ?? "");
       setAuthChecked(true);
     });
     const { data: sub } = sb.auth.onAuthStateChange((_event, sess) => {
-      if (!sess) router.replace("/login");
-      else {
-        setAuthToken(sess.access_token);
-        setAuthEmail(sess.user.email ?? "");
-        setAuthChecked(true);
-      }
+      setAuthToken(sess?.access_token ?? null);
+      setAuthEmail(sess?.user.email ?? "");
+      setAuthChecked(true);
     });
     return () => sub.subscription.unsubscribe();
-  }, [router]);
+  }, []);
+
+  const isGuest = authChecked && !authToken;
 
   useEffect(() => {
     if (!authToken) return;
@@ -199,13 +211,23 @@ export default function Home() {
   }, [authToken]);
 
   useEffect(() => {
+    if (!isGuest) return;
+    fetch(`${API_URL}/guest/status`, { headers: { "X-Guest-Id": guestId() } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && typeof d.remaining === "number") setGuestLeft(d.remaining);
+      })
+      .catch(() => {});
+  }, [isGuest]);
+
+  useEffect(() => {
     if (mode === "ask" && (streamText || status === "loading")) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [streamText, status, mode, thread.length]);
 
   const authHeaders = (): Record<string, string> =>
-    authToken ? { Authorization: `Bearer ${authToken}` } : {};
+    authToken ? { Authorization: `Bearer ${authToken}` } : { "X-Guest-Id": guestId() };
 
   const hasContent = status !== "idle" || thread.length > 0 || results.length > 0;
   const shownResults =
@@ -295,11 +317,13 @@ export default function Home() {
       body: JSON.stringify({ q, history: historyTurns, as_of: asOf || null }),
     });
     if (res.status === 401) {
-      router.replace("/login");
+      if (authToken) router.replace("/login");
       throw new Error("Please sign in.");
     }
     if (res.status === 402) throw new Error((await res.json()).detail ?? "Your trial has ended.");
     if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const rem = res.headers.get("X-Guest-Remaining");
+    if (rem !== null) setGuestLeft(Number(rem));
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let buffer = "";
@@ -346,6 +370,14 @@ export default function Home() {
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
+    if (!authToken && mode !== "ask") {
+      setError(
+        "Search and Check cites need a free account — 7-day trial, no credit card. " +
+          "Guest preview covers Ask."
+      );
+      setStatus("error");
+      return;
+    }
     const q = query.trim();
     if (mode !== "audit" && q.length < 3) return;
     if (mode === "audit" && !auditFile && q.length < 50) {
@@ -734,14 +766,23 @@ export default function Home() {
             >
               {copiedIdx === idx ? "Copied ✓" : "Copy answer"}
             </button>
-            <button
-              onClick={() => exportMemo(idx)}
-              title="Download a Word research memo with a verification appendix"
-              className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
-            >
-              Export memo
-            </button>
-            {feedbackByIdx[idx] === "sent" ? (
+            {authToken ? (
+              <button
+                onClick={() => exportMemo(idx)}
+                title="Download a Word research memo with a verification appendix"
+                className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+              >
+                Export memo
+              </button>
+            ) : (
+              <Link
+                href="/signup"
+                className="text-xs text-[#1e3a5a] hover:underline dark:text-blue-400"
+              >
+                Create a free account to export memos →
+              </Link>
+            )}
+            {!authToken ? null : feedbackByIdx[idx] === "sent" ? (
               <span className="text-xs text-[#8a8571] dark:text-neutral-400">
                 Thanks for the feedback ✓
               </span>
@@ -842,7 +883,7 @@ export default function Home() {
   if (!authChecked) {
     return (
       <div className="flex h-dvh items-center justify-center bg-[#faf9f5] text-sm text-[#a39f8d] dark:bg-[#262624] dark:text-neutral-500">
-        Signing you in…
+        Opening Casewise…
       </div>
     );
   }
@@ -858,7 +899,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.5.0</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.6.0</span>
         </Link>
         <button
           onClick={reset}
@@ -938,20 +979,41 @@ export default function Home() {
           </button>
         )}
         <div className="border-t border-[#e8e6dc] px-4 py-3 text-xs dark:border-neutral-800">
-          <div className="truncate text-[#5d5848] dark:text-neutral-300">{authEmail}</div>
-          {daysLeft !== null && (
-            <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
-              Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
-            </div>
+          {authToken ? (
+            <>
+              <div className="truncate text-[#5d5848] dark:text-neutral-300">{authEmail}</div>
+              {daysLeft !== null && (
+                <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
+                  Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+                </div>
+              )}
+              <button
+                onClick={async () => {
+                  await supabase().auth.signOut();
+                }}
+                className="mt-1 text-[#1e3a5a] hover:underline dark:text-blue-400"
+              >
+                Sign out
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="text-[#5d5848] dark:text-neutral-300">Guest preview</div>
+              <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
+                {guestLeft !== null
+                  ? `${guestLeft} of ${GUEST_LIMIT} free questions left`
+                  : `${GUEST_LIMIT} free questions, no sign-up`}
+              </div>
+              <div className="mt-1 flex gap-3">
+                <Link href="/signup" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
+                  Start free trial
+                </Link>
+                <Link href="/login" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
+                  Sign in
+                </Link>
+              </div>
+            </>
           )}
-          <button
-            onClick={async () => {
-              await supabase().auth.signOut();
-            }}
-            className="mt-1 text-[#1e3a5a] hover:underline dark:text-blue-400"
-          >
-            Sign out
-          </button>
         </div>
       </aside>
 
@@ -968,6 +1030,18 @@ export default function Home() {
                 SI research assistant for New York property law. For licensed attorneys;
                 not legal advice. Verify all citations.
               </p>
+              {isGuest && (
+                <p className="mt-2 text-center text-xs text-[#8a8571] dark:text-neutral-400">
+                  Guest preview: ask up to {GUEST_LIMIT} questions free, no sign-up.{" "}
+                  <Link
+                    href="/signup"
+                    className="text-[#1e3a5a] hover:underline dark:text-blue-400"
+                  >
+                    Start your 7-day trial
+                  </Link>{" "}
+                  for search, cite checking, and memo export.
+                </p>
+              )}
             </div>
           </div>
         ) : (

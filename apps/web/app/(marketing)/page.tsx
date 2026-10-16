@@ -81,10 +81,10 @@ export default function Landing() {
         </p>
         <div className="mt-8 flex justify-center gap-3">
           <Link
-            href="/signup"
+            href="/app"
             className="rounded-full bg-[#3d3929] px-7 py-3 font-medium text-[#faf9f5] transition-colors hover:bg-[#2a271c] dark:bg-neutral-100 dark:text-neutral-900"
           >
-            Try it now
+            Try it now — no sign-up
           </Link>
           <Link
             href="/features"
@@ -94,7 +94,7 @@ export default function Landing() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-[#a39f8d]">
-          For licensed attorneys · 7-day free trial · no credit card
+          For licensed attorneys · 5 free questions as a guest · 7-day free trial, no credit card
         </p>
 
         <div className="mx-auto mt-14 max-w-4xl">

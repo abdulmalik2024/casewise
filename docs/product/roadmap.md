@@ -22,6 +22,8 @@ as items ship; move completed items to the log at the bottom.
 3. ✅ Auth: Supabase email/password + 7-day trial enforced in the API
    (402 after expiry); /login + /signup; session-gated app — V-2.5.0.
    Remaining: Google OAuth provider config (button shipped), billing.
+4. ✅ Guest preview: 5 free Ask questions without login (server-tracked
+   by guest id + IP); Search/cite-check/memo require an account — V-2.6.0
 
 **Now #5 (DHCR parser) is PARKED pending a real rent-history printout** —
 official references secured in pipelines/seeds/dhcr-refs/ (RAI guide 07/2026

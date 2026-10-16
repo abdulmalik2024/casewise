@@ -11,7 +11,14 @@ from pypdf import PdfReader
 from fastapi.responses import Response
 
 from .audit import AuditResponse, audit_text
-from .auth import require_active, trial_status, validate_token
+from .auth import (
+    GUEST_LIMIT,
+    guest_remaining,
+    record_guest_question,
+    require_active,
+    trial_status,
+    validate_token,
+)
 from .memo import MemoIn, build_memo
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -41,10 +48,11 @@ app.add_middleware(
     allow_origin_regex=r"https://casewise-[a-z0-9]+-casewise1\.vercel\.app",  # preview deploys
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-Guest-Remaining"],
 )
 
 
-from fastapi import Depends
+from fastapi import Depends, Header, Request
 
 
 def gated(user: dict = Depends(validate_token)) -> dict:
@@ -53,6 +61,49 @@ def gated(user: dict = Depends(validate_token)) -> dict:
         raise HTTPException(503, "database is not configured")
     require_active(app.state.pool, user)
     return user
+
+
+GUEST_OVER_LIMIT_MSG = (
+    f"You've used your {GUEST_LIMIT} free questions. Create a free account at "
+    "casewise.si/signup — 7-day trial, no credit card — to keep researching."
+)
+
+
+def _guest_identity(request: Request, x_guest_id: str | None) -> tuple[str, str]:
+    ip = (request.headers.get("x-forwarded-for") or "").split(",")[0].strip()
+    if not ip and request.client:
+        ip = request.client.host
+    guest_id = (x_guest_id or "").strip()[:64] or f"ip:{ip}"
+    return guest_id, ip or "unknown"
+
+
+def gated_or_guest(
+    request: Request,
+    authorization: str | None = Header(default=None),
+    x_guest_id: str | None = Header(default=None),
+) -> dict:
+    """Signed-in users pass as usual; anonymous visitors get GUEST_LIMIT free
+    questions, tracked server-side by browser guest id and IP."""
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    if authorization:
+        user = validate_token(authorization)
+        require_active(app.state.pool, user)
+        return {"user": user}
+    guest_id, ip = _guest_identity(request, x_guest_id)
+    remaining = guest_remaining(app.state.pool, guest_id, ip)
+    if remaining <= 0:
+        raise HTTPException(402, GUEST_OVER_LIMIT_MSG)
+    record_guest_question(app.state.pool, guest_id, ip)
+    return {"guest": guest_id, "remaining": remaining - 1}
+
+
+@app.get("/guest/status")
+def guest_status(request: Request, x_guest_id: str | None = Header(default=None)):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    guest_id, ip = _guest_identity(request, x_guest_id)
+    return {"limit": GUEST_LIMIT, "remaining": guest_remaining(app.state.pool, guest_id, ip)}
 
 
 @app.get("/me")
@@ -96,7 +147,7 @@ class AskStreamIn(BaseModel):
     as_of: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
-def _stream_response(q: str, history: list[dict] | None, as_of: str | None = None):
+def _stream_response(q: str, history: list[dict] | None, as_of: str | None = None, caller: dict | None = None):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:
@@ -116,22 +167,21 @@ def _stream_response(q: str, history: list[dict] | None, as_of: str | None = Non
         except Exception:
             yield f"data: {json.dumps({'type': 'error', 'message': 'something went wrong; retry shortly'})}\n\n"
 
-    return StreamingResponse(
-        gen(),
-        media_type="text/event-stream",
-        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
-    )
+    headers = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+    if caller and "guest" in caller:
+        headers["X-Guest-Remaining"] = str(caller["remaining"])
+    return StreamingResponse(gen(), media_type="text/event-stream", headers=headers)
 
 
 @app.get("/ask/stream")
-def ask_stream_get(q: str = Query(min_length=3, max_length=500), user: dict = Depends(gated)):
-    return _stream_response(q, None)
+def ask_stream_get(q: str = Query(min_length=3, max_length=500), caller: dict = Depends(gated_or_guest)):
+    return _stream_response(q, None, caller=caller)
 
 
 @app.post("/ask/stream")
-def ask_stream_post(body: AskStreamIn, user: dict = Depends(gated)):
+def ask_stream_post(body: AskStreamIn, caller: dict = Depends(gated_or_guest)):
     history = [t.model_dump() for t in body.history]
-    return _stream_response(body.q, history or None, body.as_of)
+    return _stream_response(body.q, history or None, body.as_of, caller=caller)
 
 
 class AuditIn(BaseModel):
@@ -229,7 +279,7 @@ def feedback_endpoint(body: FeedbackIn, user: dict = Depends(validate_token)):
 
 
 @app.get("/ask", response_model=AskResponse)
-def ask_endpoint(q: str = Query(min_length=3, max_length=500), user: dict = Depends(gated)):
+def ask_endpoint(q: str = Query(min_length=3, max_length=500), caller: dict = Depends(gated_or_guest)):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:

@@ -18,8 +18,10 @@ from psycopg_pool import ConnectionPool
 from .config import settings
 
 TRIAL_DAYS = 7
+GUEST_LIMIT = 5
 _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300
+_guest_table_ready = False
 
 
 def validate_token(authorization: str | None = Header(default=None)) -> dict:
@@ -64,6 +66,47 @@ def trial_status(pool: ConnectionPool, user_id: str) -> dict:
     plan, days_left = row
     active = plan == "paid" or (plan == "trial" and days_left > 0)
     return {"plan": plan, "days_left": days_left if plan == "trial" else None, "active": active}
+
+
+def _ensure_guest_table(pool: ConnectionPool) -> None:
+    global _guest_table_ready
+    if _guest_table_ready:
+        return
+    with pool.connection() as conn:
+        conn.execute(
+            "create table if not exists guest_usage ("
+            "  guest_id text primary key,"
+            "  ip text not null,"
+            "  questions int not null default 0,"
+            "  created_at timestamptz not null default now(),"
+            "  updated_at timestamptz not null default now()"
+            ")"
+        )
+        conn.execute("create index if not exists guest_usage_ip_idx on guest_usage (ip)")
+    _guest_table_ready = True
+
+
+def guest_remaining(pool: ConnectionPool, guest_id: str, ip: str) -> int:
+    """Free questions left for this visitor — counted across both the browser
+    guest id and the IP, so clearing localStorage does not reset the quota."""
+    _ensure_guest_table(pool)
+    with pool.connection() as conn:
+        row = conn.execute(
+            "select coalesce(max(questions), 0) from guest_usage where guest_id = %s or ip = %s",
+            (guest_id, ip),
+        ).fetchone()
+    return max(0, GUEST_LIMIT - (row[0] if row else 0))
+
+
+def record_guest_question(pool: ConnectionPool, guest_id: str, ip: str) -> None:
+    _ensure_guest_table(pool)
+    with pool.connection() as conn:
+        conn.execute(
+            "insert into guest_usage (guest_id, ip, questions) values (%s, %s, 1) "
+            "on conflict (guest_id) do update "
+            "set questions = guest_usage.questions + 1, ip = excluded.ip, updated_at = now()",
+            (guest_id, ip),
+        )
 
 
 def require_active(pool: ConnectionPool, user: dict) -> dict:

@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.5.0** (2026-10-16)
+**Version: V-2.6.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -120,6 +120,16 @@ point-in-time questions ("what was the law when this lease was signed").
   returns plan + days left; sidebar shows account, trial countdown,
   Sign out. Env: SUPABASE_URL/SUPABASE_ANON_KEY (API, Railway) and
   NEXT_PUBLIC_SUPABASE_URL/_ANON_KEY (web, Vercel).
+- Guest preview (V-2.6.0): anonymous visitors get 5 free Ask questions,
+  no login. Server-tracked in `guest_usage` (auto-created table; keyed by
+  a localStorage guest id AND the request IP — max across both, so
+  clearing storage doesn't reset the quota). API: `gated_or_guest` on
+  /ask + /ask/stream, GET /guest/status, `X-Guest-Remaining` response
+  header (CORS-exposed), 402 over-limit message pointing at /signup.
+  Web: /app no longer redirects signed-out visitors; sidebar shows
+  "Guest preview: N of 5 free questions left" + trial/sign-in links;
+  Search/Check cites/memo/feedback prompt signup for guests; landing
+  hero CTA → /app "Try it now — no sign-up".
 
 **Product (https://casewise.si/app):**
 - Ask: streaming RAG answers — live pipeline status (real source counts),
