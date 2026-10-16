@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
@@ -792,12 +793,16 @@ export default function Home() {
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
-        <div className="flex items-baseline gap-2 px-4 pb-2 pt-5">
+        <Link
+          href="/"
+          title="Back to casewise.si"
+          className="flex items-baseline gap-2 px-4 pb-2 pt-5 hover:opacity-80"
+        >
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
           <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.3.0</span>
-        </div>
+        </Link>
         <button
           onClick={reset}
           className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
