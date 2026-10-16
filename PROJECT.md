@@ -67,13 +67,13 @@ point-in-time questions ("what was the law when this lease was signed").
 | Source type | Table | Contents | Count |
 |---|---|---|---|
 | statute | `statute_sections` | RPP, RPA (RPAPL), CVP (CPLR), GOB, MDW, ETP — full text, versioned, from nysenate.gov | 2,062 sections |
-| case | `case_decisions` | NY Official Reports slip opinions (9 RSS feeds, daily refresh) + CourtListener 10-yr backfill in progress (Appellate Term 6,780 target, COA, Civil Ct) | 670 + backfill |
+| case | `case_decisions` | 10-year corpus loaded from CourtListener bulk snapshots (Appellate Term 6,727, Court of Appeals 3,651, Civil Ct 27) + Official Reports slip-opinion feeds (daily refresh). The 85K-decision Appellate Division decade is archived on R2 (`ny-decisions/nyappdiv.jsonl.gz`), loaded at the Supabase Pro upgrade. API backfill retired. | 11,589 |
 | guidance | `agency_documents` | DHCR operational bulletins, policy statements, advisory opinions, fact sheets (English), RSC amendment rule-texts | 166 docs |
 | rule | `agency_documents` (doc_type court-rule) | Uniform Civil Rules Parts 208/210/212 (incl. housing part §208.42-.43), from committed seeds (`seeds/courtrules/*.txt`, captured via a real browser — nycourts.gov blocks bots) | 125 sections |
 | form | `agency_documents` (doc_type court-form) | Hand-curated landlord-tenant form catalog (`seeds/forms.yaml`, reviewable like the deadline rules) | 5 forms |
 | (feedback) | `answer_feedback` | Anonymous thumbs up/down + comments on answers; downvotes feed the future golden set | grows with use |
 | (curated) | `deadline_rules` | Hand-built deadline/notice rules, citation-validated against the statute corpus; source of truth is `pipelines/seeds/deadlines.yaml` (attorney reviews via git) | 5 drafts, **all unverified** |
-| (derived) | `chunks` | Embedded retrieval index over all of the above, 1024-dim pgvector | ~3,650+ |
+| (derived) | `chunks` | Embedded retrieval index over all of the above, 1024-dim pgvector | ~20,600 |
 
 ### Source quirks learned the hard way
 - **nysenate.gov**: WAF admits ONLY classic CLI user agents (`curl/`,
