@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.3.0** (2026-10-13)
+**Version: V-2.4.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -9,8 +9,8 @@
 ## What Casewise is
 
 An AI legal research assistant for **solo and small-firm attorneys practicing
-New York State property law** (landlord-tenant focus), reachable at
-https://casewise-bice.vercel.app. An attorney asks a question in plain
+New York State property law** (landlord-tenant focus), live at
+**https://casewise.si** (the app at /app; casewise-bice.vercel.app remains an alias). An attorney asks a question in plain
 language and receives a drafted answer in which **every legal assertion cites
 a source that provably exists in the corpus**, alongside a semantic search
 over statutes, court decisions, and DHCR guidance.
@@ -21,8 +21,7 @@ over statutes, court decisions, and DHCR guidance.
   small-firm pricing intent ($50–150/user/month); the real competitor is
   generic ChatGPT, beaten on NY-specific depth and verified citations.
 - Attorney-facing only (avoids unauthorized-practice-of-law exposure).
-- Domain casewise.si is owned; production currently runs on the Vercel URL.
-  Note: a live USPTO application for "CASEWISE" (Serial 50062522, Torticity
+- Note: a live USPTO application for "CASEWISE" (Serial 50062522, Torticity
   LLC, filed 2026-08-20) is a known trademark risk — keep branding
   investment reversible until cleared.
 
@@ -98,7 +97,22 @@ point-in-time questions ("what was the law when this lease was signed").
 
 ## Features (V-2.0.0)
 
-**Product (https://casewise-bice.vercel.app):**
+**Platform (V-2.4.0):**
+- Domain: casewise.si on Vercel (Namecheap nameservers delegated to
+  ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
+  domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
+- Marketing site: landing (chatgpt.com/overview-style: framed real
+  screenshots, alternating showcases, confidentiality section), Features
+  (single column, real captures), Pricing (7-day no-card trial, $99/mo
+  early-adopter placeholder), About. Screenshots regenerate via
+  `scripts/capture_marketing_shots.py` (runs real flows against prod).
+- Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
+  palette; green/red/amber reserved for semantic states.
+- NOT yet built: signup/login (Supabase Auth planned: Google +
+  email/password) and trial enforcement — the pricing page's 7-day trial
+  is not enforced until then; the app is open at /app.
+
+**Product (https://casewise.si/app):**
 - Ask: streaming RAG answers — live pipeline status (real source counts),
   token-by-token answer, verified-citation sources list with type badges
   and links to official texts; copy-to-clipboard (rich text for Word +
