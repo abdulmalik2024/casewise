@@ -73,7 +73,7 @@ export default function Landing() {
           <br />
           Understand the precedent.
           <br />
-          <span className="text-[#c96442]">Build your case.</span>
+          <span className="text-[#1e3a5a]">Build your case.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-[#6b6450] dark:text-neutral-400">
           The research assistant for New York property law — every answer cited to the
@@ -126,7 +126,7 @@ export default function Landing() {
             }`}
           >
             <div className="md:w-2/5">
-              <div className="text-xs font-semibold uppercase tracking-widest text-[#c96442]">
+              <div className="text-xs font-semibold uppercase tracking-widest text-[#1e3a5a]">
                 {s.eyebrow}
               </div>
               <h2 className="mt-2 text-3xl leading-snug tracking-tight [font-family:var(--font-serif)]">
@@ -210,7 +210,7 @@ export default function Landing() {
         <div className="mt-8">
           <Link
             href="/app"
-            className="rounded-full bg-[#c96442] px-8 py-3.5 font-medium text-white transition-colors hover:bg-[#b55a3a]"
+            className="rounded-full bg-[#1e3a5a] px-8 py-3.5 font-medium text-white transition-colors hover:bg-[#16304b]"
           >
             Start researching — free
           </Link>

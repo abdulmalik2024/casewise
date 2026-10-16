@@ -494,8 +494,8 @@ export default function Home() {
           title={h.pinned ? "Unpin" : "Pin to top"}
           className={`rounded px-1 text-xs ${
             h.pinned
-              ? "text-[#c96442]"
-              : "hidden text-[#a39f8d] hover:text-[#c96442] group-hover:inline-block"
+              ? "text-[#1e3a5a]"
+              : "hidden text-[#a39f8d] hover:text-[#1e3a5a] group-hover:inline-block"
           }`}
         >
           {h.pinned ? "★" : "☆"}
@@ -503,7 +503,7 @@ export default function Home() {
         <button
           onClick={(e) => deleteEntry(e, h)}
           title="Delete"
-          className="hidden rounded px-1 text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:inline-block"
+          className="hidden rounded px-1 text-xs text-[#a39f8d] hover:text-[#1e3a5a] group-hover:inline-block"
         >
           ✕
         </button>
@@ -566,7 +566,7 @@ export default function Home() {
             </label>
           )}
           {mode === "audit" && auditFile && (
-            <button type="button" onClick={() => setAuditFile(null)} className="text-xs text-[#a39f8d] hover:text-[#c96442]">
+            <button type="button" onClick={() => setAuditFile(null)} className="text-xs text-[#a39f8d] hover:text-[#1e3a5a]">
               ✕
             </button>
           )}
@@ -581,7 +581,7 @@ export default function Home() {
                 title="Optional: research the law as of a past date. Decisions and guidance after this date are excluded; statutes amended after it are flagged."
               />
               {asOf && (
-                <button type="button" onClick={() => setAsOf("")} className="text-[#a39f8d] hover:text-[#c96442]">
+                <button type="button" onClick={() => setAsOf("")} className="text-[#a39f8d] hover:text-[#1e3a5a]">
                   ✕
                 </button>
               )}
@@ -605,7 +605,7 @@ export default function Home() {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="rounded-xl bg-[#c96442] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#b55a3a] disabled:opacity-50"
+          className="rounded-xl bg-[#1e3a5a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16304b] disabled:opacity-50"
         >
           {status === "loading"
             ? "Working…"
@@ -639,7 +639,7 @@ export default function Home() {
       </button>
       {collapsed[idx] && !streaming ? null : streaming && !streamText ? (
         <p className="flex items-center gap-2 text-sm text-[#8a8571] dark:text-neutral-400">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#c96442]" />
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#1e3a5a]" />
           {statusMsg}
         </p>
       ) : (
@@ -724,7 +724,7 @@ export default function Home() {
               />
               <button
                 onClick={() => sendFeedback(idx, "down", feedbackComment.trim() || "(no comment)")}
-                className="rounded-lg bg-[#c96442] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#b55a3a]"
+                className="rounded-lg bg-[#1e3a5a] px-3 py-1.5 text-xs font-medium text-white hover:bg-[#16304b]"
               >
                 Send
               </button>
@@ -765,7 +765,7 @@ export default function Home() {
                     href={s.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="font-mono font-medium text-[#c96442] hover:underline"
+                    className="font-mono font-medium text-[#1e3a5a] hover:underline"
                   >
                     {s.citation}
                   </a>
@@ -775,7 +775,7 @@ export default function Home() {
                 <button
                   onClick={() => copyCite(s.marker + idx, s.citation)}
                   title="Copy citation"
-                  className="hidden text-xs text-[#a39f8d] hover:text-[#c96442] group-hover:inline"
+                  className="hidden text-xs text-[#a39f8d] hover:text-[#1e3a5a] group-hover:inline"
                 >
                   {copiedCite === s.marker + idx ? "✓" : "⧉"}
                 </button>
@@ -802,7 +802,7 @@ export default function Home() {
           onClick={reset}
           className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
         >
-          <span className="text-base leading-none text-[#c96442]">+</span> New research
+          <span className="text-base leading-none text-[#1e3a5a]">+</span> New research
         </button>
         <div className="mx-3 mt-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
           <span>New case prep</span>
@@ -929,7 +929,7 @@ export default function Home() {
                             <button
                               onClick={() => copyCite(`audit${i}`, r.citation)}
                               title="Copy citation"
-                              className="ml-1.5 hidden text-[#a39f8d] hover:text-[#c96442] group-hover:inline"
+                              className="ml-1.5 hidden text-[#a39f8d] hover:text-[#1e3a5a] group-hover:inline"
                             >
                               {copiedCite === `audit${i}` ? "✓" : "⧉"}
                             </button>
@@ -943,7 +943,7 @@ export default function Home() {
                           </td>
                           <td className="py-2 text-xs text-[#8a8571] dark:text-neutral-400">
                             {r.url ? (
-                              <a href={r.url} target="_blank" rel="noreferrer" className="text-[#c96442] hover:underline">
+                              <a href={r.url} target="_blank" rel="noreferrer" className="text-[#1e3a5a] hover:underline">
                                 {r.detail}
                               </a>
                             ) : (
@@ -1023,7 +1023,7 @@ export default function Home() {
                         href={r.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-2 inline-block text-xs text-[#c96442] hover:underline"
+                        className="mt-2 inline-block text-xs text-[#1e3a5a] hover:underline"
                       >
                         View source ↗
                       </a>

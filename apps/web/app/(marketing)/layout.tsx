@@ -22,7 +22,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </Link>
           <Link
             href="/app"
-            className="rounded-xl bg-[#c96442] px-4 py-2 font-medium text-white transition-colors hover:bg-[#b55a3a]"
+            className="rounded-xl bg-[#1e3a5a] px-4 py-2 font-medium text-white transition-colors hover:bg-[#16304b]"
           >
             Open Casewise
           </Link>

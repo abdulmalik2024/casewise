@@ -21,13 +21,13 @@ export default function Pricing() {
           </ul>
           <Link
             href="/app"
-            className="mt-6 block rounded-xl bg-[#c96442] px-5 py-2.5 text-center font-medium text-white hover:bg-[#b55a3a]"
+            className="mt-6 block rounded-xl bg-[#1e3a5a] px-5 py-2.5 text-center font-medium text-white hover:bg-[#16304b]"
           >
             Start free
           </Link>
         </div>
 
-        <div className="rounded-2xl border-2 border-[#c96442] bg-white p-8 dark:bg-[#30302e]">
+        <div className="rounded-2xl border-2 border-[#1e3a5a] bg-white p-8 dark:bg-[#30302e]">
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">
             Professional
             <span className="ml-2 rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
