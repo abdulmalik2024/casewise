@@ -24,15 +24,6 @@ export default function Signup() {
     else setCheckEmail(true); // email confirmation flow
   }
 
-  async function google() {
-    setError("");
-    const { error } = await supabase().auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/app` },
-    });
-    if (error) setError(error.message);
-  }
-
   if (checkEmail) {
     return (
       <main className="mx-auto max-w-sm px-6 py-16 text-center">
@@ -83,10 +74,11 @@ export default function Signup() {
         </button>
       </form>
       <button
-        onClick={google}
-        className="mt-3 w-full rounded-xl border border-[#e3e1d5] bg-white px-4 py-2.5 text-sm font-medium text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300"
+        disabled
+        title="Google sign-in is coming soon"
+        className="mt-3 w-full cursor-not-allowed rounded-xl border border-[#e3e1d5] bg-white px-4 py-2.5 text-sm font-medium text-[#a39f8d] opacity-60 dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-500"
       >
-        Continue with Google
+        Continue with Google — coming soon
       </button>
       <p className="mt-6 text-center text-sm text-[#8a8571]">
         Already have an account?{" "}
