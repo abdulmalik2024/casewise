@@ -26,8 +26,11 @@ as items ship; move completed items to the log at the bottom.
    by guest id + IP); Search/cite-check/memo require an account — V-2.6.0
 5. ✅ Billing: Stripe Checkout — $99.99/mo + $999.99/yr (2 months free), upgrade any time
    incl. during trial; webhook flips plan; no "unlimited" wording
-   (higher-volume firm plan reserved) — V-2.9.0. Needs Stripe account
-   setup (keys + 2 prices + webhook) to go live.
+   (higher-volume firm plan reserved) — V-2.9.0. Live keys configured.
+6. ✅ V-2.9.1: calendar-day trial countdown; quote-check wording per
+   attorney feedback ("not an exact match — check wording", no more
+   "unverified"). Payment+recurring test planned at trial expiry
+   (Oct 23) with a $1 promo code.
 
 ## Attorney feedback round 1 (2026-10-16)
 1. ✅ Concise answers (Short answer + ≤5 cited bullets) + "Go deeper"

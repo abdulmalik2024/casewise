@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.9.0** (2026-10-16)
+**Version: V-2.9.1** (2026-10-17)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,16 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.9.1 (2026-10-17): trial countdown counts calendar days (day after
+  signup reads "6 days left"; access ends at the start of day 8) — was 24h
+  blocks that showed "7 days left" a day in. Quote-check copy per attorney
+  feedback: "unverified" (read as provenance doubt) → "check wording
+  against the source before citing. Not an exact match." in the app flag
+  and the memo verification appendix, plus a one-line explainer of the
+  word-for-word comparison. Stripe live keys configured (Railway); live
+  checkout verified server-side; first real-payment webhook test pending
+  trial expiry (Abdul's account, Oct 23). Policy from this release: EVERY
+  change ships with a version bump + doc update in the same commit.
 - Billing (V-2.9.0): Stripe Checkout — $99.99/mo and $999.99/yr (2 months free)
   Professional plans, upgrade allowed any time INCLUDING during the trial
   (pricing cards + in-app "Upgrade" link in the sidebar). API:
