@@ -1,14 +1,69 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { supabase } from "../../../lib/supabase";
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+function UpgradeButton({ plan, label }: { plan: "monthly" | "yearly"; label: string }) {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+
+  async function upgrade() {
+    setBusy(true);
+    setMsg("");
+    try {
+      const { data } = await supabase().auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) {
+        router.push("/signup");
+        return;
+      }
+      const res = await fetch(`${API_URL}/billing/checkout`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ plan }),
+      });
+      if (res.status === 503) {
+        setMsg("Billing is being switched on — check back shortly.");
+        return;
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const { url } = await res.json();
+      window.location.href = url;
+    } catch {
+      setMsg("Could not start checkout — try again in a minute.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        onClick={upgrade}
+        disabled={busy}
+        className="mt-6 block w-full rounded-xl bg-[#1e3a5a] px-5 py-2.5 text-center font-medium text-white hover:bg-[#16304b] disabled:opacity-50"
+      >
+        {busy ? "Opening checkout…" : label}
+      </button>
+      {msg && <p className="mt-2 text-xs text-[#8a8571] dark:text-neutral-400">{msg}</p>}
+    </>
+  );
+}
 
 export default function Pricing() {
   return (
-    <main className="mx-auto max-w-4xl px-6 pb-20">
+    <main className="mx-auto max-w-5xl px-6 pb-20">
       <h1 className="pt-10 text-3xl tracking-tight [font-family:var(--font-serif)]">Pricing</h1>
       <p className="mt-2 text-[#6b6450] dark:text-neutral-400">
         Simple, self-serve, no sales calls. Built for solo and small-firm practice.
       </p>
 
-      <div className="mt-10 grid gap-6 md:grid-cols-2">
+      <div className="mt-10 grid gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-[#e3e1d5] bg-white p-8 dark:border-neutral-700 dark:bg-[#30302e]">
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">Free trial</h3>
           <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
@@ -38,20 +93,53 @@ export default function Pricing() {
             $99 <span className="text-sm font-normal text-[#8a8571]">per attorney / month</span>
           </div>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
-            <li>✓ Unlimited research questions and searches</li>
-            <li>✓ Check cites document audits</li>
+            <li>✓ Full daily practice use — Ask, Search, Check cites, IRAC drafts</li>
             <li>✓ Word memo exports with verification appendix</li>
             <li>✓ Building records and point-in-time research</li>
             <li>✓ Priority support and feature input</li>
           </ul>
-          <p className="mt-6 rounded-lg bg-[#f5f4ee] px-4 py-2.5 text-xs text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
-            Available when your trial ends — early adopters lock this rate.
+          <UpgradeButton plan="monthly" label="Upgrade — $99/month" />
+          <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
+            Upgrade any time — including during your free trial. Early adopters lock this rate.
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-[#e3e1d5] bg-white p-8 dark:border-neutral-700 dark:bg-[#30302e]">
+          <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">
+            Professional — Annual
+            <span className="ml-2 rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+              save $188
+            </span>
+          </h3>
+          <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
+            $1,000 <span className="text-sm font-normal text-[#8a8571]">per attorney / year</span>
+          </div>
+          <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
+            <li>✓ Everything in Professional</li>
+            <li>✓ Nearly two months free vs. monthly</li>
+            <li>✓ One invoice for the year</li>
+          </ul>
+          <UpgradeButton plan="yearly" label="Upgrade — $1,000/year" />
+          <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
+            Upgrade any time — including during your free trial.
           </p>
         </div>
       </div>
 
+      <p className="mt-6 text-xs text-[#8a8571] dark:text-neutral-400">
+        Plans cover the full research workload of a solo practice under fair professional
+        use. A higher-volume plan for busy firms is on the way.
+      </p>
+
       <h2 className="mt-14 text-xl [font-family:var(--font-serif)]">Questions attorneys ask us</h2>
       <div className="mt-4 space-y-5 text-sm">
+        <div>
+          <h3 className="font-semibold">Can I upgrade during the trial?</h3>
+          <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
+            Yes — upgrading any time keeps your access uninterrupted, no waiting for the
+            trial to end.
+          </p>
+        </div>
         <div>
           <h3 className="font-semibold">Is my research confidential?</h3>
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">

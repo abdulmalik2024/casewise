@@ -1112,7 +1112,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.8.0</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.9.0</span>
         </Link>
         <button
           onClick={reset}
@@ -1209,14 +1209,24 @@ export default function Home() {
                   Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
                 </div>
               )}
-              <button
-                onClick={async () => {
-                  await supabase().auth.signOut();
-                }}
-                className="mt-1 text-[#1e3a5a] hover:underline dark:text-blue-400"
-              >
-                Sign out
-              </button>
+              <div className="mt-1 flex gap-3">
+                {daysLeft !== null && (
+                  <Link
+                    href="/pricing"
+                    className="font-medium text-[#1e3a5a] hover:underline dark:text-blue-400"
+                  >
+                    Upgrade
+                  </Link>
+                )}
+                <button
+                  onClick={async () => {
+                    await supabase().auth.signOut();
+                  }}
+                  className="text-[#1e3a5a] hover:underline dark:text-blue-400"
+                >
+                  Sign out
+                </button>
+              </div>
             </>
           ) : (
             <>

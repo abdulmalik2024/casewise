@@ -106,6 +106,30 @@ def guest_status(request: Request, x_guest_id: str | None = Header(default=None)
     return {"limit": GUEST_LIMIT, "remaining": guest_remaining(app.state.pool, guest_id, ip)}
 
 
+class CheckoutIn(BaseModel):
+    plan: Literal["monthly", "yearly"]
+
+
+@app.post("/billing/checkout")
+def billing_checkout(body: CheckoutIn, user: dict = Depends(validate_token)):
+    # validate_token, not gated: an expired trial must still be able to upgrade
+    from .billing import create_checkout
+
+    return {"url": create_checkout(user, body.plan)}
+
+
+@app.post("/billing/webhook")
+async def billing_webhook(request: Request):
+    from .billing import handle_event, verify_webhook
+
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    payload = await request.body()
+    event = verify_webhook(payload, request.headers.get("stripe-signature"))
+    handle_event(app.state.pool, event)
+    return {"received": True}
+
+
 @app.get("/me")
 def me_endpoint(user: dict = Depends(validate_token)):
     if app.state.pool is None:

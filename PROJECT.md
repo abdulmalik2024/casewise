@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.8.0** (2026-10-16)
+**Version: V-2.9.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,19 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- Billing (V-2.9.0): Stripe Checkout — $99/mo and $1,000/yr (save $188)
+  Professional plans, upgrade allowed any time INCLUDING during the trial
+  (pricing cards + in-app "Upgrade" link in the sidebar). API:
+  POST /billing/checkout (validate_token only, so expired trials can pay)
+  → Stripe-hosted checkout with client_reference_id = user id;
+  POST /billing/webhook (HMAC signature verified, raw httpx — no Stripe
+  SDK) flips profiles.plan to 'paid' on checkout.session.completed and
+  back to 'trial' on customer.subscription.deleted (billing_customers
+  table maps Stripe customer → user, auto-created). Env: STRIPE_SECRET_KEY,
+  STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_YEARLY (503
+  "billing is being switched on" until set). Copy rule: never say
+  "unlimited" — plans are "full daily practice use / fair professional
+  use"; a higher-volume firm plan is reserved for later.
 - Guest preview (V-2.6.0): anonymous visitors get 5 free Ask questions,
   no login. Server-tracked in `guest_usage` (auto-created table; keyed by
   a localStorage guest id AND the request IP — max across both, so

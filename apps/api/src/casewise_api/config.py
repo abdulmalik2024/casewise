@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # Supabase Auth (token validation): project URL + anon/publishable key
     supabase_url: str = ""
     supabase_anon_key: str = ""
+    stripe_secret_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_monthly: str = ""
+    stripe_price_yearly: str = ""
 
 
 settings = Settings()
