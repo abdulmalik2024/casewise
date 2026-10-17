@@ -103,7 +103,7 @@ point-in-time questions ("what was the law when this lease was signed").
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
 - Marketing site: landing (chatgpt.com/overview-style: framed real
   screenshots, alternating showcases, confidentiality section), Features
-  (single column, real captures), Pricing (7-day no-card trial, $99/mo
+  (single column, real captures), Pricing (7-day no-card trial, $99.99/mo
   early-adopter placeholder), About. Screenshots regenerate via
   `scripts/capture_marketing_shots.py` (runs real flows against prod).
 - Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
@@ -146,7 +146,7 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
-- Billing (V-2.9.0): Stripe Checkout — $99/mo and $1,000/yr (save $188)
+- Billing (V-2.9.0): Stripe Checkout — $99.99/mo and $999.99/yr (2 months free)
   Professional plans, upgrade allowed any time INCLUDING during the trial
   (pricing cards + in-app "Upgrade" link in the sidebar). API:
   POST /billing/checkout (validate_token only, so expired trials can pay)

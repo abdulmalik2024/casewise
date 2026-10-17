@@ -24,7 +24,7 @@ as items ship; move completed items to the log at the bottom.
    Remaining: Google OAuth provider config (button shipped).
 4. ✅ Guest preview: 5 free Ask questions without login (server-tracked
    by guest id + IP); Search/cite-check/memo require an account — V-2.6.0
-5. ✅ Billing: Stripe Checkout — $99/mo + $1,000/yr, upgrade any time
+5. ✅ Billing: Stripe Checkout — $99.99/mo + $999.99/yr (2 months free), upgrade any time
    incl. during trial; webhook flips plan; no "unlimited" wording
    (higher-volume firm plan reserved) — V-2.9.0. Needs Stripe account
    setup (keys + 2 prices + webhook) to go live.

@@ -90,7 +90,7 @@ export default function Pricing() {
             </span>
           </h3>
           <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
-            $99 <span className="text-sm font-normal text-[#8a8571]">per attorney / month</span>
+            $99.99 <span className="text-sm font-normal text-[#8a8571]">per attorney / month</span>
           </div>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
             <li>✓ Full daily practice use — Ask, Search, Check cites, IRAC drafts</li>
@@ -98,7 +98,7 @@ export default function Pricing() {
             <li>✓ Building records and point-in-time research</li>
             <li>✓ Priority support and feature input</li>
           </ul>
-          <UpgradeButton plan="monthly" label="Upgrade — $99/month" />
+          <UpgradeButton plan="monthly" label="Upgrade — $99.99/month" />
           <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
             Upgrade any time — including during your free trial. Early adopters lock this rate.
           </p>
@@ -108,18 +108,18 @@ export default function Pricing() {
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">
             Professional — Annual
             <span className="ml-2 rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
-              save $188
+              2 months free
             </span>
           </h3>
           <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
-            $1,000 <span className="text-sm font-normal text-[#8a8571]">per attorney / year</span>
+            $999.99 <span className="text-sm font-normal text-[#8a8571]">per attorney / year</span>
           </div>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
             <li>✓ Everything in Professional</li>
-            <li>✓ Nearly two months free vs. monthly</li>
+            <li>✓ Two months free vs. paying monthly</li>
             <li>✓ One invoice for the year</li>
           </ul>
-          <UpgradeButton plan="yearly" label="Upgrade — $1,000/year" />
+          <UpgradeButton plan="yearly" label="Upgrade — $999.99/year" />
           <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
             Upgrade any time — including during your free trial.
           </p>
