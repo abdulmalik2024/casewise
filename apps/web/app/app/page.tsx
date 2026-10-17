@@ -950,13 +950,18 @@ export default function Home() {
             <details className="text-amber-700 dark:text-amber-400">
               <summary className="cursor-pointer">
                 ⚠ {x.answer.quote_check.unverified.length} of {x.answer.quote_check.total}{" "}
-                quotations could not be matched to the sources — verify before relying
+                quotations — check wording against the source before citing. Not an exact
+                match.
               </summary>
               <ul className="mt-1 list-disc pl-5">
                 {x.answer.quote_check.unverified.map((q, i) => (
                   <li key={i} className="italic">&ldquo;{q}&rdquo;</li>
                 ))}
               </ul>
+              <p className="mt-1 text-[#8a8571] dark:text-neutral-400">
+                Every quotation is compared word-for-word to the stored source text; anything
+                that isn&apos;t an exact match is flagged here instead of silently shown.
+              </p>
             </details>
           )}
         </div>

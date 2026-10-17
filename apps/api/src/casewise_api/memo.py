@@ -149,8 +149,8 @@ def build_memo(data: MemoIn) -> bytes:
         else:
             doc.add_paragraph(
                 f"Quotations: {qc.verified} of {qc.total} quoted passage(s) matched the "
-                "cited source texts. The following could NOT be matched and must be "
-                "verified manually before filing:"
+                "cited source texts word-for-word. The following are not an exact match — "
+                "check the wording against the source before citing:"
             )
             for q in qc.unverified:
                 doc.add_paragraph(f'"{q}"', style="Intense Quote")
