@@ -30,10 +30,12 @@ as items ship; move completed items to the log at the bottom.
    expand button — V-2.7.0
 2. ✅ Search: quoted exact-phrase matching, full-section expand,
    term highlighting, find-in-text — V-2.7.0
-3. ⬜ IRAC Draft mode (issue + case facts → verified-citation
-   Issue/Rule/Application/Conclusion, Word export) — V-2.8.0, NEXT;
-   waiting on an anonymized fact pattern from the attorney to build
-   against a real case
+3. ✅ IRAC Draft mode (issue + case facts → verified-citation
+   Issue/Rule/Application/Conclusion with counteranalysis, FACT NEEDED
+   flags, deterministic structure lint, Word export) — V-2.8.0. Built
+   against public golden set (bar-exam answers, CUNY memo, Housing Part
+   habitability decisions) per deep-research report — no client material
+   needed. Awaiting attorney field test.
 
 **Now #5 (DHCR parser) is PARKED pending a real rent-history printout** —
 official references secured in pipelines/seeds/dhcr-refs/ (RAI guide 07/2026

@@ -21,11 +21,20 @@ type Source = {
 
 type QuoteCheck = { total: number; verified: number; unverified: string[] };
 
+type DraftCheck = {
+  missing_sections: string[];
+  uncited_rule_paragraphs: number;
+  markers_only_in_application: string[];
+  fact_gaps: string[];
+  passed: boolean;
+};
+
 type AskResponse = {
   answer: string;
   sources: Source[];
   model: string;
   quote_check?: QuoteCheck | null;
+  draft_check?: DraftCheck | null;
 };
 
 type Exchange = { question: string; answer: AskResponse | null };
@@ -53,7 +62,7 @@ type AuditResponse = { rows: AuditRow[]; quotes: QuoteCheck };
 
 type HistoryEntry = {
   id: string;
-  mode: "ask" | "search" | "audit";
+  mode: "ask" | "search" | "audit" | "draft";
   query: string;
   sourceType: SourceFilter;
   at: string;
@@ -61,6 +70,7 @@ type HistoryEntry = {
   thread?: Exchange[];
   results?: SearchResult[];
   audit?: AuditResponse;
+  facts?: string; // draft mode: the case facts the attorney provided
   pinned?: boolean;
 };
 
@@ -184,7 +194,8 @@ function typeLabel(t: string): string {
 }
 
 export default function Home() {
-  const [mode, setMode] = useState<"ask" | "search" | "audit">("ask");
+  const [mode, setMode] = useState<"ask" | "search" | "audit" | "draft">("ask");
+  const [facts, setFacts] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
   const [sourceType, setSourceType] = useState<SourceFilter>("");
@@ -260,7 +271,7 @@ export default function Home() {
   }, [isGuest]);
 
   useEffect(() => {
-    if (mode === "ask" && (streamText || status === "loading")) {
+    if ((mode === "ask" || mode === "draft") && (streamText || status === "loading")) {
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
     }
   }, [streamText, status, mode, thread.length]);
@@ -300,13 +311,14 @@ export default function Home() {
       setThread([]);
       setResults([]);
       threadIdRef.current = "";
-    } else if (entry.mode === "ask") {
+    } else if (entry.mode === "ask" || entry.mode === "draft") {
       const t =
         entry.thread ??
         (entry.answer ? [{ question: entry.query, answer: entry.answer }] : []);
       setThread(t);
       threadIdRef.current = entry.id;
       setResults([]);
+      if (entry.mode === "draft") setFacts(entry.facts ?? "");
     } else {
       setResults(entry.results ?? []);
       setExpandedResults({});
@@ -410,6 +422,65 @@ export default function Home() {
     }
   }
 
+  async function runDraftStream(issue: string, factsText: string) {
+    setStatusMsg("Connecting…");
+    const res = await fetch(`${API_URL}/draft/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ issue, facts: factsText, as_of: asOf || null }),
+    });
+    if (res.status === 401) {
+      if (authToken) router.replace("/login");
+      throw new Error("Please sign in.");
+    }
+    if (res.status === 402) throw new Error((await res.json()).detail ?? "Your trial has ended.");
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let acc = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+      for (const frame of frames) {
+        const line = frame.split("\n").find((l) => l.startsWith("data: "));
+        if (!line) continue;
+        const event = JSON.parse(line.slice(6));
+        if (event.type === "status") setStatusMsg(event.message);
+        else if (event.type === "delta") {
+          acc += event.text;
+          setStreamText(acc);
+        } else if (event.type === "done") {
+          const final: AskResponse = {
+            answer: event.answer,
+            sources: event.sources,
+            model: event.model,
+            quote_check: event.quote_check ?? null,
+            draft_check: event.draft_check ?? null,
+          };
+          setThread([{ question: issue, answer: final }]);
+          setStreamText("");
+          const id = `draft::${issue}`;
+          threadIdRef.current = id;
+          recordHistory({
+            id,
+            mode: "draft",
+            query: `Draft: ${issue.slice(0, 60)}`,
+            sourceType: "",
+            at: new Date().toISOString(),
+            thread: [{ question: issue, answer: final }],
+            facts: factsText,
+          });
+        } else if (event.type === "error") {
+          throw new Error(event.message);
+        }
+      }
+    }
+  }
+
   async function askMoreDetail() {
     if (status === "loading") return;
     const prior = thread.filter((x) => x.answer);
@@ -433,7 +504,7 @@ export default function Home() {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
       setError(
-        "Search and Check cites need a free account — 7-day trial, no credit card. " +
+        "Search, Check cites, and Draft need a free account — 7-day trial, no credit card. " +
           "Guest preview covers Ask."
       );
       setStatus("error");
@@ -441,6 +512,18 @@ export default function Home() {
     }
     const q = query.trim();
     if (mode !== "audit" && q.length < 3) return;
+    if (mode === "draft" && q.length < 10) {
+      setError("Frame the legal issue in a sentence (at least 10 characters).");
+      setStatus("error");
+      return;
+    }
+    if (mode === "draft" && facts.trim().length < 50) {
+      setError(
+        "Add the facts of the case (at least a paragraph). Anonymize names and addresses."
+      );
+      setStatus("error");
+      return;
+    }
     if (mode === "audit" && !auditFile && q.length < 50) {
       setError("Paste at least a paragraph of the document, or upload a PDF/Word file.");
       setStatus("error");
@@ -485,6 +568,9 @@ export default function Home() {
           at: new Date().toISOString(),
           audit: data,
         });
+      } else if (mode === "draft") {
+        setThread([{ question: q, answer: null }]);
+        await runDraftStream(q, facts.trim());
       } else if (mode === "ask") {
         const prior = thread.filter((x) => x.answer);
         setThread([...prior, { question: q, answer: null }]);
@@ -670,6 +756,22 @@ export default function Home() {
           placeholder="Paste a brief, motion, or memo — yours or opposing counsel's. Every NY citation gets checked; quotes get matched to the sources. Or upload a PDF below."
           className="w-full resize-y bg-transparent px-5 pb-2 pt-4 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
         />
+      ) : mode === "draft" ? (
+        <>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder='The legal issue, e.g. "Can the tenant assert a warranty-of-habitability defense to this nonpayment petition?"'
+            className="w-full bg-transparent px-5 pb-1 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+          />
+          <textarea
+            value={facts}
+            onChange={(e) => setFacts(e.target.value)}
+            rows={6}
+            placeholder="The facts of the case — dates, conditions, notices, payments, who did what. Anonymize names and addresses. The draft will only use facts you provide here; gaps are flagged, never assumed."
+            className="w-full resize-y border-t border-[#f0eee4] bg-transparent px-5 pb-2 pt-3 text-[14px] outline-none placeholder:text-[#a39f8d] dark:border-neutral-800 dark:placeholder:text-neutral-500"
+          />
+        </>
       ) : (
         <input
           value={query}
@@ -686,7 +788,7 @@ export default function Home() {
       )}
       <div className="flex items-center justify-between px-3 pb-3">
         <div className="flex items-center gap-1 text-xs">
-          {(["ask", "search", "audit"] as const).map((m) => (
+          {(["ask", "search", "audit", "draft"] as const).map((m) => (
             <button
               type="button"
               key={m}
@@ -697,7 +799,13 @@ export default function Home() {
                   : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400 dark:hover:bg-neutral-800"
               }`}
             >
-              {m === "ask" ? "Ask" : m === "search" ? "Search" : "Check cites"}
+              {m === "ask"
+                ? "Ask"
+                : m === "search"
+                  ? "Search"
+                  : m === "audit"
+                    ? "Check cites"
+                    : "Draft IRAC"}
             </button>
           ))}
           {mode === "audit" && (
@@ -716,7 +824,7 @@ export default function Home() {
               ✕
             </button>
           )}
-          {mode === "ask" && (
+          {(mode === "ask" || mode === "draft") && (
             <label className="ml-1 flex items-center gap-1.5 text-xs text-[#8a8571] dark:text-neutral-400">
               As of
               <input
@@ -757,11 +865,13 @@ export default function Home() {
             ? "Working…"
             : mode === "audit"
               ? "Check cites"
-              : mode === "ask"
-                ? thread.length
-                  ? "Follow up"
-                  : "Research"
-                : "Search"}
+              : mode === "draft"
+                ? "Draft IRAC"
+                : mode === "ask"
+                  ? thread.length
+                    ? "Follow up"
+                    : "Research"
+                  : "Search"}
         </button>
       </div>
     </form>
@@ -798,6 +908,36 @@ export default function Home() {
           <ReactMarkdown>{x.answer ? x.answer.answer : streamText}</ReactMarkdown>
         </article>
       )}
+      {x.answer && !collapsed[idx] && x.answer.draft_check && (
+        <div className="mt-2 text-xs">
+          {x.answer.draft_check.passed ? (
+            <span className="text-emerald-700 dark:text-emerald-400">
+              ✓ IRAC structure check passed: all sections present, every rule proposition
+              cited, application relies only on authorities the rule introduced
+            </span>
+          ) : (
+            <div className="text-amber-700 dark:text-amber-400">
+              ⚠ Structure check:
+              <ul className="mt-1 list-inside list-disc">
+                {x.answer.draft_check.missing_sections.length > 0 && (
+                  <li>missing section{x.answer.draft_check.missing_sections.length > 1 ? "s" : ""}: {x.answer.draft_check.missing_sections.join(", ")}</li>
+                )}
+                {x.answer.draft_check.uncited_rule_paragraphs > 0 && (
+                  <li>{x.answer.draft_check.uncited_rule_paragraphs} rule paragraph{x.answer.draft_check.uncited_rule_paragraphs > 1 ? "s" : ""} without a citation</li>
+                )}
+                {x.answer.draft_check.markers_only_in_application.length > 0 && (
+                  <li>application cites {x.answer.draft_check.markers_only_in_application.join(", ")} without introducing {x.answer.draft_check.markers_only_in_application.length > 1 ? "them" : "it"} in the rule</li>
+                )}
+              </ul>
+            </div>
+          )}
+          {x.answer.draft_check.fact_gaps.length > 0 && (
+            <div className="mt-1 text-[#8a8571] dark:text-neutral-400">
+              Facts the draft needs from you: {x.answer.draft_check.fact_gaps.join("; ")}
+            </div>
+          )}
+        </div>
+      )}
       {x.answer && !collapsed[idx] && x.answer.quote_check && x.answer.quote_check.total > 0 && (
         <div className="mt-2 text-xs">
           {x.answer.quote_check.unverified.length === 0 ? (
@@ -830,7 +970,7 @@ export default function Home() {
             >
               {copiedIdx === idx ? "Copied ✓" : "Copy answer"}
             </button>
-            {idx === thread.length - 1 && (
+            {idx === thread.length - 1 && mode === "ask" && (
               <button
                 onClick={askMoreDetail}
                 title="Expand this answer: authorities, exceptions, edge cases"
@@ -972,7 +1112,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.7.0</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.8.0</span>
         </Link>
         <button
           onClick={reset}
@@ -1005,6 +1145,7 @@ export default function Home() {
               const asks = entries.filter((h) => h.mode === "ask");
               const searches = entries.filter((h) => h.mode === "search");
               const audits = entries.filter((h) => h.mode === "audit");
+              const drafts = entries.filter((h) => h.mode === "draft");
               return (
                 <div key={label} className="mb-4">
                   <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
@@ -1032,6 +1173,14 @@ export default function Home() {
                         Cite checks
                       </div>
                       <ul>{audits.map(historyItem)}</ul>
+                    </>
+                  )}
+                  {drafts.length > 0 && (
+                    <>
+                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                        IRAC drafts
+                      </div>
+                      <ul>{drafts.map(historyItem)}</ul>
                     </>
                   )}
                 </div>
@@ -1127,7 +1276,7 @@ export default function Home() {
               </p>
             )}
 
-            {mode === "ask" &&
+            {(mode === "ask" || mode === "draft") &&
               thread.map((x, idx) =>
                 answerCard(x, idx, status === "loading" && idx === thread.length - 1)
               )}

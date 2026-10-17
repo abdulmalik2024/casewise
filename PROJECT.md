@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.7.0** (2026-10-16)
+**Version: V-2.8.0** (2026-10-16)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -130,8 +130,22 @@ point-in-time questions ("what was the law when this lease was signed").
   match in section text (semantic fallback if no verbatim hit); result
   cards expand to the full section text with query-term highlighting and
   a find-in-text box with match count. Pending from the same feedback:
-  IRAC Draft mode (issue + case facts → verified-citation IRAC, Word
-  export) — awaiting an anonymized fact pattern from the attorney.
+  IRAC Draft mode — shipped as V-2.8.0 (below).
+- IRAC Draft mode (V-2.8.0): new "Draft IRAC" tab — attorney supplies the
+  legal issue + anonymized case facts; output is one complete
+  Issue/Rule/Application/Conclusion unit per discrete issue with [Sn]
+  verified citations, counteranalysis, and [FACT NEEDED] flags instead of
+  assumed facts; ends "DRAFT — attorney work product for review…".
+  API: POST /draft/stream (accounts only; draft.py), retrieval runs a
+  statute-scoped search first (statutes-before-cases Rule grounding),
+  max_tokens 20k (thinking shares the budget — 8k truncated drafts).
+  Deterministic IRAC lint (irac_lint) on output: required headings, a
+  citation on every Rule paragraph, Application cites only authorities the
+  Rule introduced, fact-gap list — shown in the UI as a structure-check
+  line next to quote verification. Memo export works on drafts. Design
+  grounded in research report "IRAC drafting method and examples"
+  (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
+  NCBE/BOLE items are internal-eval-only, licensing).
 - Guest preview (V-2.6.0): anonymous visitors get 5 free Ask questions,
   no login. Server-tracked in `guest_usage` (auto-created table; keyed by
   a localStorage guest id AND the request IP — max across both, so

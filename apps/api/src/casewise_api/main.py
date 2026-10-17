@@ -184,6 +184,42 @@ def ask_stream_post(body: AskStreamIn, caller: dict = Depends(gated_or_guest)):
     return _stream_response(body.q, history or None, body.as_of, caller=caller)
 
 
+class DraftIn(BaseModel):
+    issue: str = Field(min_length=10, max_length=500)
+    facts: str = Field(min_length=50, max_length=12_000)
+    as_of: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+
+@app.post("/draft/stream")
+def draft_stream_endpoint(body: DraftIn, user: dict = Depends(gated)):
+    if app.state.pool is None or not settings.voyage_api_key:
+        raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
+    if not settings.anthropic_api_key:
+        raise HTTPException(501, "answer generation not yet enabled; set ANTHROPIC_API_KEY")
+
+    from .draft import draft_stream
+
+    def gen():
+        try:
+            for event in draft_stream(app.state.pool, body.issue, body.facts, body.as_of):
+                yield f"data: {json.dumps(event)}\n\n"
+        except httpx.HTTPStatusError as e:
+            msg = (
+                "embedding service is at its rate limit; retry shortly"
+                if e.response.status_code == 429
+                else "upstream error; retry shortly"
+            )
+            yield f"data: {json.dumps({'type': 'error', 'message': msg})}\n\n"
+        except Exception:
+            yield f"data: {json.dumps({'type': 'error', 'message': 'something went wrong; retry shortly'})}\n\n"
+
+    return StreamingResponse(
+        gen(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
+
+
 class AuditIn(BaseModel):
     text: str = Field(min_length=50, max_length=300_000)
 
