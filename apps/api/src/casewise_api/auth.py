@@ -55,8 +55,10 @@ def validate_token(authorization: str | None = Header(default=None)) -> dict:
 def trial_status(pool: ConnectionPool, user_id: str) -> dict:
     """-> {plan, days_left, active}."""
     with pool.connection() as conn:
+        # calendar days, not elapsed 24h blocks: the day after signup reads
+        # "6 days left", and access ends at the start of day 8
         row = conn.execute(
-            "select plan, greatest(0, %s - extract(day from now() - created_at))::int "
+            "select plan, greatest(0, %s - (current_date - created_at::date))::int "
             "from profiles where id = %s",
             (TRIAL_DAYS, user_id),
         ).fetchone()
