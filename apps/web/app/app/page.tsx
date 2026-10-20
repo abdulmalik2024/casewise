@@ -272,6 +272,7 @@ export default function Home() {
   const [lastSearchQ, setLastSearchQ] = useState("");
   const answerRefs = useRef<(HTMLElement | null)[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
   const threadIdRef = useRef<string>("");
 
   useEffect(() => {
@@ -348,11 +349,13 @@ export default function Home() {
     return () => clearInterval(id);
   }, [status, streamText, pendingCites]);
 
+  // the answer window scrolls internally; follow the streaming text inside it
   useEffect(() => {
-    if ((mode === "ask" || mode === "draft") && (streamText || status === "loading")) {
-      bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if ((mode === "ask" || mode === "draft") && streamText) {
+      const el = answerRefs.current[thread.length - 1];
+      if (el) el.scrollTop = el.scrollHeight;
     }
-  }, [streamText, status, mode, thread.length]);
+  }, [streamText, mode, thread.length]);
 
   const authHeaders = (): Record<string, string> =>
     authToken ? { Authorization: `Bearer ${authToken}` } : { "X-Guest-Id": guestId() };
@@ -566,6 +569,8 @@ export default function Home() {
   async function askMoreDetail() {
     if (status === "loading") return;
     const prior = thread.filter((x) => x.answer);
+    setCollapsed(Object.fromEntries(prior.map((_, i) => [i, true])));
+    mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     const lastQ = prior[prior.length - 1]?.question.slice(0, 380) ?? "";
     const q = `Go deeper on ${lastQ || "the last answer"}: fuller analysis of the key authorities, exceptions, and edge cases.`;
     setThread([...prior, { question: q, answer: null }]);
@@ -657,6 +662,11 @@ export default function Home() {
         await runDraftStream(q, facts.trim());
       } else if (mode === "ask") {
         const prior = thread.filter((x) => x.answer);
+        // follow-up swaps in place: prior exchanges fold to one-line rows and
+        // the view returns to the top, where the new answer streams
+        setCollapsed(Object.fromEntries(prior.map((_, i) => [i, true])));
+        setSourcesCollapsed({});
+        mainRef.current?.scrollTo({ top: 0, behavior: "smooth" });
         setThread([...prior, { question: q, answer: null }]);
         setQuery("");
         await runAskStream(q, prior);
@@ -1095,7 +1105,7 @@ export default function Home() {
           ref={(el) => {
             answerRefs.current[idx] = el;
           }}
-          className="prose prose-sm max-w-none rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e] [&_table]:text-xs"
+          className="prose prose-sm max-h-[62vh] max-w-none overflow-y-auto rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e] [&_table]:text-xs"
         >
           <ReactMarkdown>{x.answer ? x.answer.answer : streamText}</ReactMarkdown>
         </article>
@@ -1485,7 +1495,7 @@ export default function Home() {
         </div>
       )}
 
-      <main className="min-w-0 flex-1 overflow-y-auto">
+      <main ref={mainRef} className="min-w-0 flex-1 overflow-y-auto">
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e8e6dc] bg-[#faf9f5]/95 px-4 py-3 backdrop-blur dark:border-neutral-800 dark:bg-[#262624]/95 md:hidden">
           <Link href="/" className="flex items-baseline gap-2">
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
@@ -1745,7 +1755,7 @@ export default function Home() {
             <div ref={bottomRef} />
             </div>
             {(mode === "ask" || mode === "draft") && panelIdx >= 0 && thread[panelIdx]?.answer && (
-              <aside className="hidden lg:sticky lg:top-8 lg:block">
+              <aside className="hidden lg:sticky lg:top-8 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
                 {authoritiesPanel(thread[panelIdx].answer!)}
               </aside>
             )}
