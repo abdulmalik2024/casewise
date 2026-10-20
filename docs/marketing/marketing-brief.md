@@ -53,6 +53,63 @@ don't trust, or expensive Westlaw/Lexis subscriptions they underuse.
   counsel's) and every NY citation is validated against official records;
   quotes are matched to sources.
 
+## Practice-area coverage (be honest in posts — updated 2026-10-20)
+
+**Fully covered — lead marketing with these:**
+- Landlord–Tenant Attorney (the bullseye: statutes, 10 years of housing
+  decisions, DHCR guidance, building records, IRAC drafts)
+- Eviction Defense / Tenant Attorney (same foundation from the tenant side:
+  holdover & nonpayment case law, rent stabilization, habitability)
+- Housing Court practitioner (NYC Civil Court / Housing Part practice)
+- Real Estate Litigation Attorney (full CPLR, RPAPL, a decade of Court of
+  Appeals + Appellate Term decisions, cite checking)
+- Real Estate Dispute Resolution Attorney
+- Property Rights Attorney (quiet title, adverse possession)
+
+**Partially covered — mention as "NY real estate litigation and leasing",
+don't name individually:**
+- Residential Real Estate Attorney · Mortgage & Foreclosure Attorney ·
+  Real Estate Contract Attorney · Commercial Real Estate (lease disputes) ·
+  Condominium & HOA Attorney · Real Estate Brokerage Attorney ·
+  Title & Escrow · Real Estate Investment
+
+**Not covered — never claim:**
+Land Use & Zoning · Property Tax / RE Tax · Construction Law · Eminent
+Domain · Environmental · RE Development · RE Finance · RE Insurance ·
+Estate Planning
+
+Citation verification (Check cites) is broader than research coverage: it
+validates citations to essentially ALL New York case law, historical and
+current (5M+ citation records) — a safe claim on its own.
+
+## Target audience (for post targeting and voice)
+
+**Primary buyer and user (same person):**
+- Job titles: Attorney, Solo Practitioner, Principal, Founding Attorney,
+  Of Counsel, Associate, Partner — at firms of 1–10 lawyers
+- Practice self-descriptions to target: "landlord-tenant attorney",
+  "housing attorney", "tenant lawyer", "eviction attorney", "real estate
+  litigation", "housing court", "L&T"
+- Geography: New York City (all five boroughs) first, then NY metro
+  (Westchester, Long Island) and NY State
+- Their day: housing court appearances, drafting answers/motions/
+  affirmations, DHCR rent-history fights, researching RPAPL/RPL/CPLR
+  questions between court calls, reviewing opposing counsel's papers
+- Their pain: no associate to delegate research to; Westlaw/Lexis too
+  expensive for what they use; generic AI not trustable in court
+
+**Secondary segments (worth engaging, slower converts):**
+- Legal aid / nonprofit staff attorneys (Legal Aid Society, housing
+  justice orgs) — heavy housing-court volume, budget-constrained
+- Paralegals and legal assistants at small L&T firms — they do the first
+  pass of research and cite checking; the attorney still buys
+- Recently admitted attorneys hanging a shingle in housing/real estate —
+  no firm library, most price-sensitive, most AI-open
+
+**Explicitly NOT the audience (never target or imply):**
+- Tenants, landlords, or the general public (UPL line — attorney-only)
+- BigLaw (anti-Harvey positioning; our value is solo/small-firm fit)
+
 ## Pricing & funnel (current)
 
 - Try 5 questions free as a guest — no sign-up, straight from the homepage.
