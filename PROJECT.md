@@ -155,7 +155,11 @@ point-in-time questions ("what was the law when this lease was signed").
   three example-question chips (fill the Ask box: habitability,
   month-to-month notice, security deposits — all anchor-backed);
   "As of" relabeled "Research date" with a "current law" hint when
-  empty; "Private by design" note in the sidebar footer. Workflow note:
+  empty; "Private by design" note in the sidebar footer. Mobile: new
+  sticky header (wordmark + navy hamburger) opening the sidebar as a
+  drawer — previously phones had NO access to history/account/guest
+  counter; drawer closes on restore/new-research; composer toolbar
+  wraps cleanly (Research button no longer clips off-screen). Workflow note:
   UI changes now go out as Vercel PREVIEW deploys for Abdul's approval
   before production (preview URLs sit behind Vercel auth; he opens them
   logged in, or tests locally via npx next dev).

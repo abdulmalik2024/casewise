@@ -236,6 +236,7 @@ export default function Home() {
   const [authChecked, setAuthChecked] = useState(false);
   const [guestLeft, setGuestLeft] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
   const [findInResult, setFindInResult] = useState<Record<number, string>>({});
   const [lastSearchQ, setLastSearchQ] = useState("");
@@ -335,6 +336,7 @@ export default function Home() {
   }
 
   function restore(entry: HistoryEntry) {
+    setMobileNavOpen(false);
     setMode(entry.mode);
     setQuery("");
     setSourceType(entry.sourceType);
@@ -379,6 +381,7 @@ export default function Home() {
   }
 
   function reset() {
+    setMobileNavOpen(false);
     setQuery("");
     setAuditResult(null);
     setAuditFile(null);
@@ -818,7 +821,7 @@ export default function Home() {
           className="w-full bg-transparent px-5 pb-2 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
         />
       )}
-      <div className="flex items-center justify-between px-3 pb-3">
+      <div className="flex flex-wrap items-center justify-between gap-y-2 px-3 pb-3">
         <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs">
           {(["ask", "search", "audit", "draft"] as const).map((m) => (
             <button
@@ -893,7 +896,7 @@ export default function Home() {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="rounded-xl bg-[#1e3a5a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16304b] disabled:opacity-50"
+          className="ml-auto rounded-xl bg-[#1e3a5a] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#16304b] disabled:opacity-50"
         >
           {status === "loading"
             ? "Working…"
@@ -1141,6 +1144,163 @@ export default function Home() {
     );
   }
 
+  const sidebarInner = (
+    <>
+          <div className="flex items-baseline justify-between px-4 pb-2 pt-5">
+            <Link href="/" title="Back to casewise.si" className="flex items-baseline gap-2 hover:opacity-80">
+              <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
+                Casewise
+              </span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.12.0</span>
+            </Link>
+            <button
+              onClick={toggleSidebar}
+              title="Hide sidebar"
+              className="hidden rounded-md px-1.5 py-0.5 text-sm text-[#a39f8d] hover:bg-[#eae8dc] hover:text-[#5d5848] dark:hover:bg-neutral-800 md:block"
+            >
+              «
+            </button>
+          </div>
+          <button
+            onClick={reset}
+            className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+          >
+            <span className="text-base leading-none text-[#1e3a5a]">+</span> New research
+          </button>
+          <div className="mx-3 mt-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
+            <span>New case prep</span>
+            <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide dark:bg-neutral-800">
+              soon
+            </span>
+          </div>
+
+          <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
+            {pinned.length > 0 && (
+              <div className="mb-4">
+                <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
+                  Pinned
+                </div>
+                <ul>{pinned.map(historyItem)}</ul>
+              </div>
+            )}
+            {grouped.length === 0 && pinned.length === 0 ? (
+              <p className="px-2 text-xs text-[#a39f8d] dark:text-neutral-500">
+                Your questions and searches will appear here.
+              </p>
+            ) : (
+              grouped.map(([label, entries]) => {
+                const asks = entries.filter((h) => h.mode === "ask");
+                const searches = entries.filter((h) => h.mode === "search");
+                const audits = entries.filter((h) => h.mode === "audit");
+                const drafts = entries.filter((h) => h.mode === "draft");
+                return (
+                  <div key={label} className="mb-4">
+                    <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
+                      {label}
+                    </div>
+                    {asks.length > 0 && (
+                      <>
+                        <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                          Chat results
+                        </div>
+                        <ul>{asks.map(historyItem)}</ul>
+                      </>
+                    )}
+                    {searches.length > 0 && (
+                      <>
+                        <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                          Search results
+                        </div>
+                        <ul>{searches.map(historyItem)}</ul>
+                      </>
+                    )}
+                    {audits.length > 0 && (
+                      <>
+                        <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                          Cite checks
+                        </div>
+                        <ul>{audits.map(historyItem)}</ul>
+                      </>
+                    )}
+                    {drafts.length > 0 && (
+                      <>
+                        <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                          IRAC drafts
+                        </div>
+                        <ul>{drafts.map(historyItem)}</ul>
+                      </>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {history.length > 0 && (
+            <button
+              onClick={() => {
+                setHistory([]);
+                saveHistory([]);
+              }}
+              className="mx-3 mb-4 rounded-lg px-2 py-1 text-left text-xs text-[#a39f8d] hover:text-[#5d5848] dark:text-neutral-500 dark:hover:text-neutral-300"
+            >
+              Clear history
+            </button>
+          )}
+          <div className="border-t border-[#e8e6dc] px-4 py-3 text-xs dark:border-neutral-800">
+            {authToken ? (
+              <>
+                <div className="truncate text-[#5d5848] dark:text-neutral-300">{authEmail}</div>
+                {daysLeft !== null && (
+                  <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
+                    Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
+                  </div>
+                )}
+                <div className="mt-1 flex gap-3">
+                  {daysLeft !== null && (
+                    <Link
+                      href="/pricing"
+                      className="font-medium text-[#1e3a5a] hover:underline dark:text-blue-400"
+                    >
+                      Upgrade
+                    </Link>
+                  )}
+                  <button
+                    onClick={async () => {
+                      await supabase().auth.signOut();
+                    }}
+                    className="text-[#1e3a5a] hover:underline dark:text-blue-400"
+                  >
+                    Sign out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="text-[#5d5848] dark:text-neutral-300">Guest preview</div>
+                <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
+                  {guestLeft !== null
+                    ? `${guestLeft} of ${GUEST_LIMIT} free questions left`
+                    : `${GUEST_LIMIT} free questions, no sign-up`}
+                </div>
+                <div className="mt-1 flex gap-3">
+                  <Link href="/signup" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
+                    Start free trial
+                  </Link>
+                  <Link href="/login" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
+                    Sign in
+                  </Link>
+                </div>
+              </>
+            )}
+            <div className="mt-3 border-t border-[#e8e6dc] pt-2 text-[11px] leading-snug text-[#a39f8d] dark:border-neutral-800 dark:text-neutral-500">
+              <div className="font-medium text-[#8a8571] dark:text-neutral-400">Private by design</div>
+              Questions stay in this browser. They are not stored on our servers.
+            </div>
+          </div>
+    </>
+  );
+
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
       {!sidebarOpen && (
@@ -1153,163 +1313,40 @@ export default function Home() {
         </button>
       )}
       {sidebarOpen && (
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
-        <div className="flex items-baseline justify-between px-4 pb-2 pt-5">
-          <Link href="/" title="Back to casewise.si" className="flex items-baseline gap-2 hover:opacity-80">
-            <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
+          {sidebarInner}
+        </aside>
+      )}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-30 md:hidden">
+          <div className="absolute inset-0 bg-black/30" onClick={() => setMobileNavOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-full w-72 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] shadow-xl dark:border-neutral-800 dark:bg-[#1f1e1b]">
+            <div className="flex justify-end px-3 pt-3">
+              <button onClick={() => setMobileNavOpen(false)} className="rounded-md px-2 py-0.5 text-[#a39f8d] hover:text-[#5d5848]">
+                ✕
+              </button>
+            </div>
+            {sidebarInner}
+          </aside>
+        </div>
+      )}
+
+      <main className="min-w-0 flex-1 overflow-y-auto">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#e8e6dc] bg-[#faf9f5]/95 px-4 py-3 backdrop-blur dark:border-neutral-800 dark:bg-[#262624]/95 md:hidden">
+          <Link href="/" className="flex items-baseline gap-2">
+            <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
             <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.12.0</span>
           </Link>
           <button
-            onClick={toggleSidebar}
-            title="Hide sidebar"
-            className="rounded-md px-1.5 py-0.5 text-sm text-[#a39f8d] hover:bg-[#eae8dc] hover:text-[#5d5848] dark:hover:bg-neutral-800"
+            onClick={() => setMobileNavOpen(true)}
+            title="Menu"
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-[#1e3a5a] text-white"
           >
-            «
+            ☰
           </button>
         </div>
-        <button
-          onClick={reset}
-          className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
-        >
-          <span className="text-base leading-none text-[#1e3a5a]">+</span> New research
-        </button>
-        <div className="mx-3 mt-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
-          <span>New case prep</span>
-          <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide dark:bg-neutral-800">
-            soon
-          </span>
-        </div>
-
-        <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
-          {pinned.length > 0 && (
-            <div className="mb-4">
-              <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
-                Pinned
-              </div>
-              <ul>{pinned.map(historyItem)}</ul>
-            </div>
-          )}
-          {grouped.length === 0 && pinned.length === 0 ? (
-            <p className="px-2 text-xs text-[#a39f8d] dark:text-neutral-500">
-              Your questions and searches will appear here.
-            </p>
-          ) : (
-            grouped.map(([label, entries]) => {
-              const asks = entries.filter((h) => h.mode === "ask");
-              const searches = entries.filter((h) => h.mode === "search");
-              const audits = entries.filter((h) => h.mode === "audit");
-              const drafts = entries.filter((h) => h.mode === "draft");
-              return (
-                <div key={label} className="mb-4">
-                  <div className="px-2 pb-1 text-xs font-medium text-[#a39f8d] dark:text-neutral-500">
-                    {label}
-                  </div>
-                  {asks.length > 0 && (
-                    <>
-                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                        Chat results
-                      </div>
-                      <ul>{asks.map(historyItem)}</ul>
-                    </>
-                  )}
-                  {searches.length > 0 && (
-                    <>
-                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                        Search results
-                      </div>
-                      <ul>{searches.map(historyItem)}</ul>
-                    </>
-                  )}
-                  {audits.length > 0 && (
-                    <>
-                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                        Cite checks
-                      </div>
-                      <ul>{audits.map(historyItem)}</ul>
-                    </>
-                  )}
-                  {drafts.length > 0 && (
-                    <>
-                      <div className="px-2 pb-0.5 pt-1 text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                        IRAC drafts
-                      </div>
-                      <ul>{drafts.map(historyItem)}</ul>
-                    </>
-                  )}
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {history.length > 0 && (
-          <button
-            onClick={() => {
-              setHistory([]);
-              saveHistory([]);
-            }}
-            className="mx-3 mb-4 rounded-lg px-2 py-1 text-left text-xs text-[#a39f8d] hover:text-[#5d5848] dark:text-neutral-500 dark:hover:text-neutral-300"
-          >
-            Clear history
-          </button>
-        )}
-        <div className="border-t border-[#e8e6dc] px-4 py-3 text-xs dark:border-neutral-800">
-          {authToken ? (
-            <>
-              <div className="truncate text-[#5d5848] dark:text-neutral-300">{authEmail}</div>
-              {daysLeft !== null && (
-                <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
-                  Free trial: {daysLeft} day{daysLeft === 1 ? "" : "s"} left
-                </div>
-              )}
-              <div className="mt-1 flex gap-3">
-                {daysLeft !== null && (
-                  <Link
-                    href="/pricing"
-                    className="font-medium text-[#1e3a5a] hover:underline dark:text-blue-400"
-                  >
-                    Upgrade
-                  </Link>
-                )}
-                <button
-                  onClick={async () => {
-                    await supabase().auth.signOut();
-                  }}
-                  className="text-[#1e3a5a] hover:underline dark:text-blue-400"
-                >
-                  Sign out
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="text-[#5d5848] dark:text-neutral-300">Guest preview</div>
-              <div className="mt-0.5 text-[#a39f8d] dark:text-neutral-500">
-                {guestLeft !== null
-                  ? `${guestLeft} of ${GUEST_LIMIT} free questions left`
-                  : `${GUEST_LIMIT} free questions, no sign-up`}
-              </div>
-              <div className="mt-1 flex gap-3">
-                <Link href="/signup" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
-                  Start free trial
-                </Link>
-                <Link href="/login" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
-                  Sign in
-                </Link>
-              </div>
-            </>
-          )}
-          <div className="mt-3 border-t border-[#e8e6dc] pt-2 text-[11px] leading-snug text-[#a39f8d] dark:border-neutral-800 dark:text-neutral-500">
-            <div className="font-medium text-[#8a8571] dark:text-neutral-400">Private by design</div>
-            Questions stay in this browser. They are not stored on our servers.
-          </div>
-        </div>
-      </aside>
-      )}
-
-      <main className="flex-1 overflow-y-auto">
         {!hasContent ? (
           <div className="flex h-full flex-col items-center justify-center px-4">
             <div className="w-full max-w-2xl">
