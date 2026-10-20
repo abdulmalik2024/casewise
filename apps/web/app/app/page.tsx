@@ -242,6 +242,7 @@ export default function Home() {
   const [facts, setFacts] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
+  const [auditTab, setAuditTab] = useState<"paste" | "upload">("paste");
   const [sourceType, setSourceType] = useState<SourceFilter>("");
   const [asOf, setAsOf] = useState("");
   const [query, setQuery] = useState("");
@@ -612,14 +613,15 @@ export default function Home() {
       setStatus("error");
       return;
     }
-    if (mode === "audit" && !auditFile && q.length < 50) {
+    const activeAuditFile = auditTab === "upload" ? auditFile : null;
+    if (mode === "audit" && !activeAuditFile && q.length < 50) {
       setError("Paste at least a paragraph of the document, or upload a PDF/Word file.");
       setStatus("error");
       return;
     }
-    if (mode === "audit" && auditFile) {
-      const limit = auditFile.name.toLowerCase().endsWith(".docx") ? 10 : 15;
-      if (auditFile.size > limit * 1_000_000) {
+    if (mode === "audit" && activeAuditFile) {
+      const limit = activeAuditFile.name.toLowerCase().endsWith(".docx") ? 10 : 15;
+      if (activeAuditFile.size > limit * 1_000_000) {
         setError(`File is too large; the limit is ${limit}MB for this type.`);
         setStatus("error");
         return;
@@ -634,9 +636,9 @@ export default function Home() {
       if (mode === "audit") {
         setAuditResult(null);
         let res: Response;
-        if (auditFile) {
+        if (activeAuditFile) {
           const fd = new FormData();
-          fd.append("file", auditFile);
+          fd.append("file", activeAuditFile);
           res = await fetch(`${API_URL}/audit/pdf`, { method: "POST", body: fd, headers: authHeaders() });
         } else {
           res = await fetch(`${API_URL}/audit`, {
@@ -648,7 +650,7 @@ export default function Home() {
         if (!res.ok) throw new Error((await res.json()).detail ?? `HTTP ${res.status}`);
         const data: AuditResponse = await res.json();
         setAuditResult(data);
-        const label = auditFile ? auditFile.name : q.slice(0, 60);
+        const label = activeAuditFile ? activeAuditFile.name : q.slice(0, 60);
         recordHistory({
           id: `audit:${label}`,
           mode: "audit",
@@ -843,13 +845,77 @@ export default function Home() {
       className="rounded-2xl border border-[#e3e1d5] bg-white shadow-[0_2px_12px_rgba(61,57,41,0.06)] dark:border-neutral-700 dark:bg-[#30302e]"
     >
       {mode === "audit" ? (
-        <textarea
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          rows={5}
-          placeholder="Paste a brief, motion, or memo, yours or opposing counsel's. Every NY citation gets checked; quotes get matched to the sources. Or upload a PDF below."
-          className="w-full resize-y bg-transparent px-5 pb-2 pt-4 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
-        />
+        <div className="px-5 pt-4">
+          <div className="flex items-center gap-4 text-[11px] text-[#a39f8d] dark:text-neutral-500">
+            {["Add your document", "Check citations", "Review matches"].map((step, i) => {
+              const current =
+                status === "done" && auditResult ? 2 : status === "loading" ? 1 : 0;
+              return (
+                <span key={step} className="flex items-center gap-1.5">
+                  <span
+                    className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] ${
+                      i <= current
+                        ? "bg-[#1e3a5a] text-white"
+                        : "bg-[#efede3] text-[#8a8571] dark:bg-neutral-800"
+                    }`}
+                  >
+                    {i + 1}
+                  </span>
+                  <span className={i === current ? "font-medium text-[#5d5848] dark:text-neutral-300" : ""}>
+                    {step}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+          <div className="mt-3 flex gap-1 text-xs">
+            {(["paste", "upload"] as const).map((t) => (
+              <button
+                type="button"
+                key={t}
+                onClick={() => setAuditTab(t)}
+                className={`rounded-lg px-3 py-1.5 ${
+                  auditTab === t
+                    ? "bg-[#efede3] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
+                    : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400"
+                }`}
+              >
+                {t === "paste" ? "Paste text" : "Upload file"}
+              </button>
+            ))}
+          </div>
+          {auditTab === "paste" ? (
+            <textarea
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              rows={5}
+              placeholder="Paste a brief, motion, or memo, yours or opposing counsel's. Every NY citation gets checked and quoted text is matched to the sources."
+              className="mt-2 w-full resize-y bg-transparent pb-2 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+            />
+          ) : (
+            <label className="mt-2 mb-3 flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-[#d8d5c5] px-4 py-8 text-sm text-[#8a8571] hover:border-[#1e3a5a] hover:text-[#5d5848] dark:border-neutral-700 dark:text-neutral-400">
+              {auditFile ? (
+                <>
+                  <span className="font-medium text-[#3d3929] dark:text-neutral-200">
+                    📄 {auditFile.name}
+                  </span>
+                  <span className="text-xs">Click to choose a different file</span>
+                </>
+              ) : (
+                <>
+                  <span>Choose a PDF or Word file</span>
+                  <span className="text-xs">15MB PDF / 10MB Word. No scanned images yet.</span>
+                </>
+              )}
+              <input
+                type="file"
+                accept=".pdf,.docx"
+                className="hidden"
+                onChange={(e) => setAuditFile(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          )}
+        </div>
       ) : mode === "draft" ? (
         <>
           <input
@@ -903,20 +969,9 @@ export default function Home() {
             </button>
           ))}
           {mode === "audit" && (
-            <label className="ml-1 cursor-pointer text-xs text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400">
-              {auditFile ? `📄 ${auditFile.name.slice(0, 24)}` : "Upload PDF/Word"}
-              <input
-                type="file"
-                accept=".pdf,.docx"
-                className="hidden"
-                onChange={(e) => setAuditFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
-          )}
-          {mode === "audit" && auditFile && (
-            <button type="button" onClick={() => setAuditFile(null)} className="text-xs text-[#a39f8d] hover:text-[#1e3a5a]">
-              ✕
-            </button>
+            <span className="ml-1 text-[11px] text-[#a39f8d] dark:text-neutral-500">
+              Processed in memory. Never saved.
+            </span>
           )}
           {(mode === "ask" || mode === "draft") && (
             <label className="ml-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-[#8a8571] dark:text-neutral-400">
@@ -960,7 +1015,7 @@ export default function Home() {
           {status === "loading"
             ? "Working…"
             : mode === "audit"
-              ? "Check cites"
+              ? "Check citations"
               : mode === "draft"
                 ? "Draft IRAC"
                 : mode === "ask"
@@ -1073,6 +1128,41 @@ export default function Home() {
       <p className="mt-3 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-500">
         Every citation maps to a retrieved document. Review the authorities before relying
         on the answer.
+      </p>
+    </div>
+  );
+
+  const auditLegendPanel = (
+    <div className="rounded-2xl border border-[#e8e6dc] bg-[#f5f4ee] p-5 dark:border-neutral-800 dark:bg-[#1f1e1b]">
+      <div className="text-[11px] font-medium uppercase tracking-wide text-[#a39f8d] dark:text-neutral-500">
+        What you will see
+      </div>
+      <h3 className="mt-1 text-lg tracking-tight [font-family:var(--font-serif)]">
+        Clear match statuses
+      </h3>
+      <ul className="mt-3 space-y-2.5 text-xs">
+        <li className="rounded-xl border border-[#e3e1d5] bg-white p-3 dark:border-neutral-700 dark:bg-[#30302e]">
+          <span className="font-semibold text-emerald-700 dark:text-emerald-400">✓ Matched</span>
+          <div className="mt-0.5 text-[#6b6450] dark:text-neutral-400">
+            Citation found in source records, with a link to the text.
+          </div>
+        </li>
+        <li className="rounded-xl border border-[#e3e1d5] bg-white p-3 dark:border-neutral-700 dark:bg-[#30302e]">
+          <span className="font-semibold text-amber-700 dark:text-amber-400">● Not found</span>
+          <div className="mt-0.5 text-[#6b6450] dark:text-neutral-400">
+            No matching source located. Treat as suspect and verify by hand.
+          </div>
+        </li>
+        <li className="rounded-xl border border-[#e3e1d5] bg-white p-3 dark:border-neutral-700 dark:bg-[#30302e]">
+          <span className="font-semibold text-red-700 dark:text-red-400">✕ Quote mismatch</span>
+          <div className="mt-0.5 text-[#6b6450] dark:text-neutral-400">
+            Quoted wording differs from the source text.
+          </div>
+        </li>
+      </ul>
+      <p className="mt-3 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-500">
+        <span className="font-medium">Your document stays private.</span> Processed in
+        memory, never saved.
       </p>
     </div>
   );
@@ -1563,7 +1653,7 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className={`mx-auto px-4 py-8 ${(mode === "ask" || mode === "draft") && panelIdx >= 0 ? "max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8" : "max-w-3xl"}`}>
+          <div className={`mx-auto px-4 py-8 ${((mode === "ask" || mode === "draft") && panelIdx >= 0) || mode === "audit" ? "max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8" : "max-w-3xl"}`}>
             <div className="mx-auto w-full max-w-3xl min-w-0">
             <button
               onClick={reset}
@@ -1754,9 +1844,9 @@ export default function Home() {
             )}
             <div ref={bottomRef} />
             </div>
-            {(mode === "ask" || mode === "draft") && panelIdx >= 0 && thread[panelIdx]?.answer && (
+            {(((mode === "ask" || mode === "draft") && panelIdx >= 0 && thread[panelIdx]?.answer) || mode === "audit") && (
               <aside className="hidden lg:sticky lg:top-8 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
-                {authoritiesPanel(thread[panelIdx].answer!)}
+                {mode === "audit" ? auditLegendPanel : authoritiesPanel(thread[panelIdx].answer!)}
               </aside>
             )}
           </div>
