@@ -212,6 +212,25 @@ function guestId(): string {
   }
 }
 
+// authority-type index colors (muted; bars + badges only) and panel ordering:
+// statutes before decisions before guidance — the hierarchy of authority
+const TYPE_COLOR: Record<string, string> = {
+  statute: "#1e3a5a",
+  case: "#2f6b4f",
+  guidance: "#a16d1f",
+  rule: "#6b5b8a",
+  form: "#8a8571",
+  building: "#b05c3b",
+};
+const TYPE_ORDER: Record<string, number> = {
+  statute: 0,
+  case: 1,
+  guidance: 2,
+  rule: 3,
+  form: 4,
+  building: 5,
+};
+
 function typeLabel(t: string): string {
   if (t === "case") return "decision";
   if (t === "building") return "building record";
@@ -992,11 +1011,21 @@ export default function Home() {
         Verified authorities
       </h3>
       <ul className="mt-3 space-y-3">
-        {a.sources.map((s) => (
+        {[...a.sources]
+          .sort(
+            (x, y) =>
+              (TYPE_ORDER[x.source_type] ?? 9) - (TYPE_ORDER[y.source_type] ?? 9)
+          )
+          .map((s) => (
           <li
             key={s.marker}
-            className="rounded-xl border border-[#e3e1d5] bg-white p-3 text-xs dark:border-neutral-700 dark:bg-[#30302e]"
+            className="overflow-hidden rounded-xl border border-[#e3e1d5] bg-white text-xs dark:border-neutral-700 dark:bg-[#30302e]"
           >
+            <div
+              className="h-1"
+              style={{ background: TYPE_COLOR[s.source_type] ?? "#8a8571" }}
+            />
+            <div className="p-3">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
                 {typeLabel(s.source_type)}
@@ -1027,6 +1056,7 @@ export default function Home() {
                 Open official text ↗
               </a>
             )}
+            </div>
           </li>
         ))}
       </ul>
