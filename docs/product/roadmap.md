@@ -88,3 +88,11 @@ resume the build when a genuine document arrives from a tester/attorney.
   Discussion, Table of Authorities, Verification Appendix.
 - V-2.1.x: streaming answers, conversation mode, feedback, court rules & forms,
   point-in-time (partial), collapse/pin UX. See PROJECT.md.
+
+## Field-test fixes (2026-10-20)
+1. ✅ V-2.10.0: statute topic-anchors + cross-reference expansion — fixes
+   "withhold rent" missing RPL § 235-b and "pull § 226-c yourself"
+   (marketing-agent test report). Applies to Ask and Draft.
+2. ⬜ Landmark decisions seed: curated pre-2015 foundational cases
+   (Park West v. Mitchell, Braschi, etc.) — attorneys expect them;
+   10-yr corpus can't cite them. Small one-time CourtListener fetch.

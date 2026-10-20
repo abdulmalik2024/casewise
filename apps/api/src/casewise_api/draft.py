@@ -158,8 +158,14 @@ def draft_stream(
     retrieval_q = f"{issue}\n{facts[:1200]}"
     # statutes first: the Rule section should open with the governing statute,
     # and pure similarity ranking often buries it under factually-similar cases
+    from .anchors import augment_with_statutes
+
     statutes = search(pool, retrieval_q, k=4, source_type="statute", as_of=as_of)
-    retrieved = _dedupe(statutes + search(pool, retrieval_q, k=16, as_of=as_of), cap=8)
+    retrieved = augment_with_statutes(
+        pool,
+        f"{issue}\n{facts}",
+        _dedupe(statutes + search(pool, retrieval_q, k=16, as_of=as_of), cap=8),
+    )
 
     building = building_record(f"{issue}\n{facts}")
     if building:

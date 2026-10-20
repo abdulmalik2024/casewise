@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.9.2** (2026-10-20)
+**Version: V-2.10.0** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,21 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.10.0 (2026-10-20): statute anchors + cross-reference expansion
+  (anchors.py), fixing field-tested retrieval misses: "withhold rent for
+  repairs" never surfaced RPL § 235-b (ranked 19th even statute-only) and
+  the month-to-month-notice answer told the user to "pull § 226-c"
+  themselves. Two deterministic layers on Ask AND Draft retrieval:
+  (1) curated topic→anchor-statute map (11 patterns: habitability,
+  month-to-month notice, security deposits, late fees, retaliation,
+  lockouts, roommates, sublets, nonpayment, warrants — every citation
+  verified present in statute_sections); (2) worded cross-reference
+  parser ("section two hundred twenty-six-c of this article" → fetch
+  RPP § 226-C, up to 2 per answer). Anchors rank first (score .99);
+  everything stays construction-verified corpus text. Known remaining
+  gap: landmark pre-2015 decisions (e.g., Park West v. Mitchell, 47
+  NY2d 316) aren't in the 10-yr corpus — seed a curated landmark set
+  later.
 - V-2.9.2 (2026-10-20): wise-owl mascot in the app (assets from the
   brand pack in files/wise-owl, gitignored staging; servable copies at
   apps/web/public/owl/). Owl appears: bobbing loader on the Ask/Draft

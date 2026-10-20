@@ -176,7 +176,11 @@ def ask_stream(
     # follow-ups often lean on the prior exchange ("what if rent-stabilized?"),
     # so retrieval sees the previous question too
     retrieval_q = f"{history[-1]['question']}\n{question}" if history else question
-    retrieved = _dedupe(search(pool, retrieval_q, k=16, as_of=as_of))
+    from .anchors import augment_with_statutes
+
+    retrieved = augment_with_statutes(
+        pool, question, _dedupe(search(pool, retrieval_q, k=16, as_of=as_of))
+    )
 
     building = building_record(question)
     if building:
@@ -248,7 +252,9 @@ def ask_stream(
 
 
 def ask(pool: ConnectionPool, question: str) -> AskResponse:
-    retrieved = _dedupe(search(pool, question, k=16))
+    from .anchors import augment_with_statutes
+
+    retrieved = augment_with_statutes(pool, question, _dedupe(search(pool, question, k=16)))
     if not retrieved:
         return AskResponse(
             answer="No relevant sources found in the corpus for this question.",
