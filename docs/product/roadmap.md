@@ -110,3 +110,14 @@ Question → organized memo + authorities + verified quotes + counteranalysis
    history"; Team: "firm-wide search history"; Westlaw/Lexis history) —
    "storage as an explicit choice" is our empty-lane differentiator and
    pairs with the saved-research alerts idea in Next.
+
+## UI/UX redesign round (2026-10-20) — V-2.12.0 SHIPPED
+Phases A-D from Abdul's mockups + cases.ai study, approved via preview
+deploys: app shell (collapsible sidebar, start screen, chips, mobile
+drawer), answer experience (verification banner, color-coded authorities
+panel, in-place follow-ups), Check cites step flow, landing hero. Plus
+nav dropdowns, How it works, Who it's for, Blog (post #1), Starter $49
+tier (pro se excluded). TODO next: per-plan feature gating (Starter is
+research-only on paper, full-access in practice); regenerate marketing
+screenshots against the new UI; STRIPE_PRICE_STARTER once Abdul creates
+the $49 price.

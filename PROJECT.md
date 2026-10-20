@@ -146,9 +146,33 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
-- V-2.12.0 (2026-10-20): app-shell redesign, Phase A of the UI/UX round
-  (Abdul's mockups + cases.ai study; phases B answer-experience,
-  C check-cites flow, D landing hero deferred pending approval).
+- V-2.12.0 (2026-10-20, SHIPPED as one release): full UI/UX redesign
+  round (Abdul's mockups + cases.ai study), previews approved phase by
+  phase. Phase B: navy verification banner per answer (citations/quotes/
+  IRAC summary; amber on flags) + sticky "Verified authorities" desktop
+  panel — type-colored top bars (navy statute, green decision, ochre
+  guidance, plum rule, gray form, terracotta building), grouped in
+  authority order, VERIFIED badges, official-text links; follow-ups swap
+  IN PLACE (priors auto-collapse, scroll to top, answer window max-h 62vh
+  with internal scroll that follows the stream). Rotating wait lines
+  (real retrieved citations via sources_preview event; honest generic
+  fallback). Phase C: Check cites 3-step flow, Paste/Upload tabs,
+  match-status legend, measured coverage copy (5.1M records to the
+  1800s; 12 statutes listed; audit patterns extended to all 12 laws).
+  Phase D: niche landing hero ("Verified legal research for NY
+  landlord-tenant and real estate litigation attorneys", Try 5 questions
+  free). Marketing expansion: nav dropdowns (Features, Who it's for) +
+  How it works page + Who it's for page + Blog (first post: verification
+  architecture) + Features gains Draft IRAC card/anchors + About refresh
+  (12 laws, landmarks, confidentiality-by-architecture paragraph).
+  Pricing: four tiers — NEW Starter $49/mo (research only: Ask/Search/
+  phrase/buildings/point-in-time; solo attorneys, paralegals, law
+  students; PRO SE EXCLUDED on UPL grounds), Professional $99.99,
+  Annual $999.99. Billing plan "starter" + STRIPE_PRICE_STARTER (503s
+  until the Stripe price exists). KNOWN GAP: no per-plan feature gating
+  yet — any paid checkout grants full access (Starter buyers
+  over-served; build plan-aware gating before Starter volume). "← New
+  research" back button; localhost CORS any port.
   Collapsible sidebar (« / » toggle, expanded by default, state in
   localStorage casewise-sidebar); empty state is now eyebrow "NEW YORK
   LEGAL RESEARCH" + "What are you researching today?" + mode subline +
