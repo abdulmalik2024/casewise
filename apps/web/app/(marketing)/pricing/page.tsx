@@ -28,14 +28,14 @@ function UpgradeButton({ plan, label }: { plan: "monthly" | "yearly"; label: str
         body: JSON.stringify({ plan }),
       });
       if (res.status === 503) {
-        setMsg("Billing is being switched on — check back shortly.");
+        setMsg("Billing is being switched on. Check back shortly.");
         return;
       }
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const { url } = await res.json();
       window.location.href = url;
     } catch {
-      setMsg("Could not start checkout — try again in a minute.");
+      setMsg("Could not start checkout. Try again in a minute.");
     } finally {
       setBusy(false);
     }
@@ -93,20 +93,20 @@ export default function Pricing() {
             $99.99 <span className="text-sm font-normal text-[#8a8571]">per attorney / month</span>
           </div>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
-            <li>✓ Full daily practice use — Ask, Search, Check cites, IRAC drafts</li>
+            <li>✓ Full daily practice use: Ask, Search, Check cites, IRAC drafts</li>
             <li>✓ Word memo exports with verification appendix</li>
             <li>✓ Building records and point-in-time research</li>
             <li>✓ Priority support and feature input</li>
           </ul>
-          <UpgradeButton plan="monthly" label="Upgrade — $99.99/month" />
+          <UpgradeButton plan="monthly" label="Upgrade: $99.99/month" />
           <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
-            Upgrade any time — including during your free trial. Early adopters lock this rate.
+            Upgrade any time, including during your free trial. Early adopters lock this rate.
           </p>
         </div>
 
         <div className="rounded-2xl border border-[#e3e1d5] bg-white p-8 dark:border-neutral-700 dark:bg-[#30302e]">
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">
-            Professional — Annual
+            Professional Annual
             <span className="ml-2 rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
               2 months free
             </span>
@@ -119,9 +119,9 @@ export default function Pricing() {
             <li>✓ Two months free vs. paying monthly</li>
             <li>✓ One invoice for the year</li>
           </ul>
-          <UpgradeButton plan="yearly" label="Upgrade — $999.99/year" />
+          <UpgradeButton plan="yearly" label="Upgrade: $999.99/year" />
           <p className="mt-3 text-xs text-[#8a8571] dark:text-neutral-400">
-            Upgrade any time — including during your free trial.
+            Upgrade any time, including during your free trial.
           </p>
         </div>
       </div>
@@ -136,7 +136,7 @@ export default function Pricing() {
         <div>
           <h3 className="font-semibold">Can I upgrade during the trial?</h3>
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
-            Yes — upgrading any time keeps your access uninterrupted, no waiting for the
+            Yes: upgrading any time keeps your access uninterrupted, no waiting for the
             trial to end.
           </p>
         </div>
@@ -144,7 +144,7 @@ export default function Pricing() {
           <h3 className="font-semibold">Is my research confidential?</h3>
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
             Your questions are not used to train any model, and we do not keep a central log
-            of questions — research history lives in your own browser. Documents you audit
+            of questions; research history lives in your own browser. Documents you audit
             are processed in memory and not retained.
           </p>
         </div>
@@ -153,14 +153,14 @@ export default function Pricing() {
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
             Exclusively from a curated corpus of New York primary sources: the Consolidated
             Laws, ten years of court decisions, DHCR guidance, the Uniform Civil Rules, and
-            official forms — each answer cites and links to them.
+            official forms; each answer cites and links to them.
           </p>
         </div>
         <div>
           <h3 className="font-semibold">Is this legal advice?</h3>
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
             No. Casewise is a research tool for licensed attorneys. Verify everything against
-            the cited sources — the product is designed to make that verification fast.
+            the cited sources; the product is designed to make that verification fast.
           </p>
         </div>
       </div>

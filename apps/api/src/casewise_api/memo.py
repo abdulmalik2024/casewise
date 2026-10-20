@@ -110,7 +110,7 @@ def build_memo(data: MemoIn) -> bytes:
     doc.add_heading("Research Memorandum", level=0)
     meta = doc.add_paragraph()
     meta.add_run(f"Date: {date.today().strftime('%B %-d, %Y')}\n").italic = True
-    meta.add_run("Prepared with Casewise — SI research assistant for New York property law\n").italic = True
+    meta.add_run("Prepared with Casewise, SI research assistant for New York property law\n").italic = True
     meta.add_run("Attorney work product. Not legal advice. Verify all citations before relying.").italic = True
 
     doc.add_heading("Question Presented", level=1)
@@ -124,7 +124,7 @@ def build_memo(data: MemoIn) -> bytes:
         for s in data.sources:
             p = doc.add_paragraph(style="List Bullet")
             p.add_run(s.citation).bold = True
-            tail = f" — {s.heading}" if s.heading else ""
+            tail = f" · {s.heading}" if s.heading else ""
             p.add_run(f"{tail} ({'decision' if s.source_type == 'case' else s.source_type})")
             if s.url:
                 p.add_run(f"\n{s.url}").font.size = Pt(9)
@@ -149,7 +149,7 @@ def build_memo(data: MemoIn) -> bytes:
         else:
             doc.add_paragraph(
                 f"Quotations: {qc.verified} of {qc.total} quoted passage(s) matched the "
-                "cited source texts word-for-word. The following are not an exact match — "
+                "cited source texts word-for-word. The following are not an exact match; "
                 "check the wording against the source before citing:"
             )
             for q in qc.unverified:

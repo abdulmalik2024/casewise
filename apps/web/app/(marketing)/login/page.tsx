@@ -60,7 +60,7 @@ export default function Login() {
         title="Google sign-in is coming soon"
         className="mt-3 w-full cursor-not-allowed rounded-xl border border-[#e3e1d5] bg-white px-4 py-2.5 text-sm font-medium text-[#a39f8d] opacity-60 dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-500"
       >
-        Continue with Google — coming soon
+        Continue with Google (coming soon)
       </button>
       <p className="mt-6 text-center text-sm text-[#8a8571]">
         New to Casewise?{" "}

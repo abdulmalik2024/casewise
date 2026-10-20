@@ -11,7 +11,7 @@ export default function About() {
           are priced for BigLaw, and the affordable ones know nothing about New York.
         </p>
         <p>
-          We chose the opposite of the generic approach — one state, one practice area, done
+          We chose the opposite of the generic approach: one state, one practice area, done
           deeply. Casewise works from the primary sources themselves: every section of the
           Real Property Law, RPAPL, CPLR and related statutes (versioned, so history is
           never overwritten), ten years of New York appellate decisions, DHCR&apos;s bulletins
@@ -19,7 +19,7 @@ export default function About() {
         </p>
         <p>
           The defining design decision is verification by construction. The model drafting an
-          answer can only cite the sources retrieved for that question — citations are mapped
+          answer can only cite the sources retrieved for that question; citations are mapped
           to real documents on the server, quoted passages are string-matched against the
           source text, and documents you audit are checked against a catalog of 5.1 million
           published citations. Where the famous AI failure is the invented case, Casewise is
@@ -28,7 +28,7 @@ export default function About() {
         <p>
           We are early, and we build in close conversation with the attorneys who use the
           product. If something is wrong or missing, the thumbs-down button genuinely reaches
-          us — every piece of feedback shapes what gets built next.
+          us; every piece of feedback shapes what gets built next.
         </p>
         <p className="text-sm text-[#8a8571] dark:text-neutral-400">
           Casewise is a research tool for licensed attorneys and does not provide legal

@@ -21,13 +21,13 @@ const showcases = [
   {
     eyebrow: "Ask",
     title: "Answers an attorney can stand behind.",
-    body: "Ask in plain English. Casewise retrieves the controlling New York authorities — statutes, ten years of decisions, DHCR guidance, court rules — and drafts a structured answer where every assertion carries a citation. Quoted language is string-matched to the source, word for word, and the check is shown with the answer.",
+    body: "Ask in plain English. Casewise retrieves the controlling New York authorities (statutes, ten years of decisions, DHCR guidance, court rules) and drafts a structured answer where every assertion carries a citation. Quoted language is string-matched to the source, word for word, and the check is shown with the answer.",
     img: "/shots/ask-verified.png",
     alt: "Casewise answering a warranty of habitability question with inline citations",
   },
   {
     eyebrow: "Check cites",
-    title: "Audit any filing in seconds — including theirs.",
+    title: "Audit any filing in seconds, including theirs.",
     body: "Paste a brief or upload a PDF or Word file. Every citation is verified: statutes and rules against the corpus, case law against a catalog of 5.1 million published citations. Real authority comes back with its case name and year. Fabricated authority comes back in red.",
     img: "/shots/check-cites.png",
     alt: "Citation audit flagging a fabricated citation as NOT FOUND",
@@ -35,7 +35,7 @@ const showcases = [
   {
     eyebrow: "Building records",
     title: "Analysis grounded in the actual building.",
-    body: "Mention a NYC address and the answer reflects that building's public record — rent-stabilization indicators, open HPD violations by class, the registered owner, eviction history — cited like any other source, linked to the underlying data.",
+    body: "Mention a NYC address and the answer reflects that building's public record (rent-stabilization indicators, open HPD violations by class, the registered owner, eviction history), cited like any other source, linked to the underlying data.",
     img: "/shots/building-sources.png",
     alt: "Verified sources including a live building record for a Bronx address",
   },
@@ -44,11 +44,11 @@ const showcases = [
 const useCases = [
   {
     title: "Holdover & nonpayment defense",
-    body: "Notice periods, rent demands, service windows, and the housing-part rules — with the controlling section quoted, not paraphrased.",
+    body: "Notice periods, rent demands, service windows, and the housing-part rules, with the controlling section quoted, not paraphrased.",
   },
   {
     title: "Rent-stabilization questions",
-    body: "Guideline increases, IAI and MCI rules, Good Cause coverage, deregulation history — grounded in DHCR's own bulletins and fact sheets.",
+    body: "Guideline increases, IAI and MCI rules, Good Cause coverage, deregulation history, grounded in DHCR's own bulletins and fact sheets.",
   },
   {
     title: "Habitability claims",
@@ -76,7 +76,7 @@ export default function Landing() {
           <span className="text-[#1e3a5a]">Build your case.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-[#6b6450] dark:text-neutral-400">
-          The research assistant for New York property law — every answer cited to the
+          The research assistant for New York property law. Every answer is cited to the
           statutes, decisions, and DHCR guidance themselves, verified before you see it.
         </p>
         <div className="mt-8 flex justify-center gap-3">
@@ -84,7 +84,7 @@ export default function Landing() {
             href="/app"
             className="rounded-full bg-[#3d3929] px-7 py-3 font-medium text-[#faf9f5] transition-colors hover:bg-[#2a271c] dark:bg-neutral-100 dark:text-neutral-900"
           >
-            Try it now — no sign-up
+            Try it now, no sign-up
           </Link>
           <Link
             href="/features"
@@ -178,7 +178,7 @@ export default function Landing() {
           <div>
             <h3 className="font-semibold">Your questions stay yours</h3>
             <p className="mt-2 text-sm leading-relaxed text-[#5d5848] dark:text-neutral-300">
-              Nothing you ask trains any model. We keep no central log of questions —
+              Nothing you ask trains any model. We keep no central log of questions;
               research history lives in your own browser. No ad trackers, no cookie
               banners, nothing to opt out of.
             </p>
@@ -194,8 +194,8 @@ export default function Landing() {
           <div>
             <h3 className="font-semibold">Primary sources, always</h3>
             <p className="mt-2 text-sm leading-relaxed text-[#5d5848] dark:text-neutral-300">
-              Every citation links to the official text — nysenate.gov, nycourts.gov,
-              hcr.ny.gov — one click from answer to authority. Verify everything; the
+              Every citation links to the official text: nysenate.gov, nycourts.gov,
+              hcr.ny.gov. One click from answer to authority. Verify everything; the
               product is built to make that fast.
             </p>
           </div>
@@ -212,7 +212,7 @@ export default function Landing() {
             href="/signup"
             className="rounded-full bg-[#1e3a5a] px-8 py-3.5 font-medium text-white transition-colors hover:bg-[#16304b]"
           >
-            Start researching — free
+            Start researching, free
           </Link>
         </div>
         <p className="mt-4 text-xs text-[#a39f8d]">

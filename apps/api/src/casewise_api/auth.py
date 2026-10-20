@@ -44,7 +44,7 @@ def validate_token(authorization: str | None = Header(default=None)) -> dict:
     except httpx.HTTPError:
         raise HTTPException(503, "auth service unreachable; retry shortly")
     if resp.status_code != 200:
-        raise HTTPException(401, "session expired — sign in again")
+        raise HTTPException(401, "session expired; sign in again")
     user = resp.json()
     if len(_cache) > 2000:
         _cache.clear()
@@ -116,7 +116,7 @@ def require_active(pool: ConnectionPool, user: dict) -> dict:
     if not status["active"]:
         raise HTTPException(
             402,
-            "Your 7-day free trial has ended. Visit casewise.si/pricing to continue — "
+            "Your 7-day free trial has ended. Visit casewise.si/pricing to continue; "
             "early adopters lock the launch rate.",
         )
     return status

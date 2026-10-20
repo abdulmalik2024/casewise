@@ -33,7 +33,7 @@ numbered source excerpts provided. You receive the attorney's ISSUE and the FACT
 their case; your output is a draft the attorney will adapt into an attorney \
 affirmation or memorandum of law.
 
-Structure — use exactly these markdown headings, repeating the full set once per \
+Structure: use exactly these markdown headings, repeating the full set once per \
 discrete legal issue the facts raise:
 ## Issue
 One precise framing (75 words max): the legal premise plus the decisive facts.
@@ -46,7 +46,7 @@ every case the Application will rely on.
 Apply the Rule to the provided FACTS element by element, reusing the Rule's key \
 terms. Connect each fact to the law with explicit reasoning ("because …"). \
 Analogize to or distinguish the cited cases. Then a counteranalysis: the strongest \
-argument the opposing party would make and why it fails — or a candid note that it \
+argument the opposing party would make and why it fails, or a candid note that it \
 may succeed. Cite only sources already cited in the Rule.
 ## Conclusion
 The likely outcome, briefly. No new arguments, facts, or citations.
@@ -56,11 +56,12 @@ Rules:
 never invent citations, case names, or section numbers.
 - Base every factual assertion ONLY on the provided FACTS. Where a fact needed for \
 an element is missing, write [FACT NEEDED: what is missing] instead of assuming it.
-- If the sources do not support a necessary element, say so explicitly — a flagged \
+- If the sources do not support a necessary element, say so explicitly; a flagged \
 gap beats an invented authority.
 - Where New York City rules differ from the rest of the state, flag the distinction.
 - Measured, precise register of a memorandum of law; no boilerplate openers.
-- End with exactly: "DRAFT — attorney work product for review. Verify all citations \
+- Never use an em dash in your writing; use commas, colons, periods, or parentheses.
+- End with exactly: "DRAFT: attorney work product for review. Verify all citations \
 and factual assertions before filing."
 """
 
@@ -139,14 +140,14 @@ def _build_draft_prompt(
 ) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
-        head = f" — {s.heading}" if s.heading else ""
+        head = f" · {s.heading}" if s.heading else ""
         parts.append(f"[S{i}] {s.citation}{head} ({s.source_type})\n{s.text}")
     joined = "\n\n".join(parts)
     prefix = f"RESEARCH AS-OF DATE: {as_of}. Draft as of this date.\n\n" if as_of else ""
     return (
         f"{prefix}Sources:\n\n{joined}\n\n"
         f"ISSUE (as framed by the attorney): {issue}\n\n"
-        f"FACTS (as provided by the attorney — the only facts you may use):\n{facts}"
+        f"FACTS (as provided by the attorney; the only facts you may use):\n{facts}"
     )
 
 
@@ -227,7 +228,7 @@ def draft_stream(
     yield {"type": "status", "message": "Verifying citations, quotations, and IRAC structure…"}
     text_out = "".join(parts)
     if final.stop_reason == "max_tokens":
-        text_out += "\n\n*[Draft cut off at the length limit — narrow the issue or split it into two drafts.]*"
+        text_out += "\n\n*[Draft cut off at the length limit; narrow the issue or split it into two drafts.]*"
     answer, used = _verify_markers(text_out, len(retrieved))
     qc = check_quotes(answer, [r.text for r in retrieved])
     yield {

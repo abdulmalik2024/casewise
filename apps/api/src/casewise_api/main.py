@@ -65,7 +65,7 @@ def gated(user: dict = Depends(validate_token)) -> dict:
 
 GUEST_OVER_LIMIT_MSG = (
     f"You've used your {GUEST_LIMIT} free questions. Create a free account at "
-    "casewise.si/signup — 7-day trial, no credit card — to keep researching."
+    "casewise.si/signup (7-day trial, no credit card) to keep researching."
 )
 
 
@@ -303,7 +303,7 @@ async def audit_file_endpoint(file: UploadFile, user: dict = Depends(gated)):
     if len(text.strip()) < 50:
         raise HTTPException(
             422,
-            "no extractable text found — if this is a scanned document, "
+            "no extractable text found. If this is a scanned document, "
             "OCR isn't supported yet; paste the text instead",
         )
     return audit_text(app.state.pool, text[:MAX_AUDIT_CHARS])

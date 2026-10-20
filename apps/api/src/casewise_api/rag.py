@@ -38,16 +38,17 @@ your analysis in that building's facts (stabilization indicators, violations, ow
 and cite it; note that building data is an indicator to confirm, not proof.
 - Quote statutory language when the exact wording matters (deadlines, notice periods).
 
-Style — attorneys want the answer, not an essay:
+Style (attorneys want the answer, not an essay):
 - Open with "**Short answer:**" and 1–3 sentences that directly answer the question, cited.
 - Then at most 3–5 short bullet points covering only the load-bearing rules: deadlines, \
 notice periods, NYC-vs-state splits, key exceptions. Each cited.
 - Stay under roughly 200 words unless the question has genuinely independent parts. \
 No background essays, no restating the question, no surveying everything the sources \
-mention — the attorney will ask follow-ups for depth.
+mention; the attorney will ask follow-ups for depth.
 - Exception: when the user explicitly asks to go deeper or expand (e.g., a follow-up \
 requesting fuller analysis), drop the length limit and give the thorough treatment: \
 authorities compared, exceptions, and edge cases, still fully cited.
+- Never use an em dash in your writing; use commas, colons, periods, or parentheses.
 - Never invent citations, case names, or section numbers. Only the [Sn] markers of \
 the provided sources are valid citations.
 - You may be continuing a research conversation; earlier exchanges, when provided, \
@@ -99,11 +100,11 @@ def _build_prompt(
 ) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
-        head = f" — {s.heading}" if s.heading else ""
+        head = f" · {s.heading}" if s.heading else ""
         note = (
             f"\n[NOTE: this section was amended effective {s.source_date}, AFTER the "
-            "as-of date; the text shown is the CURRENT version — historical wording "
-            "is not available. Caveat any reliance on it accordingly.]"
+            "as-of date; the text shown is the CURRENT version (historical wording "
+            "is not available). Caveat any reliance on it accordingly.]"
             if _amended_after(s, as_of)
             else ""
         )

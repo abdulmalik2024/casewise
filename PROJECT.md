@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.10.0** (2026-10-20)
+**Version: V-2.10.1** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,14 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.10.1 (2026-10-20): COPY STYLE RULE, permanent — no em dashes (—)
+  anywhere user-facing: all website/app copy rewritten (commas, colons,
+  periods, parentheses, or " · " separators), API error messages and memo
+  output cleaned, and both system prompts (Ask + Draft) now carry an
+  explicit "never use an em dash" rule so model answers comply too. The
+  Draft footer label is now "DRAFT: attorney work product for review…".
+  Abdul: dashes "look too AI chat bot written." Check every future copy
+  change against this.
 - V-2.10.0 (2026-10-20): statute anchors + cross-reference expansion
   (anchors.py), fixing field-tested retrieval misses: "withhold rent for
   repairs" never surfaced RPL § 235-b (ranked 19th even statute-only) and

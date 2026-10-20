@@ -485,7 +485,7 @@ export default function Home() {
     if (status === "loading") return;
     const prior = thread.filter((x) => x.answer);
     const lastQ = prior[prior.length - 1]?.question.slice(0, 380) ?? "";
-    const q = `Go deeper on ${lastQ || "the last answer"} — fuller analysis of the key authorities, exceptions, and edge cases.`;
+    const q = `Go deeper on ${lastQ || "the last answer"}: fuller analysis of the key authorities, exceptions, and edge cases.`;
     setThread([...prior, { question: q, answer: null }]);
     setStatus("loading");
     setError("");
@@ -504,7 +504,7 @@ export default function Home() {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
       setError(
-        "Search, Check cites, and Draft need a free account — 7-day trial, no credit card. " +
+        "Search, Check cites, and Draft need a free account: 7-day trial, no credit card. " +
           "Guest preview covers Ask."
       );
       setStatus("error");
@@ -532,7 +532,7 @@ export default function Home() {
     if (mode === "audit" && auditFile) {
       const limit = auditFile.name.toLowerCase().endsWith(".docx") ? 10 : 15;
       if (auditFile.size > limit * 1_000_000) {
-        setError(`File is too large — the limit is ${limit}MB for this type.`);
+        setError(`File is too large; the limit is ${limit}MB for this type.`);
         setStatus("error");
         return;
       }
@@ -621,7 +621,7 @@ export default function Home() {
     const sourcesPlain = a.sources
       .map(
         (s) =>
-          `[${s.marker}] ${s.citation}${s.heading ? ` — ${s.heading}` : ""}${s.url ? ` (${s.url})` : ""}`
+          `[${s.marker}] ${s.citation}${s.heading ? ` · ${s.heading}` : ""}${s.url ? ` (${s.url})` : ""}`
       )
       .join("\n");
     const plain = `${a.answer}\n\nSources:\n${sourcesPlain}`;
@@ -629,7 +629,7 @@ export default function Home() {
     const sourcesHtml = a.sources
       .map(
         (s) =>
-          `<li>[${s.marker}] ${s.url ? `<a href="${s.url}">${s.citation}</a>` : s.citation}${s.heading ? ` — ${s.heading}` : ""}</li>`
+          `<li>[${s.marker}] ${s.url ? `<a href="${s.url}">${s.citation}</a>` : s.citation}${s.heading ? ` · ${s.heading}` : ""}</li>`
       )
       .join("");
     const html = `<div>${bodyHtml}<p><strong>Sources:</strong></p><ul>${sourcesHtml}</ul></div>`;
@@ -753,7 +753,7 @@ export default function Home() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           rows={5}
-          placeholder="Paste a brief, motion, or memo — yours or opposing counsel's. Every NY citation gets checked; quotes get matched to the sources. Or upload a PDF below."
+          placeholder="Paste a brief, motion, or memo, yours or opposing counsel's. Every NY citation gets checked; quotes get matched to the sources. Or upload a PDF below."
           className="w-full resize-y bg-transparent px-5 pb-2 pt-4 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
         />
       ) : mode === "draft" ? (
@@ -768,7 +768,7 @@ export default function Home() {
             value={facts}
             onChange={(e) => setFacts(e.target.value)}
             rows={6}
-            placeholder="The facts of the case — dates, conditions, notices, payments, who did what. Anonymize names and addresses. The draft will only use facts you provide here; gaps are flagged, never assumed."
+            placeholder="The facts of the case: dates, conditions, notices, payments, who did what. Anonymize names and addresses. The draft will only use facts you provide here; gaps are flagged, never assumed."
             className="w-full resize-y border-t border-[#f0eee4] bg-transparent px-5 pb-2 pt-3 text-[14px] outline-none placeholder:text-[#a39f8d] dark:border-neutral-800 dark:placeholder:text-neutral-500"
           />
         </>
@@ -779,7 +779,7 @@ export default function Home() {
           placeholder={
             mode === "ask"
               ? thread.length
-                ? "Ask a follow-up — the conversation is remembered…"
+                ? "Ask a follow-up; the conversation is remembered…"
                 : 'Ask a legal question, like "Can a tenant withhold rent for repairs?"'
               : 'Search statutes, decisions, guidance… put "exact phrases" in quotes'
           }
@@ -951,7 +951,7 @@ export default function Home() {
             <details className="text-amber-700 dark:text-amber-400">
               <summary className="cursor-pointer">
                 ⚠ {x.answer.quote_check.unverified.length} of {x.answer.quote_check.total}{" "}
-                quotations — check wording against the source before citing. Not an exact
+                quotations: check wording against the source before citing. Not an exact
                 match.
               </summary>
               <ul className="mt-1 list-disc pl-5">
@@ -1118,7 +1118,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.10.0</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.10.1</span>
         </Link>
         <button
           onClick={reset}
@@ -1303,7 +1303,7 @@ export default function Home() {
               <div className="mt-6">
                 <div className="rounded-2xl border border-[#e3e1d5] bg-white p-5 dark:border-neutral-700 dark:bg-[#30302e]">
                   <h2 className="text-sm font-semibold">
-                    Citation audit — {auditResult.rows.length} citation
+                    Citation audit: {auditResult.rows.length} citation
                     {auditResult.rows.length === 1 ? "" : "s"} found
                     {auditResult.rows.some((r) => r.status === "not_found") && (
                       <span className="ml-2 rounded-full bg-red-100 px-2 py-0.5 text-xs font-medium text-red-800 dark:bg-red-950 dark:text-red-300">
@@ -1386,7 +1386,7 @@ export default function Home() {
             {mode === "search" && status === "done" && shownResults.length === 0 && (
               <p className="mt-6 text-sm text-[#8a8571]">
                 {results.length > 0
-                  ? "No results of this type — change the filter."
+                  ? "No results of this type. Change the filter."
                   : "No results."}
               </p>
             )}
