@@ -138,6 +138,21 @@ function relevance(score: number): { label: string; cls: string } {
 
 const GUEST_LIMIT = 5;
 
+const EXAMPLE_QUESTIONS = [
+  {
+    label: "Habitability defenses",
+    q: "What habitability defenses can a tenant raise in a nonpayment proceeding?",
+  },
+  {
+    label: "Month-to-month termination",
+    q: "What notice must a landlord give to terminate a month-to-month tenancy in NYC?",
+  },
+  {
+    label: "Security deposits",
+    q: "How quickly must a landlord return a security deposit, and what can be deducted?",
+  },
+];
+
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
@@ -220,6 +235,7 @@ export default function Home() {
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [guestLeft, setGuestLeft] = useState<number | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
   const [findInResult, setFindInResult] = useState<Record<number, string>>({});
   const [lastSearchQ, setLastSearchQ] = useState("");
@@ -229,7 +245,23 @@ export default function Home() {
 
   useEffect(() => {
     setHistory(loadHistory());
+    try {
+      if (localStorage.getItem("casewise-sidebar") === "closed") setSidebarOpen(false);
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
+
+  function toggleSidebar() {
+    setSidebarOpen((open) => {
+      try {
+        localStorage.setItem("casewise-sidebar", open ? "closed" : "open");
+      } catch {
+        /* storage unavailable */
+      }
+      return !open;
+    });
+  }
 
   useEffect(() => {
     const sb = supabase();
@@ -787,13 +819,13 @@ export default function Home() {
         />
       )}
       <div className="flex items-center justify-between px-3 pb-3">
-        <div className="flex items-center gap-1 text-xs">
+        <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs">
           {(["ask", "search", "audit", "draft"] as const).map((m) => (
             <button
               type="button"
               key={m}
               onClick={() => setMode(m)}
-              className={`rounded-lg px-3 py-1.5 ${
+              className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${
                 mode === m
                   ? "bg-[#efede3] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
                   : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400 dark:hover:bg-neutral-800"
@@ -825,8 +857,8 @@ export default function Home() {
             </button>
           )}
           {(mode === "ask" || mode === "draft") && (
-            <label className="ml-1 flex items-center gap-1.5 text-xs text-[#8a8571] dark:text-neutral-400">
-              As of
+            <label className="ml-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-[#8a8571] dark:text-neutral-400">
+              Research date
               <input
                 type="date"
                 value={asOf}
@@ -834,10 +866,12 @@ export default function Home() {
                 className="rounded-lg border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-[#e3e1d5] dark:hover:border-neutral-700"
                 title="Optional: research the law as of a past date. Decisions and guidance after this date are excluded; statutes amended after it are flagged."
               />
-              {asOf && (
+              {asOf ? (
                 <button type="button" onClick={() => setAsOf("")} className="text-[#a39f8d] hover:text-[#1e3a5a]">
                   ✕
                 </button>
+              ) : (
+                <span className="text-[#bcb8a5] dark:text-neutral-600">current law</span>
               )}
             </label>
           )}
@@ -1109,17 +1143,32 @@ export default function Home() {
 
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
-      <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
-        <Link
-          href="/"
-          title="Back to casewise.si"
-          className="flex items-baseline gap-2 px-4 pb-2 pt-5 hover:opacity-80"
+      {!sidebarOpen && (
+        <button
+          onClick={toggleSidebar}
+          title="Show sidebar"
+          className="fixed left-3 top-4 z-10 hidden h-8 w-8 items-center justify-center rounded-lg border border-[#e3e1d5] bg-white text-sm text-[#5d5848] shadow-sm hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 md:flex"
         >
-          <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
-            Casewise
-          </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.11.0</span>
-        </Link>
+          »
+        </button>
+      )}
+      {sidebarOpen && (
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
+        <div className="flex items-baseline justify-between px-4 pb-2 pt-5">
+          <Link href="/" title="Back to casewise.si" className="flex items-baseline gap-2 hover:opacity-80">
+            <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
+              Casewise
+            </span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.12.0</span>
+          </Link>
+          <button
+            onClick={toggleSidebar}
+            title="Hide sidebar"
+            className="rounded-md px-1.5 py-0.5 text-sm text-[#a39f8d] hover:bg-[#eae8dc] hover:text-[#5d5848] dark:hover:bg-neutral-800"
+          >
+            «
+          </button>
+        </div>
         <button
           onClick={reset}
           className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
@@ -1252,8 +1301,13 @@ export default function Home() {
               </div>
             </>
           )}
+          <div className="mt-3 border-t border-[#e8e6dc] pt-2 text-[11px] leading-snug text-[#a39f8d] dark:border-neutral-800 dark:text-neutral-500">
+            <div className="font-medium text-[#8a8571] dark:text-neutral-400">Private by design</div>
+            Questions stay in this browser. They are not stored on our servers.
+          </div>
         </div>
       </aside>
+      )}
 
       <main className="flex-1 overflow-y-auto">
         {!hasContent ? (
@@ -1261,11 +1315,34 @@ export default function Home() {
             <div className="w-full max-w-2xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
-              <h1 className="mb-8 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
-                Find the law. Understand the precedent.
-                <br className="hidden md:block" /> Build your case.
+              <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
+                New York legal research
+              </p>
+              <h1 className="mb-3 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
+                What are you researching today?
               </h1>
+              <p className="mb-7 text-center text-sm text-[#8a8571] dark:text-neutral-400">
+                Ask a question, search authorities, check citations, or draft an IRAC memo
+                with verified sources.
+              </p>
               {inputCard}
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                  Try a common question
+                </span>
+                {EXAMPLE_QUESTIONS.map((ex) => (
+                  <button
+                    key={ex.label}
+                    onClick={() => {
+                      setMode("ask");
+                      setQuery(ex.q);
+                    }}
+                    className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  >
+                    {ex.label}
+                  </button>
+                ))}
+              </div>
               <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
                 SI research assistant for New York property law. For licensed attorneys;
                 not legal advice. Verify all citations.

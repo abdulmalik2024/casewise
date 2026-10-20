@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.11.0** (2026-10-20)
+**Version: V-2.12.0** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,19 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.12.0 (2026-10-20): app-shell redesign, Phase A of the UI/UX round
+  (Abdul's mockups + cases.ai study; phases B answer-experience,
+  C check-cites flow, D landing hero deferred pending approval).
+  Collapsible sidebar (« / » toggle, expanded by default, state in
+  localStorage casewise-sidebar); empty state is now eyebrow "NEW YORK
+  LEGAL RESEARCH" + "What are you researching today?" + mode subline +
+  three example-question chips (fill the Ask box: habitability,
+  month-to-month notice, security deposits — all anchor-backed);
+  "As of" relabeled "Research date" with a "current law" hint when
+  empty; "Private by design" note in the sidebar footer. Workflow note:
+  UI changes now go out as Vercel PREVIEW deploys for Abdul's approval
+  before production (preview URLs sit behind Vercel auth; he opens them
+  logged in, or tests locally via npx next dev).
 - V-2.11.0 (2026-10-20): landmark decisions seed, part 1 of the free-tier
   corpus expansion. New pipeline `ingest-landmarks` (CourtListener
   citation-lookup → cluster → opinion text; chunked resolver with 429/
