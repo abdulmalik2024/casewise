@@ -26,6 +26,13 @@ LAW_PATTERNS: list[tuple[re.Pattern, str]] = [
     (re.compile(r"CPLR\s*§?\s*([\d]+(?:-[A-Za-z])?)"), "CVP"),
     (re.compile(r"(?:General Obligations Law|GOL)\s*§+\s*([\d]+(?:-[A-Za-z0-9]+)?)"), "GOB"),
     (re.compile(r"(?:Multiple Dwelling Law|MDL)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "MDW"),
+    (re.compile(r"(?:Emergency Tenant Protection Act|ETPA)\s*§*\s*([\d]+(?:-[A-Za-z])?)"), "ETP"),
+    (re.compile(r"(?:Banking Law)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "BNK"),
+    (re.compile(r"(?:Business Corporation Law|BCL)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "BSC"),
+    (re.compile(r"(?:Not-for-Profit Corporation Law|N-PCL)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "NPC"),
+    (re.compile(r"(?:General Business Law|GBL)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "GBS"),
+    (re.compile(r"(?:Lien Law)\s*§+\s*([\d]+(?:-[A-Za-z])?)"), "LIE"),
+    (re.compile(r"(?:Uniform Commercial Code|UCC)\s*§*\s*([\d]+(?:-?[A-Za-z]?-?[\d]+)?)"), "UCC"),
 ]
 NYCRR_RE = re.compile(r"(\d+)\s*N\.?Y\.?C\.?R\.?R\.?\s*§*\s*([\d]+\.[\d]+(?:-[a-z])?)")
 SLIP_RE = re.compile(r"(\d{4})\s*N\.?Y\.?\s*Slip\s*Op\.?\s*(\d{4,6})(\s*\(U\))?", re.I)
