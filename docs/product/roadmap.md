@@ -96,3 +96,17 @@ resume the build when a genuine document arrives from a tester/attorney.
 2. ⬜ Landmark decisions seed: curated pre-2015 foundational cases
    (Park West v. Mitchell, Braschi, etc.) — attorneys expect them;
    10-yr corpus can't cite them. Small one-time CourtListener fetch.
+
+## Future: research records (from cases.ai comparison, 2026-10-20)
+Question → organized memo + authorities + verified quotes + counteranalysis
++ reusable research record, sources attached. Staged plan agreed:
+1. Export bundle first: one "Download research record" capturing the whole
+   thread (not just one answer) — no storage-posture change, mostly
+   existing pieces.
+2. Opt-in saved matters later ("New case prep" slot, likely paid-tier):
+   named server-side workspaces. Requires honest confidentiality copy
+   ("nothing stored unless you save it to a matter"). Competitors ALL
+   store research history by default (cases.ai Pro: "saved research
+   history"; Team: "firm-wide search history"; Westlaw/Lexis history) —
+   "storage as an explicit choice" is our empty-lane differentiator and
+   pairs with the saved-research alerts idea in Next.
