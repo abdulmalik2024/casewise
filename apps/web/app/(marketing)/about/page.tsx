@@ -12,10 +12,12 @@ export default function About() {
         </p>
         <p>
           We chose the opposite of the generic approach: one state, one practice area, done
-          deeply. Casewise works from the primary sources themselves: every section of the
-          Real Property Law, RPAPL, CPLR and related statutes (versioned, so history is
-          never overwritten), ten years of New York appellate decisions, DHCR&apos;s bulletins
-          and fact sheets, the Uniform Civil Rules, and the official landlord-tenant forms.
+          deeply. Casewise works from the primary sources themselves: twelve bodies of New
+          York statute, from the Real Property Law and RPAPL to the CPLR, UCC, and Banking
+          Law (versioned, so history is never overwritten), ten years of New York appellate
+          decisions plus the landmark Court of Appeals cases attorneys cite daily,
+          DHCR&apos;s bulletins and fact sheets, the Uniform Civil Rules, and the official
+          landlord-tenant forms.
         </p>
         <p>
           The defining design decision is verification by construction. The model drafting an
@@ -24,6 +26,13 @@ export default function About() {
           source text, and documents you audit are checked against a catalog of 5.1 million
           published citations. Where the famous AI failure is the invented case, Casewise is
           architected so that failure cannot reach you.
+        </p>
+        <p>
+          The second design decision is confidentiality by architecture. Your questions are
+          not stored on our servers; research history lives only in your own browser, and
+          nothing you type trains any model. Documents you check are processed in memory
+          and never saved. We built it this way because what we do not hold cannot leak
+          and cannot be demanded from us.
         </p>
         <p>
           We are early, and we build in close conversation with the attorneys who use the
