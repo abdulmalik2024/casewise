@@ -1118,7 +1118,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.10.1</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.11.0</span>
         </Link>
         <button
           onClick={reset}

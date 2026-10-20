@@ -40,7 +40,8 @@ LANDMARKS: list[tuple[str, str, str, str]] = [
     ("10 N.Y.3d 542", "Pultz v. Economakis", "2008-05-06", "owner-use withdrawal"),
     ("15 N.Y.3d 347", "Matter of Cintron v. Calogero", "2010-10-14", "rent reduction orders"),
     ("83 N.Y.2d 156", "Rent Stabilization Assn. v. Higgins", "1993-12-21", "succession regs upheld"),
-    ("65 N.Y.2d 900", "Golub v. Frank", "1985-06-28", "nonrenewal (Golub) notice"),
+    # 65 N.Y.2d 900 (Golub v. Frank) excluded: that reporter page holds several
+    # memoranda and the lookup resolves to the wrong one (61 Jane St.)
     ("2 N.Y.3d 472", "Matter of ATM One v. Landaverde", "2004-06-10", "cure-notice service/timing"),
     ("72 N.Y.2d 784", "Matter of Salvati v. Eimicke", "1988-11-22", "DHCR deference / overcharge"),
     ("74 N.Y.2d 92", "Seawall Assoc. v. City of New York", "1989-06-06", "SRO takings"),

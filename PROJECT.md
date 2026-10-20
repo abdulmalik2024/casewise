@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.10.1** (2026-10-20)
+**Version: V-2.11.0** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,18 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.11.0 (2026-10-20): landmark decisions seed, part 1 of the free-tier
+  corpus expansion. New pipeline `ingest-landmarks` (CourtListener
+  citation-lookup → cluster → opinion text; chunked resolver with 429/
+  timeout retries): 17 foundational pre-2016 Court of Appeals decisions
+  loaded + embedded (205 chunks) — Park West, Braschi, Solow, Roberts v.
+  Tishman Speyer, Yellowstone, Thornton, Grimm, Conason, Chinatown Apts,
+  Domen, Pultz, Cintron, RSA v. Higgins, Landaverde, Salvati, Seawall,
+  Holy Props. Golub v. Frank excluded (65 NY2d 900 is a multi-case memo
+  page; lookup resolves to the wrong case). feed_code='landmark'.
+  Corpus now 11,694 decisions / 20,779 chunks; DB 216MB of the 500MB
+  free tier. In progress: six gap laws crawling (UCC/BNK/BSC/NPC/GBS/
+  LIE); pending: agency guidance (DFS/DOS/AG), filtered AD slice.
 - V-2.10.1 (2026-10-20): COPY STYLE RULE, permanent — no em dashes (—)
   anywhere user-facing: all website/app copy rewritten (commas, colons,
   periods, parentheses, or " · " separators), API error messages and memo
