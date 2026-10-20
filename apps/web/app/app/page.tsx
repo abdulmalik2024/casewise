@@ -944,6 +944,99 @@ export default function Home() {
     </form>
   );
 
+  // last exchange whose sources the desktop side panel shows
+  const panelIdx = (() => {
+    for (let i = thread.length - 1; i >= 0; i--) {
+      const a = thread[i]?.answer;
+      if (a && a.sources.length > 0) return i;
+    }
+    return -1;
+  })();
+
+  const verificationBanner = (a: AskResponse) => {
+    if (a.sources.length === 0) return null;
+    const qc = a.quote_check;
+    const quotesClean = !qc || qc.total === 0 || qc.unverified.length === 0;
+    const draftClean = !a.draft_check || a.draft_check.passed;
+    const clean = quotesClean && draftClean;
+    return (
+      <div
+        className={`mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl px-4 py-2.5 text-xs ${
+          clean
+            ? "bg-[#1e3a5a] text-white"
+            : "border border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950 dark:text-amber-300"
+        }`}
+      >
+        <span className="font-semibold">
+          ✓ {a.sources.length} citation{a.sources.length === 1 ? "" : "s"} verified
+        </span>
+        {qc && qc.total > 0 && (
+          <span>
+            {qc.verified} of {qc.total} quoted passage{qc.total === 1 ? "" : "s"} matched
+            word for word
+          </span>
+        )}
+        {a.draft_check && <span>IRAC structure {draftClean ? "checks passed" : "flagged below"}</span>}
+        {clean && (
+          <span className="ml-auto rounded-full border border-white/30 px-2.5 py-0.5 text-[10px] uppercase tracking-wider text-white/90">
+            Verified against sources
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  const authoritiesPanel = (a: AskResponse) => (
+    <div className="rounded-2xl border border-[#e8e6dc] bg-[#f5f4ee] p-5 dark:border-neutral-800 dark:bg-[#1f1e1b]">
+      <h3 className="text-lg tracking-tight [font-family:var(--font-serif)]">
+        Verified authorities
+      </h3>
+      <ul className="mt-3 space-y-3">
+        {a.sources.map((s) => (
+          <li
+            key={s.marker}
+            className="rounded-xl border border-[#e3e1d5] bg-white p-3 text-xs dark:border-neutral-700 dark:bg-[#30302e]"
+          >
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+                {typeLabel(s.source_type)}
+              </span>
+              <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] uppercase tracking-wide text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                Verified
+              </span>
+              {s.amended_after && (
+                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  amended after date
+                </span>
+              )}
+              <span className="ml-auto font-mono text-[10px] text-[#a39f8d]">{s.marker}</span>
+            </div>
+            <div className="mt-1.5 font-mono text-[13px] font-semibold text-[#3d3929] dark:text-neutral-200">
+              {s.citation}
+            </div>
+            {s.heading && s.heading !== s.citation && (
+              <div className="mt-0.5 text-[#6b6450] dark:text-neutral-400">{s.heading}</div>
+            )}
+            {s.url && (
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1.5 inline-block text-[#1e3a5a] hover:underline dark:text-blue-400"
+              >
+                Open official text ↗
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-500">
+        Every citation maps to a retrieved document. Review the authorities before relying
+        on the answer.
+      </p>
+    </div>
+  );
+
   const answerCard = (x: Exchange, idx: number, streaming: boolean) => (
     <div key={idx} className="mt-6">
       <button
@@ -960,6 +1053,7 @@ export default function Home() {
           {x.question}
         </span>
       </button>
+      {x.answer && !collapsed[idx] && verificationBanner(x.answer)}
       {collapsed[idx] && !streaming ? null : streaming && !streamText ? (
         <p className="flex items-center gap-2.5 text-sm text-[#8a8571] dark:text-neutral-400">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1110,7 +1204,7 @@ export default function Home() {
         </div>
       )}
       {x.answer && !collapsed[idx] && x.answer.sources.length > 0 && (
-        <div className="mt-4">
+        <div className={`mt-4 ${idx === panelIdx ? "lg:hidden" : ""}`}>
           <button
             onClick={() => setSourcesCollapsed((p) => ({ ...p, [idx]: !p[idx] }))}
             className="flex items-baseline gap-1.5 text-xs font-semibold uppercase tracking-wide text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400"
@@ -1429,7 +1523,8 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-3xl px-4 py-8">
+          <div className={`mx-auto px-4 py-8 ${(mode === "ask" || mode === "draft") && panelIdx >= 0 ? "max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8" : "max-w-3xl"}`}>
+            <div className="mx-auto w-full max-w-3xl min-w-0">
             <button
               onClick={reset}
               className="mb-3 flex items-center gap-1.5 text-xs text-[#8a8571] hover:text-[#1e3a5a] dark:text-neutral-400 dark:hover:text-blue-400"
@@ -1618,6 +1713,12 @@ export default function Home() {
               </ul>
             )}
             <div ref={bottomRef} />
+            </div>
+            {(mode === "ask" || mode === "draft") && panelIdx >= 0 && thread[panelIdx]?.answer && (
+              <aside className="hidden lg:sticky lg:top-8 lg:block">
+                {authoritiesPanel(thread[panelIdx].answer!)}
+              </aside>
+            )}
           </div>
         )}
       </main>
