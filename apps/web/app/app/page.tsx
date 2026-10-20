@@ -138,6 +138,16 @@ function relevance(score: number): { label: string; cls: string } {
 
 const GUEST_LIMIT = 5;
 
+// shown in rotation while the model reads sources and drafts (the quiet stretch)
+const WAITING_LINES = [
+  "Lining up the governing statutes…",
+  "Comparing the decisions on point…",
+  "Checking how the authorities fit together…",
+  "Drafting, with every citation pinned to a source…",
+  "Almost there; quotations get verified next…",
+];
+const STATUS_VERBS = ["Reading", "Checking", "Comparing"];
+
 const EXAMPLE_QUESTIONS = [
   {
     label: "Habitability defenses",
@@ -237,6 +247,7 @@ export default function Home() {
   const [guestLeft, setGuestLeft] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [pendingCites, setPendingCites] = useState<string[]>([]);
   const [expandedResults, setExpandedResults] = useState<Record<number, boolean>>({});
   const [findInResult, setFindInResult] = useState<Record<number, string>>({});
   const [lastSearchQ, setLastSearchQ] = useState("");
@@ -302,6 +313,21 @@ export default function Home() {
       })
       .catch(() => {});
   }, [isGuest]);
+
+  // while the model is thinking (loading, nothing streamed yet), rotate the
+  // status line through the retrieved citations, or honest generic lines
+  useEffect(() => {
+    if (status !== "loading" || streamText) return;
+    const lines = pendingCites.length
+      ? pendingCites.map((c, i) => `${STATUS_VERBS[i % STATUS_VERBS.length]} ${c}…`)
+      : WAITING_LINES;
+    let i = 0;
+    const id = setInterval(() => {
+      setStatusMsg(lines[i % lines.length]);
+      i += 1;
+    }, 3500);
+    return () => clearInterval(id);
+  }, [status, streamText, pendingCites]);
 
   useEffect(() => {
     if ((mode === "ask" || mode === "draft") && (streamText || status === "loading")) {
@@ -428,6 +454,7 @@ export default function Home() {
         if (!line) continue;
         const event = JSON.parse(line.slice(6));
         if (event.type === "status") setStatusMsg(event.message);
+        else if (event.type === "sources_preview") setPendingCites(event.citations ?? []);
         else if (event.type === "delta") {
           acc += event.text;
           setStreamText(acc);
@@ -485,6 +512,7 @@ export default function Home() {
         if (!line) continue;
         const event = JSON.parse(line.slice(6));
         if (event.type === "status") setStatusMsg(event.message);
+        else if (event.type === "sources_preview") setPendingCites(event.citations ?? []);
         else if (event.type === "delta") {
           acc += event.text;
           setStreamText(acc);
@@ -525,6 +553,7 @@ export default function Home() {
     setStatus("loading");
     setError("");
     setStreamText("");
+    setPendingCites([]);
     setCopiedIdx(null);
     try {
       await runAskStream(q, prior);
@@ -575,6 +604,7 @@ export default function Home() {
     setStatus("loading");
     setError("");
     setStreamText("");
+    setPendingCites([]);
     setCopiedIdx(null);
     try {
       if (mode === "audit") {

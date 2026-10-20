@@ -191,6 +191,7 @@ def draft_stream(
         }
         return
     yield {"type": "status", "message": _source_counts(retrieved)}
+    yield {"type": "sources_preview", "citations": [r.citation for r in retrieved]}
     yield {"type": "status", "message": "Drafting the IRAC analysis with cited authorities…"}
 
     headers = (

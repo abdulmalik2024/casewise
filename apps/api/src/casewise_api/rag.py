@@ -206,6 +206,8 @@ def ask_stream(
         }
         return
     yield {"type": "status", "message": _source_counts(retrieved)}
+    # lets the client rotate through the actual sources while the model thinks
+    yield {"type": "sources_preview", "citations": [r.citation for r in retrieved]}
     yield {"type": "status", "message": "Reading the sources and drafting a cited answer…"}
 
     headers = (
