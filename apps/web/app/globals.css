@@ -25,3 +25,11 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Casewise owl loader (files/wise-owl pack) */
+@keyframes cw-owl-bob {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50% { transform: translateY(-6px) rotate(3deg); }
+}
+.cw-owl-bob { animation: cw-owl-bob 1.4s ease-in-out infinite; transform-origin: 50% 90%; }
+@media (prefers-reduced-motion: reduce) { .cw-owl-bob { animation: none; } }

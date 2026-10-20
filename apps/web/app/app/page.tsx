@@ -894,8 +894,9 @@ export default function Home() {
         </span>
       </button>
       {collapsed[idx] && !streaming ? null : streaming && !streamText ? (
-        <p className="flex items-center gap-2 text-sm text-[#8a8571] dark:text-neutral-400">
-          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-[#1e3a5a]" />
+        <p className="flex items-center gap-2.5 text-sm text-[#8a8571] dark:text-neutral-400">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/owl/casewise-owl-256.webp" alt="" className="cw-owl-bob h-9 w-9" />
           {statusMsg}
         </p>
       ) : (
@@ -1117,7 +1118,7 @@ export default function Home() {
           <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
             Casewise
           </span>
-          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.9.1</span>
+          <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.9.2</span>
         </Link>
         <button
           onClick={reset}
@@ -1258,6 +1259,8 @@ export default function Home() {
         {!hasContent ? (
           <div className="flex h-full flex-col items-center justify-center px-4">
             <div className="w-full max-w-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
               <h1 className="mb-8 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
                 Find the law. Understand the precedent.
                 <br className="hidden md:block" /> Build your case.
@@ -1366,6 +1369,17 @@ export default function Home() {
                     is not an opinion on whether it remains good law.
                   </p>
                 </div>
+              </div>
+            )}
+
+            {status === "loading" && (mode === "search" || mode === "audit") && (
+              <div
+                role="status"
+                className="mt-12 flex flex-col items-center gap-3 text-sm font-medium text-[#1e3a5a] dark:text-blue-300"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/owl/casewise-owl-256.webp" alt="" className="cw-owl-bob h-20 w-20" />
+                <span>{mode === "audit" ? "Checking citations…" : "Searching the library…"}</span>
               </div>
             )}
 

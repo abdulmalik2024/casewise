@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.9.1** (2026-10-17)
+**Version: V-2.9.2** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,14 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.9.2 (2026-10-20): wise-owl mascot in the app (assets from the
+  brand pack in files/wise-owl, gitignored staging; servable copies at
+  apps/web/public/owl/). Owl appears: bobbing loader on the Ask/Draft
+  status line, centered loader for Search ("Searching the library…") and
+  Check cites ("Checking citations…"), small static owl on the empty-app
+  hero. CSS keyframes in globals.css (cw-owl-bob, reduced-motion safe).
+  Note: owl art is AI-generated — have an illustrator redraw before print
+  or trademark use (per pack README).
 - V-2.9.1 (2026-10-17): trial countdown counts calendar days (day after
   signup reads "6 days left"; access ends at the start of day 8) — was 24h
   blocks that showed "7 days left" a day in. Quote-check copy per attorney
