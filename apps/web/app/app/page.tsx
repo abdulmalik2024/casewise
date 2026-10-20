@@ -889,7 +889,7 @@ export default function Home() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               rows={5}
-              placeholder="Paste a brief, motion, or memo, yours or opposing counsel's. NY case citations are checked against official records from any year; quoted text is matched word for word to the sources."
+              placeholder="Paste a brief, motion, or memo, yours or opposing counsel's. NY case citations are checked against 5.1 million official records going back to the 1800s; quoted text is matched word for word to the sources."
               className="mt-2 w-full resize-y bg-transparent pb-2 text-[14px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
             />
           ) : (
@@ -1161,9 +1161,10 @@ export default function Home() {
         </li>
       </ul>
       <p className="mt-3 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-500">
-        Coverage: NY case citations in all official reporters, any year; slip opinions;
-        and statute citations across the twelve NY laws in the library (RPL, RPAPL,
-        CPLR, GOL, MDL, ETPA, UCC, GBL, Banking, BCL, N-PCL, Lien Law).
+        Coverage: NY case citations in all official reporters, 5.1 million records
+        going back to the 1800s; slip opinions; and statute citations across the
+        twelve NY laws in the library (RPL, RPAPL, CPLR, GOL, MDL, ETPA, UCC, GBL,
+        Banking, BCL, N-PCL, Lien Law).
       </p>
       <p className="mt-2 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-500">
         <span className="font-medium">Your document stays private.</span> Processed in
