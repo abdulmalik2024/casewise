@@ -68,33 +68,34 @@ export default function Landing() {
     <main>
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pt-16 text-center">
-        <h1 className="mx-auto max-w-4xl text-balance text-5xl leading-[1.08] tracking-tight [font-family:var(--font-serif)] md:text-6xl">
-          Find the law.
-          <br />
-          Understand the precedent.
-          <br />
-          <span className="text-[#1e3a5a]">Build your case.</span>
+        <p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
+          Legal research for New York attorneys
+        </p>
+        <h1 className="mx-auto mt-4 max-w-4xl text-balance text-[2.6rem] leading-[1.12] tracking-tight [font-family:var(--font-serif)] md:text-6xl">
+          Verified legal research for New York landlord-tenant and{" "}
+          <span className="text-[#1e3a5a]">real estate litigation attorneys.</span>
         </h1>
         <p className="mx-auto mt-6 max-w-2xl text-lg text-[#6b6450] dark:text-neutral-400">
-          The research assistant for New York property law. Every answer is cited to the
-          statutes, decisions, and DHCR guidance themselves, verified before you see it.
+          Ask in plain English. Get answers grounded in New York statutes, court
+          decisions, and DHCR guidance, with citations and quotations checked against
+          the source.
         </p>
-        <div className="mt-8 flex justify-center gap-3">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/app"
             className="rounded-full bg-[#3d3929] px-7 py-3 font-medium text-[#faf9f5] transition-colors hover:bg-[#2a271c] dark:bg-neutral-100 dark:text-neutral-900"
           >
-            Try it now, no sign-up
+            Try 5 questions free
           </Link>
           <Link
             href="/features"
             className="rounded-full px-7 py-3 font-medium text-[#5d5848] hover:bg-[#efede3] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
-            See the features →
+            See how it works →
           </Link>
         </div>
         <p className="mt-4 text-xs text-[#a39f8d]">
-          For licensed attorneys · 5 free questions as a guest · 7-day free trial, no credit card
+          For licensed attorneys · No sign-up required · 7-day trial, no credit card
         </p>
 
         <div className="mx-auto mt-14 max-w-4xl">
