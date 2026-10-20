@@ -38,7 +38,13 @@ def create_checkout(user: dict, plan: str) -> str:
     """-> Stripe Checkout URL for this signed-in user. plan: monthly|yearly."""
     if not billing_configured():
         raise HTTPException(503, "billing is not configured yet; check back shortly")
-    price = settings.stripe_price_monthly if plan == "monthly" else settings.stripe_price_yearly
+    price = {
+        "monthly": settings.stripe_price_monthly,
+        "yearly": settings.stripe_price_yearly,
+        "starter": settings.stripe_price_starter,
+    }.get(plan, "")
+    if not price:
+        raise HTTPException(503, "this plan is not available yet; check back shortly")
     data = {
         "mode": "subscription",
         "line_items[0][price]": price,

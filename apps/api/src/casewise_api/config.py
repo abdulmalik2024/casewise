@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     stripe_webhook_secret: str = ""
     stripe_price_monthly: str = ""
     stripe_price_yearly: str = ""
+    stripe_price_starter: str = ""
 
 
 settings = Settings()

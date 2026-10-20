@@ -107,7 +107,7 @@ def guest_status(request: Request, x_guest_id: str | None = Header(default=None)
 
 
 class CheckoutIn(BaseModel):
-    plan: Literal["monthly", "yearly"]
+    plan: Literal["starter", "monthly", "yearly"]
 
 
 @app.post("/billing/checkout")
