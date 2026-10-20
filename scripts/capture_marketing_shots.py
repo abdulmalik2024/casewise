@@ -8,6 +8,7 @@ Costs ~2 Ask calls (a few cents).
 
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 
@@ -56,36 +57,52 @@ def main() -> None:
         )
         page = ctx.new_page()
 
+        # sign in when credentials are provided (Check cites and Search are
+        # account-gated; Ask also stops counting against the guest quota)
+        email = os.environ.get("CASEWISE_TEST_EMAIL")
+        password = os.environ.get("CASEWISE_TEST_PASSWORD")
+        if email and password:
+            page.goto("https://casewise.si/login", wait_until="networkidle")
+            page.locator('input[type="email"]').fill(email)
+            page.locator('input[type="password"]').fill(password)
+            page.get_by_role("button", name="Sign in", exact=True).click()
+            page.wait_for_url("**/app**", timeout=30_000)
+            print("signed in")
+
         # 1) Ask with verified quotations
         page.goto(BASE, wait_until="networkidle")
         page.get_by_placeholder(re.compile("Ask a legal question")).fill(
             "What does the warranty of habitability require, and what are the tenant's remedies?"
         )
         page.get_by_role("button", name="Research", exact=True).click()
-        page.wait_for_selector("text=Verified sources", timeout=240_000)
+        page.wait_for_selector("text=Verified authorities", timeout=240_000)
         page.wait_for_timeout(500)
         top_shot(page, OUT / "ask-verified.png")
         quote_line = page.locator("text=verified word-for-word").locator("xpath=ancestor::div[1]")
         if quote_line.count():
             element_shot(quote_line.first, OUT / "quotes-verified.png")
+        element_shot(
+            page.locator("aside", has_text="Verified authorities").last,
+            OUT / "authorities-panel.png",
+        )
 
         # 2) Building-grounded sources
-        page.get_by_role("button", name="New research").click()
+        page.get_by_role("button", name="New research").first.click()
         page.get_by_placeholder(re.compile("Ask a legal question")).fill(
             "My client rents at 888 Grand Concourse, Bronx — no heat and mold. What are her rights?"
         )
         page.get_by_role("button", name="Research", exact=True).click()
-        page.wait_for_selector("text=building record", timeout=240_000)
+        page.wait_for_selector("aside >> text=building record", timeout=240_000)
         page.wait_for_timeout(500)
         page.wait_for_timeout(1500)
-        sources = page.locator("xpath=//div[contains(@class,'mt-4')][.//text()[contains(., 'Verified sources')]]")
-        element_shot(sources.last, OUT / "building-sources.png")
+        panel = page.locator("aside", has_text="Verified authorities")
+        element_shot(panel.last, OUT / "building-sources.png")
 
         # 3) Check cites audit with a fabricated citation flagged
-        page.get_by_role("button", name="New research").click()
+        page.get_by_role("button", name="New research").first.click()
         page.get_by_role("button", name="Check cites").first.click()
         page.locator("textarea").fill(AUDIT_TEXT)
-        page.get_by_role("button", name="Check cites").last.click()
+        page.get_by_role("button", name="Check citations", exact=True).click()
         page.wait_for_selector("text=Citation audit", timeout=120_000)
         page.wait_for_timeout(500)
         card = page.locator("text=Citation audit").locator(
@@ -94,7 +111,7 @@ def main() -> None:
         element_shot(card.first, OUT / "check-cites.png")
 
         # 4) Search with source filters and relevance grades
-        page.get_by_role("button", name="New research").click()
+        page.get_by_role("button", name="New research").first.click()
         page.get_by_role("button", name="Search", exact=True).click()
         page.get_by_placeholder(re.compile("Search statutes")).fill(
             "notice required before rent increase"

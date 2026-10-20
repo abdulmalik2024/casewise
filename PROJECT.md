@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.12.0** (2026-10-20)
+**Version: V-2.12.1** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,10 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.12.1 (2026-10-20): marketing screenshots regenerated against the
+  new UI (capture script: signs in via CASEWISE_TEST_EMAIL/_PASSWORD env
+  since Check cites/Search are gated; panel-scoped selectors; new
+  authorities-panel.png asset).
 - V-2.12.0 (2026-10-20, SHIPPED as one release): full UI/UX redesign
   round (Abdul's mockups + cases.ai study), previews approved phase by
   phase. Phase B: navy verification banner per answer (citations/quotes/
