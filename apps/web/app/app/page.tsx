@@ -1400,6 +1400,12 @@ export default function Home() {
           </div>
         ) : (
           <div className="mx-auto max-w-3xl px-4 py-8">
+            <button
+              onClick={reset}
+              className="mb-3 flex items-center gap-1.5 text-xs text-[#8a8571] hover:text-[#1e3a5a] dark:text-neutral-400 dark:hover:text-blue-400"
+            >
+              ← New research
+            </button>
             {inputCard}
 
             {status === "error" && (
