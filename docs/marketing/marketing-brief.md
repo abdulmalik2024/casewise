@@ -79,8 +79,9 @@ Domain · Environmental · RE Development · RE Finance · RE Insurance ·
 Estate Planning
 
 Citation verification (Check cites) is broader than research coverage: it
-validates citations to essentially ALL New York case law, historical and
-current (5M+ citation records) — a safe claim on its own.
+validates citations against 5.1 million official records of NY case law
+going back to the 1800s (measured: the catalog spans 1714-2026, with
+~100,000 pre-1900 decisions). A safe, strong claim on its own.
 
 ## Target audience (for post targeting and voice)
 
