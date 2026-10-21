@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Who It's For",
+  description:
+    "Built for New York landlord-tenant attorneys, eviction defense counsel, Housing Court practitioners, real estate litigators, property rights attorneys, and the paralegals and law students who work with them.",
+};
+
 import Link from "next/link";
 
 const AUDIENCES = [

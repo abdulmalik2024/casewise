@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "About",
+  description:
+    "Casewise is a legal research assistant for solo and small-firm New York property-law attorneys, built with a practicing NY attorney. Verification by construction; confidentiality by architecture.",
+};
+
 export default function About() {
   return (
     <main className="mx-auto max-w-3xl px-6 pb-20">

@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Verified Legal Research for NY Landlord-Tenant Attorneys",
+  description:
+    "AI legal research for New York landlord-tenant and real estate litigation attorneys. Cited, quoted, and verified against NY statutes, court decisions, and DHCR guidance. Try 5 questions free.",
+};
+
 import Link from "next/link";
 
 function BrowserFrame({ src, alt }: { src: string; alt: string }) {

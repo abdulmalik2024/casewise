@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Features",
+  description:
+    "Cited streaming answers, word-for-word quote verification, citation checking against 5.1M official NY records, IRAC drafting, building-grounded answers, Word memo exports, and point-in-time research.",
+};
+
 type Feature = { id: string; title: string; body: string; img?: string; imgAlt?: string };
 
 const features: Feature[] = [

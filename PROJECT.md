@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.12.1** (2026-10-20)
+**Version: V-2.12.2** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,15 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.12.2 (2026-10-21): SEO foundation + 2 keyword posts. metadataBase,
+  per-page titles/descriptions (template '%s · Casewise'), OpenGraph +
+  twitter cards with generated 1200x630 /brand/og.png, sitemap.xml and
+  robots.txt (app/login/signup disallowed; /app also meta-noindexed),
+  per-post generateMetadata with keywords + article OG. New posts:
+  'Warranty of Habitability (RPL 235-b)' and 'Check Every Citation
+  Before Filing' (use-case + keyword targeted; h2 subheadings now
+  supported via '## ' prefix in posts.ts). Pending user action: Google
+  Search Console verification + sitemap submission.
 - V-2.12.1 (2026-10-20): marketing screenshots regenerated against the
   new UI (capture script: signs in via CASEWISE_TEST_EMAIL/_PASSWORD env
   since Check cites/Search are gated; panel-scoped selectors; new

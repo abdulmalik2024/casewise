@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Blog",
+  description:
+    "Notes on New York property law research: warranty of habitability, citation checking, AI sanctions, housing court practice, and how Casewise is built.",
+};
+
 import Link from "next/link";
 import { POSTS } from "./posts";
 

@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "How It Works",
+  description:
+    "From a plain-English question to verified, cited New York legal research in under a minute: retrieval from a closed library of NY primary law, citation mapping, and word-for-word quote checks.",
+};
+
 import Link from "next/link";
 
 const STEPS = [
