@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.12.2** (2026-10-20)
+**Version: V-2.13.0** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -146,6 +146,18 @@ point-in-time questions ("what was the law when this lease was signed").
   grounded in research report "IRAC drafting method and examples"
   (reports/; golden-set bar-exam PDFs in research_notes/…/source_pdfs —
   NCBE/BOLE items are internal-eval-only, licensing).
+- V-2.13.0 (2026-10-21): free-tier corpus expansion COMPLETE (plan from
+  2026-10-20): corpus now 15,766 decisions / 32,243 chunks / 5,746
+  statute sections across 12 laws; DB 348MB of the 500MB free tier.
+  Final piece: 4,000-opinion Appellate Division slice via new
+  `load-appdiv-slice` pipeline (streams the 138MB R2 archive, scores
+  opinions by 13 property/L&T keyword groups, keeps best opinion per
+  cluster, score-then-recency ranking, download retries;
+  feed_code='appdiv'). 92,264 opinions scanned, 4,444 matched, top
+  4,000 loaded + embedded (7,441 chunks). Verified retrieval:
+  foreclosure standing, Yellowstone, specific performance all return
+  A.D. decisions. Remaining optional: agency guidance scrapers
+  (DFS/DOS/AG); the full 85K AD decade still waits on Supabase Pro.
 - V-2.12.2 (2026-10-21): SEO foundation + 2 keyword posts. metadataBase,
   per-page titles/descriptions (template '%s · Casewise'), OpenGraph +
   twitter cards with generated 1200x630 /brand/og.png, sitemap.xml and

@@ -121,3 +121,12 @@ tier (pro se excluded). TODO next: per-plan feature gating (Starter is
 research-only on paper, full-access in practice); regenerate marketing
 screenshots against the new UI; STRIPE_PRICE_STARTER once Abdul creates
 the $49 price.
+
+## Free-tier corpus expansion (2026-10-20/21) — COMPLETE, V-2.13.0
+1. ✅ Landmark seed: 17 pre-2016 COA decisions (V-2.11.0)
+2. ✅ Six gap laws crawled + embedded: UCC, Banking, BSC, NPC, GBS, Lien
+   (3,684 sections; 12 laws total)
+3. ✅ AD slice: 4,000 property/L&T Appellate Division opinions from the
+   R2 archive (load-appdiv-slice). DB at 348MB/500MB.
+4. ⬜ Optional: agency guidance (DFS mortgage regs, DOS broker, AG condo)
+Full AD decade (85K) + Supreme Court remain the Supabase Pro unlock.
