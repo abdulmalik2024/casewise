@@ -126,6 +126,52 @@ export default function Landing() {
         ))}
       </section>
 
+      {/* Differentiation: not another AI legal tool */}
+      <section className="mx-auto max-w-5xl px-6 py-20">
+        <p className="text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
+          Not another AI legal tool
+        </p>
+        <h2 className="mx-auto mt-3 max-w-2xl text-center text-3xl tracking-tight [font-family:var(--font-serif)] md:text-4xl">
+          Five things the generic tools don&apos;t do
+        </h2>
+        <div className="mx-auto mt-10 max-w-3xl overflow-hidden rounded-2xl border border-[#e3e1d5] text-sm dark:border-neutral-700">
+          {[
+            [
+              "Searches the internet and hopes",
+              "A closed library of NY primary law. The model cannot cite a document that wasn't retrieved, so a fabricated citation is structurally impossible.",
+            ],
+            [
+              "A verification disclaimer",
+              "Verification you can watch: every quotation compared word for word with the source text, every citation checked against 5.1M official records back to the 1800s.",
+            ],
+            [
+              "Fifty states, an inch deep",
+              "One jurisdiction, all the way down: DHCR bulletins and fact sheets, Housing Part decisions, ETPA, the Rent Stabilization universe no national tool stocks.",
+            ],
+            [
+              "Knows the law, not your building",
+              "Mention a NYC address and the answer is grounded in that building's record: stabilization indicators, HPD violations, ownership, eviction history.",
+            ],
+            [
+              "Stores your research as a feature",
+              "Stores nothing. Questions never touch our servers' storage, history lives in your browser, and documents you check are processed in memory. What we don't hold can't leak or be subpoenaed.",
+            ],
+          ].map(([them, us], i) => (
+            <div
+              key={i}
+              className={`grid gap-2 p-5 md:grid-cols-[1fr_1.4fr] md:gap-6 ${
+                i % 2 ? "bg-[#f5f4ee] dark:bg-[#1f1e1b]" : "bg-white dark:bg-[#30302e]"
+              }`}
+            >
+              <div className="text-[#a39f8d] line-through decoration-[#d8d5c5] dark:text-neutral-500">
+                {them}
+              </div>
+              <div className="text-[#3d3929] dark:text-neutral-200">{us}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Showcases */}
       {showcases.map((s, i) => (
         <section key={s.eyebrow} className="mx-auto max-w-5xl px-6 py-20">

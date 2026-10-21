@@ -53,6 +53,53 @@ don't trust, or expensive Westlaw/Lexis subscriptions they underuse.
   counsel's) and every NY citation is validated against official records;
   quotes are matched to sources.
 
+## POSITIONING: the five moats (added 2026-10-21)
+
+Abdul's directive: we must never read as "another AI case tool." Every
+piece of marketing leads with ONE of these five pillars, by name. Rotate
+them; never publish generic "AI legal research" copy that any competitor
+could sign.
+
+1. CLOSED LIBRARY ("it cannot make up a case")
+   Message: generic tools search the internet and hope; Casewise answers
+   only from a closed library of NY primary law, so a fabricated citation
+   is structurally impossible.
+   Proof: the architecture itself; the AI-sanctions news cycle; live demo
+   on any brief. Post angle: sanctions stories, Mata anniversary, "ask
+   your AI tool where its answer came from."
+
+2. VISIBLE VERIFICATION ("watch it check")
+   Message: others ship a disclaimer; we ship the check. Word-for-word
+   quote matching, 5.1M-record citation validation back to the 1800s,
+   results shown under every answer.
+   Proof: the verification banner screenshot; the Stanford/Yale ~17%
+   hallucination finding about a major competitor (cite the study, never
+   name-call). Post angle: "verified means we checked, not we promise."
+
+3. ONE JURISDICTION, ALL THE WAY DOWN ("NY-deep")
+   Message: fifty-state tools are an inch deep. We stock what no national
+   player will: DHCR bulletins and fact sheets, Housing Part decisions,
+   ETPA, rent stabilization, twelve NY statutes in full.
+   Proof: corpus numbers; answers citing DHCR operational bulletins.
+   Post angle: ask a generalist tool a rent-stabilization question.
+
+4. BUILDING-GROUNDED ANSWERS ("knows your building")
+   Message: mention a NYC address and the answer is grounded in that
+   building's record: stabilization indicators, HPD violations, owner,
+   eviction history. Literally no competitor does this.
+   Proof: building-sources screenshot. Post angle: demo clips.
+
+5. CONFIDENTIAL BY ARCHITECTURE ("we store nothing")
+   Message: every competitor stores your research history as a feature.
+   We store nothing: history lives in your browser, documents are
+   processed in memory. What we don't hold can't leak or be subpoenaed.
+   Proof: the architecture; competitors' own pricing pages advertise
+   "saved research history." Post angle: subpoena/work-product framing
+   for litigators.
+
+The landing page carries these as the "Five things the generic tools
+don't do" contrast section; keep site and posts in sync with this list.
+
 ## Practice-area coverage (be honest in posts — updated 2026-10-20)
 
 **Fully covered — lead marketing with these:**
