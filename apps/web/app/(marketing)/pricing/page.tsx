@@ -87,7 +87,7 @@ export default function Pricing() {
         <div className="rounded-2xl border border-[#e3e1d5] bg-white p-7 dark:border-neutral-700 dark:bg-[#30302e]">
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">Starter</h3>
           <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
-            $49 <span className="text-sm font-normal text-[#8a8571]">per month</span>
+            $49.99 <span className="text-sm font-normal text-[#8a8571]">per month</span>
           </div>
           <p className="mt-1 text-xs text-[#8a8571]">
             Solo attorneys, paralegals, and law students

@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.13.0** (2026-10-20)
+**Version: V-2.13.1** (2026-10-20)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -190,7 +190,7 @@ point-in-time questions ("what was the law when this lease was signed").
   How it works page + Who it's for page + Blog (first post: verification
   architecture) + Features gains Draft IRAC card/anchors + About refresh
   (12 laws, landmarks, confidentiality-by-architecture paragraph).
-  Pricing: four tiers — NEW Starter $49/mo (research only: Ask/Search/
+  Pricing: four tiers — NEW Starter $49.99/mo (research only: Ask/Search/
   phrase/buildings/point-in-time; solo attorneys, paralegals, law
   students; PRO SE EXCLUDED on UPL grounds), Professional $99.99,
   Annual $999.99. Billing plan "starter" + STRIPE_PRICE_STARTER (503s
