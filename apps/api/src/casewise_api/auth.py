@@ -89,15 +89,19 @@ def _ensure_guest_table(pool: ConnectionPool) -> None:
 
 
 def guest_remaining(pool: ConnectionPool, guest_id: str, ip: str) -> int:
-    """Free questions left for this visitor — counted across both the browser
-    guest id and the IP, so clearing localStorage does not reset the quota."""
+    """Free questions left for this visitor: the worse of the per-guest-id
+    count and the TOTAL for the IP. Summing per IP closes the rotation hole
+    (a fresh guest id per request must not reset the quota)."""
     _ensure_guest_table(pool)
     with pool.connection() as conn:
         row = conn.execute(
-            "select coalesce(max(questions), 0) from guest_usage where guest_id = %s or ip = %s",
+            "select greatest("
+            "  coalesce((select max(questions) from guest_usage where guest_id = %s), 0),"
+            "  coalesce((select sum(questions) from guest_usage where ip = %s), 0)"
+            ")",
             (guest_id, ip),
         ).fetchone()
-    return max(0, GUEST_LIMIT - (row[0] if row else 0))
+    return max(0, GUEST_LIMIT - int(row[0] if row else 0))
 
 
 def record_guest_question(pool: ConnectionPool, guest_id: str, ip: str) -> None:
