@@ -35,6 +35,11 @@ type AskResponse = {
   model: string;
   quote_check?: QuoteCheck | null;
   draft_check?: DraftCheck | null;
+  authority_meter?: {
+    level: string;
+    reasons: string[];
+  } | null;
+  missing_sections?: string[];
 };
 
 type Exchange = { question: string; answer: AskResponse | null };
@@ -62,7 +67,7 @@ type AuditResponse = { rows: AuditRow[]; quotes: QuoteCheck };
 
 type HistoryEntry = {
   id: string;
-  mode: "ask" | "search" | "audit" | "draft";
+  mode: "ask" | "search" | "audit" | "draft" | "caseprep";
   query: string;
   sourceType: SourceFilter;
   at: string;
@@ -70,7 +75,8 @@ type HistoryEntry = {
   thread?: Exchange[];
   results?: SearchResult[];
   audit?: AuditResponse;
-  facts?: string; // draft mode: the case facts the attorney provided
+  facts?: string; // draft/caseprep: the case facts the attorney provided
+  objective?: string; // caseprep
   pinned?: boolean;
 };
 
@@ -138,19 +144,57 @@ function relevance(score: number): { label: string; cls: string } {
 
 const GUEST_LIMIT = 5;
 
-type Mode = "ask" | "search" | "audit" | "draft";
+type Mode = "ask" | "search" | "audit" | "draft" | "caseprep";
 const SLUG_TO_MODE: Record<string, Mode> = {
   ask: "ask",
   search: "search",
   check: "audit",
   draft: "draft",
+  "case-prep": "caseprep",
 };
 const MODE_TO_SLUG: Record<Mode, string> = {
   ask: "ask",
   search: "search",
   audit: "check",
   draft: "draft",
+  caseprep: "case-prep",
 };
+
+const OBJECTIVES: { id: string; label: string }[] = [
+  { id: "evaluate-claim", label: "Evaluate the claim" },
+  { id: "assess-defenses", label: "Assess defenses" },
+  { id: "prepare-motion", label: "Prepare for a motion" },
+  { id: "pre-litigation", label: "Pre-litigation check" },
+];
+
+const CASEPREP_TABS = [
+  "Overview",
+  "Supporting arguments",
+  "Counterarguments",
+  "Ruling paths",
+  "Appeal exposure",
+  "Missing facts",
+  "Next steps",
+];
+
+function splitSections(answer: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  let current = "Overview";
+  let buf: string[] = [];
+  for (const line of answer.split("\n")) {
+    const m = line.match(/^##\s+(.+?)\s*$/);
+    const name = m ? CASEPREP_TABS.find((s) => s.toLowerCase() === m[1].trim().toLowerCase()) : undefined;
+    if (name) {
+      if (buf.join("").trim()) out[current] = (out[current] ? out[current] + "\n" : "") + buf.join("\n");
+      current = name;
+      buf = [];
+    } else {
+      buf.push(line);
+    }
+  }
+  if (buf.join("").trim()) out[current] = (out[current] ? out[current] + "\n" : "") + buf.join("\n");
+  return out;
+}
 
 function WsIcon({ name, className = "h-[18px] w-[18px]" }: { name: string; className?: string }) {
   const common = {
@@ -221,6 +265,7 @@ const WORKSPACES: { slug: string; label: string; hint: string; icon: string }[] 
   { slug: "search", label: "Search", hint: "the sources", icon: "search" },
   { slug: "check", label: "Check cites", hint: "audit a brief", icon: "check" },
   { slug: "draft", label: "Draft IRAC", hint: "issue + facts", icon: "draft" },
+  { slug: "case-prep", label: "Case Prep", hint: "both sides", icon: "caseprep" },
 ];
 
 // shown in rotation while the model reads sources and drafts (the quiet stretch)
@@ -335,6 +380,8 @@ function Home() {
     }
   }
   const [facts, setFacts] = useState("");
+  const [objective, setObjective] = useState("evaluate-claim");
+  const [prepTab, setPrepTab] = useState("Overview");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
   const [auditTab, setAuditTab] = useState<"paste" | "upload">("paste");
@@ -447,7 +494,7 @@ function Home() {
 
   // the answer window scrolls internally; follow the streaming text inside it
   useEffect(() => {
-    if ((mode === "ask" || mode === "draft") && streamText) {
+    if ((mode === "ask" || mode === "draft" || mode === "caseprep") && streamText) {
       const el = answerRefs.current[thread.length - 1];
       if (el) el.scrollTop = el.scrollHeight;
     }
@@ -489,14 +536,18 @@ function Home() {
       setThread([]);
       setResults([]);
       threadIdRef.current = "";
-    } else if (entry.mode === "ask" || entry.mode === "draft") {
+    } else if (entry.mode === "ask" || entry.mode === "draft" || entry.mode === "caseprep") {
       const t =
         entry.thread ??
         (entry.answer ? [{ question: entry.query, answer: entry.answer }] : []);
       setThread(t);
       threadIdRef.current = entry.id;
       setResults([]);
-      if (entry.mode === "draft") setFacts(entry.facts ?? "");
+      if (entry.mode === "draft" || entry.mode === "caseprep") setFacts(entry.facts ?? "");
+      if (entry.mode === "caseprep") {
+        setObjective(entry.objective ?? "evaluate-claim");
+        setPrepTab("Overview");
+      }
     } else {
       setResults(entry.results ?? []);
       setExpandedResults({});
@@ -662,6 +713,69 @@ function Home() {
     }
   }
 
+  async function runCasePrepStream(dispute: string, factsText: string) {
+    setStatusMsg("Connecting…");
+    const res = await fetch(`${API_URL}/caseprep/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...authHeaders() },
+      body: JSON.stringify({ dispute, facts: factsText, objective, as_of: asOf || null }),
+    });
+    if (res.status === 401) {
+      if (authToken) router.replace("/login");
+      throw new Error("Please sign in.");
+    }
+    if (res.status === 402) throw new Error((await res.json()).detail ?? "Your trial has ended.");
+    if (!res.ok || !res.body) throw new Error(`HTTP ${res.status}`);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    let acc = "";
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const frames = buffer.split("\n\n");
+      buffer = frames.pop() ?? "";
+      for (const frame of frames) {
+        const line = frame.split("\n").find((l) => l.startsWith("data: "));
+        if (!line) continue;
+        const event = JSON.parse(line.slice(6));
+        if (event.type === "status") setStatusMsg(event.message);
+        else if (event.type === "sources_preview") setPendingCites(event.citations ?? []);
+        else if (event.type === "delta") {
+          acc += event.text;
+          setStreamText(acc);
+        } else if (event.type === "done") {
+          const final: AskResponse = {
+            answer: event.answer,
+            sources: event.sources,
+            model: event.model,
+            quote_check: event.quote_check ?? null,
+            authority_meter: event.authority_meter ?? null,
+            missing_sections: event.missing_sections ?? [],
+          };
+          setThread([{ question: dispute, answer: final }]);
+          setStreamText("");
+          setPrepTab("Overview");
+          const id = `caseprep::${dispute}`;
+          threadIdRef.current = id;
+          recordHistory({
+            id,
+            mode: "caseprep",
+            query: `Case prep: ${dispute.slice(0, 60)}`,
+            sourceType: "",
+            at: new Date().toISOString(),
+            thread: [{ question: dispute, answer: final }],
+            facts: factsText,
+            objective,
+          });
+        } else if (event.type === "error") {
+          throw new Error(event.message);
+        }
+      }
+    }
+  }
+
   async function askMoreDetail() {
     if (status === "loading") return;
     const prior = thread.filter((x) => x.answer);
@@ -688,7 +802,7 @@ function Home() {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
       setError(
-        "Search, Check cites, and Draft need a free account: 7-day trial, no credit card. " +
+        "Search, Check cites, Draft, and Case Prep need a free account: 7-day trial, no credit card. " +
           "Guest preview covers Ask."
       );
       setStatus("error");
@@ -696,12 +810,12 @@ function Home() {
     }
     const q = query.trim();
     if (mode !== "audit" && q.length < 3) return;
-    if (mode === "draft" && q.length < 10) {
+    if ((mode === "draft" || mode === "caseprep") && q.length < 10) {
       setError("Frame the legal issue in a sentence (at least 10 characters).");
       setStatus("error");
       return;
     }
-    if (mode === "draft" && facts.trim().length < 50) {
+    if ((mode === "draft" || mode === "caseprep") && facts.trim().length < 50) {
       setError(
         "Add the facts of the case (at least a paragraph). Anonymize names and addresses."
       );
@@ -757,6 +871,9 @@ function Home() {
       } else if (mode === "draft") {
         setThread([{ question: q, answer: null }]);
         await runDraftStream(q, facts.trim());
+      } else if (mode === "caseprep") {
+        setThread([{ question: q, answer: null }]);
+        await runCasePrepStream(q, facts.trim());
       } else if (mode === "ask") {
         const prior = thread.filter((x) => x.answer);
         // follow-up swaps in place: prior exchanges fold to one-line rows and
@@ -1011,6 +1128,41 @@ function Home() {
             </label>
           )}
         </div>
+      ) : mode === "caseprep" ? (
+        <>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder='The dispute in one line, e.g. "Buyer seeks deposit back after discovering water damage before closing"'
+            className="w-full bg-transparent px-5 pb-1 pt-4 text-[15px] outline-none placeholder:text-[#a39f8d] dark:placeholder:text-neutral-500"
+          />
+          <div className="flex flex-wrap items-center gap-1.5 px-5 pb-1 pt-1">
+            <span className="text-[10px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+              Objective
+            </span>
+            {OBJECTIVES.map((o) => (
+              <button
+                type="button"
+                key={o.id}
+                onClick={() => setObjective(o.id)}
+                className={`rounded-full px-3 py-1 text-xs ${
+                  objective === o.id
+                    ? "bg-[#1e3a5a] text-white"
+                    : "border border-[#e3e1d5] text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:text-neutral-300"
+                }`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            value={facts}
+            onChange={(e) => setFacts(e.target.value)}
+            rows={6}
+            placeholder="The facts: dates, documents, who did what, what each side wants. Anonymize names and addresses. Missing facts are flagged, never assumed."
+            className="w-full resize-y border-t border-[#f0eee4] bg-transparent px-5 pb-2 pt-3 text-[14px] outline-none placeholder:text-[#a39f8d] dark:border-neutral-800 dark:placeholder:text-neutral-500"
+          />
+        </>
       ) : mode === "draft" ? (
         <>
           <input
@@ -1068,7 +1220,7 @@ function Home() {
               Processed in memory. Never saved.
             </span>
           )}
-          {(mode === "ask" || mode === "draft") && (
+          {(mode === "ask" || mode === "draft" || mode === "caseprep") && (
             <label className="ml-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-[#8a8571] dark:text-neutral-400">
               Research date
               <input
@@ -1113,6 +1265,8 @@ function Home() {
               ? "Check citations"
               : mode === "draft"
                 ? "Draft IRAC"
+                : mode === "caseprep"
+                  ? "Analyze dispute"
                 : mode === "ask"
                   ? thread.length
                     ? "Follow up"
@@ -1267,6 +1421,83 @@ function Home() {
       </p>
     </div>
   );
+
+  const casePrepView = (x: Exchange, idx: number) => {
+    const a = x.answer!;
+    const sections = splitSections(a.answer);
+    const meter = a.authority_meter;
+    const body = sections[prepTab] ?? "";
+    return (
+      <div key={idx} className="mt-6">
+        <div className="mb-2 flex items-baseline gap-2">
+          <span className="text-sm font-medium text-[#8a8571] dark:text-neutral-400">{x.question}</span>
+          <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
+            {OBJECTIVES.find((o) => o.id === objective)?.label ?? "Evaluate the claim"}
+          </span>
+        </div>
+        {verificationBanner(a)}
+        {meter && (
+          <div className="mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-[#e3e1d5] bg-white px-4 py-2 text-xs dark:border-neutral-700 dark:bg-[#30302e]">
+            <span className={`font-semibold ${meter.level === "strong" ? "text-[#1f6b45]" : meter.level === "moderate" ? "text-[#9a6b12]" : "text-[#b13333]"}`}>
+              Authority support: {meter.level}
+            </span>
+            <span className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <span
+                  key={i}
+                  className="h-1.5 w-6 rounded-full"
+                  style={{
+                    background:
+                      (meter.level === "strong" ? 3 : meter.level === "moderate" ? 2 : 1) > i
+                        ? "#2f6b4f"
+                        : "#e3e1d5",
+                  }}
+                />
+              ))}
+            </span>
+            <span className="text-[#8a8571] dark:text-neutral-400">{meter.reasons.join(" · ")}</span>
+          </div>
+        )}
+        <div className="flex flex-wrap gap-1 border-b border-[#e8e6dc] text-[13px] dark:border-neutral-800">
+          {CASEPREP_TABS.map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setPrepTab(tab)}
+              className={`px-3.5 py-2 ${
+                prepTab === tab
+                  ? "border-b-2 border-[#1e3a5a] font-semibold text-[#1e3a5a] dark:text-blue-400"
+                  : "text-[#8a8571] hover:text-[#5d5848] dark:text-neutral-400"
+              }`}
+            >
+              {tab}
+              {tab === "Missing facts" && (a.missing_sections ?? []).includes("Missing facts") === false && sections["Missing facts"] && sections["Missing facts"].trim().length > 30 ? " ⚑" : ""}
+            </button>
+          ))}
+        </div>
+        <article className="prose prose-sm mt-3 max-h-[58vh] max-w-none overflow-y-auto rounded-2xl border border-[#e3e1d5] bg-white p-6 [font-family:var(--font-serif)] dark:prose-invert dark:border-neutral-700 dark:bg-[#30302e]">
+          <ReactMarkdown>{body || "This section was not produced for this dispute."}</ReactMarkdown>
+        </article>
+        <div className="mt-3 flex items-center gap-2">
+          <button
+            onClick={() => copyAnswer(idx)}
+            className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300"
+          >
+            {copiedIdx === idx ? "Copied ✓" : "Copy analysis"}
+          </button>
+          <button
+            onClick={() => exportMemo(idx)}
+            title="Export the full analysis as a Word document with the verification appendix"
+            className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300"
+          >
+            Export record
+          </button>
+          <span className="text-[11px] text-[#a39f8d] dark:text-neutral-500">
+            Qualitative analysis; verify every authority before relying on it.
+          </span>
+        </div>
+      </div>
+    );
+  };
 
   const answerCard = (x: Exchange, idx: number, streaming: boolean) => (
     <div key={idx} className="mt-6">
@@ -1551,12 +1782,6 @@ function Home() {
                 <span className="text-[11px] text-[#bcb8a5] dark:text-neutral-600">{w.hint}</span>
               </Link>
             ))}
-            <div className="flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
-              <span className="flex items-center gap-2.5"><WsIcon name="caseprep" />Case Prep</span>
-              <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">
-                soon
-              </span>
-            </div>
           </nav>
 
           <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
@@ -1728,12 +1953,6 @@ function Home() {
               <WsIcon name={w.icon} />
             </Link>
           ))}
-          <span
-            title="Case Prep: coming soon"
-            className="flex h-9 w-9 cursor-default items-center justify-center rounded-lg text-[#bcb8a5] dark:text-neutral-600"
-          >
-            <WsIcon name="caseprep" />
-          </span>
         </aside>
       )}
       {sidebarOpen && (
@@ -1821,14 +2040,21 @@ function Home() {
                     <span className="text-xs leading-relaxed text-[#8a8571] dark:text-neutral-400">{c.body}</span>
                   </Link>
                 ))}
-                <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-[#d8d5c5] p-4 dark:border-neutral-700">
+                <Link
+                  href="/app/case-prep"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    goWorkspace("/app/case-prep");
+                  }}
+                  className="flex flex-col gap-1.5 rounded-xl border-2 border-[#1e3a5a] bg-white p-4 dark:bg-[#30302e]"
+                >
                   <span className="flex items-center justify-between">
                     <span className="h-[3px] w-8 rounded bg-[#b05c3b]" />
-                    <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">soon</span>
+                    <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">new</span>
                   </span>
-                  <span className="text-sm font-semibold text-[#8a8571]">Case Prep</span>
-                  <span className="text-xs leading-relaxed text-[#a39f8d]">Both sides of your dispute: arguments, weaknesses, missing facts, scenarios.</span>
-                </div>
+                  <span className="text-sm font-semibold text-[#3d3929] dark:text-neutral-100">Case Prep</span>
+                  <span className="text-xs leading-relaxed text-[#8a8571] dark:text-neutral-400">Both sides of your dispute: arguments, weaknesses, missing facts, ruling paths.</span>
+                </Link>
               </div>
               <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
                 SI research assistant for New York property law. For licensed attorneys;
@@ -1851,7 +2077,7 @@ function Home() {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
               <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
-                {mode === "ask" ? "Ask: cited answers" : mode === "search" ? "Search the sources" : mode === "audit" ? "Citation checker" : "Draft IRAC"}
+                {mode === "ask" ? "Ask: cited answers" : mode === "search" ? "Search the sources" : mode === "audit" ? "Citation checker" : mode === "draft" ? "Draft IRAC" : "Case Prep"}
               </p>
               <h1 className="mb-3 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
                 {mode === "ask"
@@ -1860,7 +2086,9 @@ function Home() {
                     ? "Search NY statutes, decisions, and guidance"
                     : mode === "audit"
                       ? "Check citations in a document"
-                      : "Draft an IRAC analysis"}
+                      : mode === "draft"
+                        ? "Draft an IRAC analysis"
+                        : "Prepare both sides of your dispute"}
               </h1>
               <p className="mb-7 text-center text-sm text-[#8a8571] dark:text-neutral-400">
                 {mode === "ask"
@@ -1869,7 +2097,9 @@ function Home() {
                     ? 'Semantic search with relevance grading. Put "exact phrases" in quotes when the wording is the argument.'
                     : mode === "audit"
                       ? "Paste or upload a brief. Citations are checked against official records; quotes matched word for word."
-                      : "Your issue and facts in, a structured Issue / Rule / Application / Conclusion draft out."}
+                      : mode === "draft"
+                        ? "Your issue and facts in, a structured Issue / Rule / Application / Conclusion draft out."
+                        : "Arguments for you, the other side's best case, ruling paths, appeal exposure, and the facts you still need. Qualitative analysis; no win percentages."}
               </p>
               {inputCard}
               {mode === "draft" && (
@@ -1922,7 +2152,7 @@ function Home() {
             </div>
           </div>
         ) : (
-          <div className={`mx-auto px-4 py-8 ${((mode === "ask" || mode === "draft") && panelIdx >= 0) || mode === "audit" ? "max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8" : "max-w-3xl"}`}>
+          <div className={`mx-auto px-4 py-8 ${((mode === "ask" || mode === "draft" || mode === "caseprep") && panelIdx >= 0) || mode === "audit" ? "max-w-6xl lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-8" : "max-w-3xl"}`}>
             <div className="mx-auto w-full max-w-3xl min-w-0">
             <button
               onClick={reset}
@@ -1941,6 +2171,13 @@ function Home() {
             {(mode === "ask" || mode === "draft") &&
               thread.map((x, idx) =>
                 answerCard(x, idx, status === "loading" && idx === thread.length - 1)
+              )}
+
+            {mode === "caseprep" &&
+              thread.map((x, idx) =>
+                x.answer
+                  ? casePrepView(x, idx)
+                  : answerCard(x, idx, status === "loading" && idx === thread.length - 1)
               )}
 
             {mode === "audit" && auditResult && (
@@ -2113,7 +2350,7 @@ function Home() {
             )}
             <div ref={bottomRef} />
             </div>
-            {(((mode === "ask" || mode === "draft") && panelIdx >= 0 && thread[panelIdx]?.answer) || mode === "audit") && (
+            {(((mode === "ask" || mode === "draft" || mode === "caseprep") && panelIdx >= 0 && thread[panelIdx]?.answer) || mode === "audit") && (
               <aside className="hidden lg:sticky lg:top-8 lg:block lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto">
                 {mode === "audit" ? auditLegendPanel : authoritiesPanel(thread[panelIdx].answer!)}
               </aside>
