@@ -383,6 +383,8 @@ function Home() {
   const [objective, setObjective] = useState("evaluate-claim");
   const [prepTab, setPrepTab] = useState("Overview");
   const [showAsOf, setShowAsOf] = useState(false);
+  const [scenario, setScenario] = useState("");
+  const [activeScenario, setActiveScenario] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
   const [auditTab, setAuditTab] = useState<"paste" | "upload">("paste");
@@ -714,12 +716,12 @@ function Home() {
     }
   }
 
-  async function runCasePrepStream(dispute: string, factsText: string) {
+  async function runCasePrepStream(dispute: string, factsText: string, scenarioText?: string) {
     setStatusMsg("Connecting…");
     const res = await fetch(`${API_URL}/caseprep/stream`, {
       method: "POST",
       headers: { "Content-Type": "application/json", ...authHeaders() },
-      body: JSON.stringify({ dispute, facts: factsText, objective, as_of: asOf || null }),
+      body: JSON.stringify({ dispute, facts: factsText, objective, scenario: scenarioText || null, as_of: asOf || null }),
     });
     if (res.status === 401) {
       if (authToken) router.replace("/login");
@@ -758,6 +760,7 @@ function Home() {
           setThread([{ question: dispute, answer: final }]);
           setStreamText("");
           setPrepTab("Overview");
+          setActiveScenario(scenarioText ?? "");
           const id = `caseprep::${dispute}`;
           threadIdRef.current = id;
           recordHistory({
@@ -1416,6 +1419,39 @@ function Home() {
     </div>
   );
 
+  async function runScenario(whatIf: string) {
+    if (status === "loading" || !whatIf.trim()) return;
+    const dispute = thread[0]?.question ?? "";
+    setThread([{ question: dispute, answer: null }]);
+    setStatus("loading");
+    setError("");
+    setStreamText("");
+    setPendingCites([]);
+    setScenario("");
+    try {
+      await runCasePrepStream(dispute, facts.trim(), whatIf.trim());
+      setStatus("done");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "request failed");
+      setStatus("error");
+    }
+  }
+
+  function scenarioChips(sections: Record<string, string>): string[] {
+    const body = sections["Missing facts"] ?? "";
+    const qs = body
+      .split("\n")
+      .map((l) => l.replace(/^[-*•\s]+/, "").trim())
+      .filter((l) => l.includes("?"))
+      .map((l) => {
+        const q = l.split("?")[0];
+        const tail = q.includes(".") ? q.slice(q.lastIndexOf(".") + 1) : q;
+        return tail.trim() + "?";
+      })
+      .filter((q) => q.length > 15 && q.length < 140);
+    return qs.slice(0, 3);
+  }
+
   const casePrepView = (x: Exchange, idx: number) => {
     const a = x.answer!;
     const sections = splitSections(a.answer);
@@ -1428,6 +1464,14 @@ function Home() {
           <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] text-[#6b6450] dark:bg-neutral-800 dark:text-neutral-400">
             {OBJECTIVES.find((o) => o.id === objective)?.label ?? "Evaluate the claim"}
           </span>
+          {activeScenario && (
+            <span
+              title={activeScenario}
+              className="max-w-[320px] truncate rounded-full border border-[#b05c3b] px-2 py-0.5 text-[10px] text-[#b05c3b]"
+            >
+              What if: {activeScenario}
+            </span>
+          )}
         </div>
         {verificationBanner(a)}
         {meter && (
@@ -1488,6 +1532,42 @@ function Home() {
           <span className="text-[11px] text-[#a39f8d] dark:text-neutral-500">
             Qualitative analysis; verify every authority before relying on it.
           </span>
+        </div>
+        <div className="mt-4 rounded-2xl border border-[#e3e1d5] bg-white p-4 dark:border-neutral-700 dark:bg-[#30302e]">
+          <div className="text-[10px] uppercase tracking-[0.14em] text-[#a39f8d] dark:text-neutral-500">
+            Explore scenarios
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {scenarioChips(sections).map((q) => (
+              <button
+                key={q}
+                onClick={() => runScenario(`What if the answer to this is favorable to the client: ${q}`)}
+                className="rounded-full border border-[#e3e1d5] bg-[#faf9f5] px-3 py-1.5 text-left text-xs text-[#5d5848] hover:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#262624] dark:text-neutral-300"
+              >
+                What if: {q}
+              </button>
+            ))}
+          </div>
+          <div className="mt-2.5 flex gap-2">
+            <input
+              value={scenario}
+              onChange={(e) => setScenario(e.target.value)}
+              placeholder="Your own what-if, e.g. What if the seller disclosed the flooding in writing?"
+              className="flex-1 rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs outline-none placeholder:text-[#a39f8d] focus:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#30302e]"
+            />
+            <button
+              onClick={() => runScenario(scenario)}
+              disabled={status === "loading" || scenario.trim().length < 10}
+              className="rounded-lg bg-[#1e3a5a] px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+            >
+              Run scenario
+            </button>
+          </div>
+          <p className="mt-2 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-400">
+            Each scenario re-runs the full analysis with that one fact stipulated, and the
+            Overview opens with what it changes. Conditional reasoning with authorities,
+            never a prediction.
+          </p>
         </div>
       </div>
     );

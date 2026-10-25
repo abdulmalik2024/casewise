@@ -250,6 +250,7 @@ class CasePrepIn(BaseModel):
     objective: Literal[
         "evaluate-claim", "assess-defenses", "prepare-motion", "pre-litigation"
     ] = "evaluate-claim"
+    scenario: str | None = Field(default=None, min_length=10, max_length=500)
     as_of: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -265,7 +266,7 @@ def caseprep_stream_endpoint(body: CasePrepIn, user: dict = Depends(gated)):
     def gen():
         try:
             for event in caseprep_stream(
-                app.state.pool, body.dispute, body.facts, body.objective, body.as_of
+                app.state.pool, body.dispute, body.facts, body.objective, body.as_of, body.scenario
             ):
                 yield f"data: {json.dumps(event)}\n\n"
         except httpx.HTTPStatusError as e:

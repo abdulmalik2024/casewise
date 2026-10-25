@@ -86,6 +86,9 @@ Rules:
 invent citations, case names, or section numbers.
 - Base every factual assertion ONLY on the provided FACTS; missing facts go in the \
 Missing facts section, never silently assumed.
+- If a SCENARIO is provided, treat it as a stipulated change or addition to the \
+facts: open the Overview by stating the scenario and which parts of the baseline \
+analysis it changes, then analyze the dispute WITH that scenario in force.
 - Where New York City rules differ from the rest of the state, flag it.
 - Never use an em dash in your writing; use commas, colons, periods, or parentheses.
 - Never state a probability, percentage, or confidence score for any outcome.
@@ -170,7 +173,12 @@ def missing_sections(answer: str) -> list[str]:
 
 
 def _build_prompt(
-    dispute: str, facts: str, objective: str, sources: list[SearchResult], as_of: str | None
+    dispute: str,
+    facts: str,
+    objective: str,
+    sources: list[SearchResult],
+    as_of: str | None,
+    scenario: str | None = None,
 ) -> str:
     parts = []
     for i, s in enumerate(sources, 1):
@@ -183,6 +191,7 @@ def _build_prompt(
         f"THE DISPUTE (as framed by the attorney): {dispute}\n\n"
         f"OBJECTIVE: {OBJECTIVES.get(objective, OBJECTIVES['evaluate-claim'])}\n\n"
         f"FACTS (as provided by the attorney; the only facts you may use):\n{facts}"
+        + (f"\n\nSCENARIO (stipulated change to the facts): {scenario}" if scenario else "")
     )
 
 
@@ -192,6 +201,7 @@ def caseprep_stream(
     facts: str,
     objective: str,
     as_of: str | None = None,
+    scenario: str | None = None,
 ):
     """Yield SSE-able events: status -> sources_preview -> delta* -> done."""
     yield {"type": "status", "message": "Reading the dispute and facts…"}
@@ -245,7 +255,7 @@ def caseprep_stream(
         messages=[
             {
                 "role": "user",
-                "content": _build_prompt(dispute, facts, objective, retrieved, as_of),
+                "content": _build_prompt(dispute, facts, objective, retrieved, as_of, scenario),
             }
         ],
     ) as stream:
