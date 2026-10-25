@@ -1195,26 +1195,6 @@ function Home() {
       )}
       <div className="flex flex-wrap items-center justify-between gap-y-2 px-3 pb-3">
         <div className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs">
-          {(["ask", "search", "audit", "draft"] as const).map((m) => (
-            <button
-              type="button"
-              key={m}
-              onClick={() => goWorkspace(`/app/${MODE_TO_SLUG[m]}`)}
-              className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${
-                mode === m
-                  ? "bg-[#efede3] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
-                  : "text-[#8a8571] hover:bg-[#f5f4ee] dark:text-neutral-400 dark:hover:bg-neutral-800"
-              }`}
-            >
-              {m === "ask"
-                ? "Ask"
-                : m === "search"
-                  ? "Search"
-                  : m === "audit"
-                    ? "Check cites"
-                    : "Draft IRAC"}
-            </button>
-          ))}
           {mode === "audit" && (
             <span className="ml-1 text-[11px] text-[#a39f8d] dark:text-neutral-500">
               Processed in memory. Never saved.
