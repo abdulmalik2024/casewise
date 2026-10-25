@@ -382,6 +382,7 @@ function Home() {
   const [facts, setFacts] = useState("");
   const [objective, setObjective] = useState("evaluate-claim");
   const [prepTab, setPrepTab] = useState("Overview");
+  const [showAsOf, setShowAsOf] = useState(false);
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
   const [auditTab, setAuditTab] = useState<"paste" | "upload">("paste");
@@ -1200,25 +1201,38 @@ function Home() {
               Processed in memory. Never saved.
             </span>
           )}
-          {(mode === "ask" || mode === "draft" || mode === "caseprep") && (
-            <label className="ml-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-[#8a8571] dark:text-neutral-400">
-              Research date
-              <input
-                type="date"
-                value={asOf}
-                onChange={(e) => setAsOf(e.target.value)}
-                className="rounded-lg border border-transparent bg-transparent px-1 py-1 text-xs outline-none hover:border-[#e3e1d5] dark:hover:border-neutral-700"
-                title="Optional: research the law as of a past date. Decisions and guidance after this date are excluded; statutes amended after it are flagged."
-              />
-              {asOf ? (
-                <button type="button" onClick={() => setAsOf("")} className="text-[#a39f8d] hover:text-[#1e3a5a]">
+          {(mode === "ask" || mode === "draft" || mode === "caseprep") &&
+            (asOf || showAsOf ? (
+              <label className="ml-1 flex items-center gap-1.5 whitespace-nowrap text-xs text-[#8a8571] dark:text-neutral-400">
+                As of
+                <input
+                  type="date"
+                  value={asOf}
+                  onChange={(e) => setAsOf(e.target.value)}
+                  className="rounded-lg border border-[#e3e1d5] bg-transparent px-1 py-1 text-xs outline-none dark:border-neutral-700"
+                  title="Research the law as of a past date. Decisions and guidance after this date are excluded; statutes amended after it are flagged."
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAsOf("");
+                    setShowAsOf(false);
+                  }}
+                  className="text-[#a39f8d] hover:text-[#1e3a5a]"
+                >
                   ✕
                 </button>
-              ) : (
-                <span className="text-[#bcb8a5] dark:text-neutral-600">current law</span>
-              )}
-            </label>
-          )}
+              </label>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowAsOf(true)}
+                title="Research the law as of a past date: decisions and guidance after that date are excluded."
+                className="ml-1 whitespace-nowrap text-xs text-[#bcb8a5] hover:text-[#5d5848] dark:text-neutral-600 dark:hover:text-neutral-300"
+              >
+                Current law ▾
+              </button>
+            ))}
           {mode === "search" && (
             <select
               value={sourceType}
