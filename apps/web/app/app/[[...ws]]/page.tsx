@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { supabase } from "../../lib/supabase";
+import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useEffect, useRef, useState } from "react";
+import { supabase } from "../../../lib/supabase";
 import ReactMarkdown from "react-markdown";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
@@ -138,6 +138,26 @@ function relevance(score: number): { label: string; cls: string } {
 
 const GUEST_LIMIT = 5;
 
+type Mode = "ask" | "search" | "audit" | "draft";
+const SLUG_TO_MODE: Record<string, Mode> = {
+  ask: "ask",
+  search: "search",
+  check: "audit",
+  draft: "draft",
+};
+const MODE_TO_SLUG: Record<Mode, string> = {
+  ask: "ask",
+  search: "search",
+  audit: "check",
+  draft: "draft",
+};
+const WORKSPACES: { slug: string; label: string; hint: string }[] = [
+  { slug: "ask", label: "Ask", hint: "cited answers" },
+  { slug: "search", label: "Search", hint: "the sources" },
+  { slug: "check", label: "Check cites", hint: "audit a brief" },
+  { slug: "draft", label: "Draft IRAC", hint: "issue + facts" },
+];
+
 // shown in rotation while the model reads sources and drafts (the quiet stretch)
 const WAITING_LINES = [
   "Lining up the governing statutes…",
@@ -237,8 +257,18 @@ function typeLabel(t: string): string {
   return t;
 }
 
-export default function Home() {
-  const [mode, setMode] = useState<"ask" | "search" | "audit" | "draft">("ask");
+function Home() {
+  const pathname = usePathname();
+  const wsSlug = pathname.split("/")[2] ?? "";
+  const isHub = wsSlug === "";
+  const mode: Mode = SLUG_TO_MODE[wsSlug] ?? "ask";
+  // workspace moves are shallow history updates: the component stays mounted,
+  // so threads and inputs survive switching; usePathname tracks pushState
+  function goWorkspace(path: string) {
+    if (typeof window !== "undefined" && window.location.pathname !== path) {
+      window.history.pushState(null, "", path);
+    }
+  }
   const [facts, setFacts] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
@@ -386,7 +416,7 @@ export default function Home() {
 
   function restore(entry: HistoryEntry) {
     setMobileNavOpen(false);
-    setMode(entry.mode);
+    goWorkspace(`/app/${MODE_TO_SLUG[entry.mode] ?? "ask"}`);
     setQuery("");
     setSourceType(entry.sourceType);
     if (entry.mode === "audit") {
@@ -952,7 +982,7 @@ export default function Home() {
             <button
               type="button"
               key={m}
-              onClick={() => setMode(m)}
+              onClick={() => goWorkspace(`/app/${MODE_TO_SLUG[m]}`)}
               className={`whitespace-nowrap rounded-lg px-3 py-1.5 ${
                 mode === m
                   ? "bg-[#efede3] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
@@ -1407,7 +1437,7 @@ export default function Home() {
   const sidebarInner = (
     <>
           <div className="flex items-baseline justify-between px-4 pb-2 pt-5">
-            <Link href="/" title="Back to casewise.si" className="flex items-baseline gap-2 hover:opacity-80">
+            <Link href="/app" title="Casewise home" onClick={(e) => { e.preventDefault(); goWorkspace("/app"); }} className="flex items-baseline gap-2 hover:opacity-80">
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
@@ -1422,17 +1452,44 @@ export default function Home() {
             </button>
           </div>
           <button
-            onClick={reset}
+            onClick={() => {
+              reset();
+              goWorkspace("/app");
+            }}
             className="mx-3 mt-1 flex items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
           >
             <span className="text-base leading-none text-[#1e3a5a]">+</span> New research
           </button>
-          <div className="mx-3 mt-0.5 flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
-            <span>New case prep</span>
-            <span className="rounded-full bg-[#efede3] px-2 py-0.5 text-[10px] uppercase tracking-wide dark:bg-neutral-800">
-              soon
-            </span>
+          <div className="mt-3 px-5 pb-1 text-[10px] uppercase tracking-[0.14em] text-[#bcb8a5] dark:text-neutral-600">
+            Workspaces
           </div>
+          <nav className="flex flex-col gap-0.5 px-3">
+            {WORKSPACES.map((w) => (
+              <Link
+                key={w.slug}
+                href={`/app/${w.slug}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileNavOpen(false);
+                  goWorkspace(`/app/${w.slug}`);
+                }}
+                className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm ${
+                  !isHub && wsSlug === w.slug
+                    ? "bg-[#eae8dc] font-medium text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
+                    : "text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                }`}
+              >
+                {w.label}
+                <span className="text-[11px] text-[#bcb8a5] dark:text-neutral-600">{w.hint}</span>
+              </Link>
+            ))}
+            <div className="flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
+              <span>Case Prep</span>
+              <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">
+                soon
+              </span>
+            </div>
+          </nav>
 
           <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
             {pinned.length > 0 && (
@@ -1607,9 +1664,9 @@ export default function Home() {
             ☰
           </button>
         </div>
-        {!hasContent ? (
-          <div className="flex h-full flex-col items-center justify-center px-4">
-            <div className="w-full max-w-2xl">
+        {isHub ? (
+          <div className="flex min-h-full flex-col items-center justify-center px-4 py-10">
+            <div className="w-full max-w-3xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
               <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
@@ -1619,27 +1676,126 @@ export default function Home() {
                 What are you researching today?
               </h1>
               <p className="mb-7 text-center text-sm text-[#8a8571] dark:text-neutral-400">
-                Ask a question, search authorities, check citations, or draft an IRAC memo
-                with verified sources.
+                Pick a workspace, or just start with a question.
+              </p>
+              <Link
+                href="/app/ask"
+                onClick={(e) => {
+                  e.preventDefault();
+                  goWorkspace("/app/ask");
+                }}
+                className="flex items-center gap-3 rounded-2xl border border-[#e3e1d5] bg-white px-5 py-4 shadow-[0_2px_12px_rgba(61,57,41,0.06)] hover:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#30302e]"
+              >
+                <span className="flex-1 text-[15px] text-[#a39f8d]">
+                  Ask a legal question, like &quot;Can a tenant withhold rent for repairs?&quot;
+                </span>
+                <span className="rounded-xl bg-[#1e3a5a] px-5 py-2 text-sm font-medium text-white">
+                  Research
+                </span>
+              </Link>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {[
+                  { href: "/app/ask", bar: "#1e3a5a", title: "Ask", body: "Plain-English questions, answers cited and verified against NY sources." },
+                  { href: "/app/search", bar: "#6b5b8a", title: "Search", body: "Semantic and exact-phrase search across statutes, decisions, guidance." },
+                  { href: "/app/check", bar: "#2f6b4f", title: "Check cites", body: "Audit any brief against 5.1M official records. Yours or theirs." },
+                  { href: "/app/draft", bar: "#a16d1f", title: "Draft IRAC", body: "Issue and facts in, a structured cited analysis out. Word export." },
+                ].map((c) => (
+                  <Link
+                    key={c.href}
+                    href={c.href}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      goWorkspace(c.href);
+                    }}
+                    className="flex flex-col gap-1.5 rounded-xl border border-[#e3e1d5] bg-white p-4 hover:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#30302e]"
+                  >
+                    <span className="h-[3px] w-8 rounded" style={{ background: c.bar }} />
+                    <span className="text-sm font-semibold text-[#3d3929] dark:text-neutral-100">{c.title}</span>
+                    <span className="text-xs leading-relaxed text-[#8a8571] dark:text-neutral-400">{c.body}</span>
+                  </Link>
+                ))}
+                <div className="flex flex-col gap-1.5 rounded-xl border-2 border-dashed border-[#d8d5c5] p-4 dark:border-neutral-700">
+                  <span className="flex items-center justify-between">
+                    <span className="h-[3px] w-8 rounded bg-[#b05c3b]" />
+                    <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">soon</span>
+                  </span>
+                  <span className="text-sm font-semibold text-[#8a8571]">Case Prep</span>
+                  <span className="text-xs leading-relaxed text-[#a39f8d]">Both sides of your dispute: arguments, weaknesses, missing facts, scenarios.</span>
+                </div>
+              </div>
+              <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
+                SI research assistant for New York property law. For licensed attorneys;
+                not legal advice. Verify all citations.
+              </p>
+              {isGuest && (
+                <p className="mt-2 text-center text-xs text-[#8a8571] dark:text-neutral-400">
+                  Guest preview: ask up to {GUEST_LIMIT} questions free, no sign-up.{" "}
+                  <Link href="/signup" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
+                    Start your 7-day trial
+                  </Link>{" "}
+                  for search, cite checking, and memo export.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : !hasContent ? (
+          <div className="flex h-full flex-col items-center justify-center px-4">
+            <div className="w-full max-w-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
+              <p className="mb-2 text-center text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
+                {mode === "ask" ? "Ask: cited answers" : mode === "search" ? "Search the sources" : mode === "audit" ? "Citation checker" : "Draft IRAC"}
+              </p>
+              <h1 className="mb-3 text-balance text-center text-3xl leading-snug tracking-tight [font-family:var(--font-serif)] md:text-4xl">
+                {mode === "ask"
+                  ? "What are you researching today?"
+                  : mode === "search"
+                    ? "Search NY statutes, decisions, and guidance"
+                    : mode === "audit"
+                      ? "Check citations in a document"
+                      : "Draft an IRAC analysis"}
+              </h1>
+              <p className="mb-7 text-center text-sm text-[#8a8571] dark:text-neutral-400">
+                {mode === "ask"
+                  ? "Plain-English questions, answered from the sources with verified citations."
+                  : mode === "search"
+                    ? 'Semantic search with relevance grading. Put "exact phrases" in quotes when the wording is the argument.'
+                    : mode === "audit"
+                      ? "Paste or upload a brief. Citations are checked against official records; quotes matched word for word."
+                      : "Your issue and facts in, a structured Issue / Rule / Application / Conclusion draft out."}
               </p>
               {inputCard}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
-                  Try a common question
-                </span>
-                {EXAMPLE_QUESTIONS.map((ex) => (
-                  <button
-                    key={ex.label}
-                    onClick={() => {
-                      setMode("ask");
-                      setQuery(ex.q);
-                    }}
-                    className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
-                  >
-                    {ex.label}
-                  </button>
-                ))}
-              </div>
+              {mode === "draft" && (
+                <div className="mt-4 grid gap-2 text-[11.5px] sm:grid-cols-4">
+                  {[
+                    ["I · Issue", "The question, framed with the decisive facts"],
+                    ["R · Rule", "Statutes first, then cases; every proposition cited"],
+                    ["A · Application", "Your facts mapped to each element, plus counteranalysis"],
+                    ["C · Conclusion", "The likely outcome; nothing new introduced"],
+                  ].map(([h, b]) => (
+                    <div key={h} className="rounded-xl border border-[#e3e1d5] bg-white p-3 dark:border-neutral-700 dark:bg-[#30302e]">
+                      <span className="font-semibold text-[#1e3a5a] dark:text-blue-400">{h}</span>
+                      <div className="mt-1 leading-snug text-[#6b6450] dark:text-neutral-400">{b}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {mode === "ask" && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                    Try a common question
+                  </span>
+                  {EXAMPLE_QUESTIONS.map((ex) => (
+                    <button
+                      key={ex.label}
+                      onClick={() => setQuery(ex.q)}
+                      className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    >
+                      {ex.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               <p className="mt-6 text-center text-xs text-[#a39f8d] dark:text-neutral-500">
                 SI research assistant for New York property law. For licensed attorneys;
                 not legal advice. Verify all citations.
@@ -1859,5 +2015,19 @@ export default function Home() {
         )}
       </main>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-dvh items-center justify-center bg-[#faf9f5] text-sm text-[#a39f8d] dark:bg-[#262624] dark:text-neutral-500">
+          Opening Casewise…
+        </div>
+      }
+    >
+      <Home />
+    </Suspense>
   );
 }
