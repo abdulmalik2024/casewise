@@ -151,11 +151,76 @@ const MODE_TO_SLUG: Record<Mode, string> = {
   audit: "check",
   draft: "draft",
 };
-const WORKSPACES: { slug: string; label: string; hint: string }[] = [
-  { slug: "ask", label: "Ask", hint: "cited answers" },
-  { slug: "search", label: "Search", hint: "the sources" },
-  { slug: "check", label: "Check cites", hint: "audit a brief" },
-  { slug: "draft", label: "Draft IRAC", hint: "issue + facts" },
+
+function WsIcon({ name, className = "h-[18px] w-[18px]" }: { name: string; className?: string }) {
+  const common = {
+    className,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    "aria-hidden": true,
+  };
+  switch (name) {
+    case "ask":
+      return (
+        <svg {...common}>
+          <path d="M21 12a8 8 0 0 1-8 8H5l-2 2V12a9 9 0 0 1 9-9h1a8 8 0 0 1 8 9z" />
+          <path d="M9.5 10a2.5 2.5 0 1 1 3.4 2.3c-.8.3-.9.9-.9 1.7" />
+          <circle cx="12" cy="17" r="0.2" />
+        </svg>
+      );
+    case "search":
+      return (
+        <svg {...common}>
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.8-3.8" />
+        </svg>
+      );
+    case "check":
+      return (
+        <svg {...common}>
+          <path d="M9 3h6l4 4v14H5V3h4z" />
+          <path d="m9 13 2 2 4-4" />
+        </svg>
+      );
+    case "draft":
+      return (
+        <svg {...common}>
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" />
+        </svg>
+      );
+    case "caseprep":
+      return (
+        <svg {...common}>
+          <path d="M12 3v18M3 21h18" />
+          <path d="M12 6 6 7l-3 6a3 3 0 0 0 6 0L6 7M12 6l6 1 3 6a3 3 0 0 1-6 0l3-6" />
+        </svg>
+      );
+    case "home":
+      return (
+        <svg {...common}>
+          <path d="m3 11 9-8 9 8" />
+          <path d="M5 10v10h14V10" />
+        </svg>
+      );
+    default:
+      return (
+        <svg {...common}>
+          <path d="M12 5v14M5 12h14" />
+        </svg>
+      );
+  }
+}
+
+const WORKSPACES: { slug: string; label: string; hint: string; icon: string }[] = [
+  { slug: "ask", label: "Ask", hint: "cited answers", icon: "ask" },
+  { slug: "search", label: "Search", hint: "the sources", icon: "search" },
+  { slug: "check", label: "Check cites", hint: "audit a brief", icon: "check" },
+  { slug: "draft", label: "Draft IRAC", hint: "issue + facts", icon: "draft" },
 ];
 
 // shown in rotation while the model reads sources and drafts (the quiet stretch)
@@ -1479,12 +1544,15 @@ function Home() {
                     : "text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
                 }`}
               >
-                {w.label}
+                <span className="flex items-center gap-2.5">
+                  <WsIcon name={w.icon} />
+                  {w.label}
+                </span>
                 <span className="text-[11px] text-[#bcb8a5] dark:text-neutral-600">{w.hint}</span>
               </Link>
             ))}
             <div className="flex cursor-default items-center justify-between rounded-lg px-3 py-2 text-sm text-[#a39f8d] dark:text-neutral-500">
-              <span>Case Prep</span>
+              <span className="flex items-center gap-2.5"><WsIcon name="caseprep" />Case Prep</span>
               <span className="rounded-full bg-[#1e3a5a] px-2 py-0.5 text-[9px] uppercase tracking-wide text-white">
                 soon
               </span>
@@ -1621,13 +1689,52 @@ function Home() {
   return (
     <div className="flex h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
       {!sidebarOpen && (
-        <button
-          onClick={toggleSidebar}
-          title="Show sidebar"
-          className="fixed left-3 top-4 z-10 hidden h-8 w-8 items-center justify-center rounded-lg border border-[#e3e1d5] bg-white text-sm text-[#5d5848] shadow-sm hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 md:flex"
-        >
-          »
-        </button>
+        <aside className="hidden w-14 shrink-0 flex-col items-center gap-1 border-r border-[#e8e6dc] bg-[#f5f4ee] pt-4 dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
+          <button
+            onClick={toggleSidebar}
+            title="Show sidebar"
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-sm text-[#a39f8d] hover:bg-[#eae8dc] hover:text-[#5d5848] dark:hover:bg-neutral-800"
+          >
+            »
+          </button>
+          <Link
+            href="/app"
+            title="Home"
+            onClick={(e) => {
+              e.preventDefault();
+              goWorkspace("/app");
+            }}
+            className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+              isHub ? "bg-[#eae8dc] text-[#3d3929] dark:bg-neutral-700" : "text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300"
+            }`}
+          >
+            <WsIcon name="home" />
+          </Link>
+          {WORKSPACES.map((w) => (
+            <Link
+              key={w.slug}
+              href={`/app/${w.slug}`}
+              title={w.label}
+              onClick={(e) => {
+                e.preventDefault();
+                goWorkspace(`/app/${w.slug}`);
+              }}
+              className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                !isHub && wsSlug === w.slug
+                  ? "bg-[#eae8dc] text-[#3d3929] dark:bg-neutral-700 dark:text-neutral-100"
+                  : "text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+              }`}
+            >
+              <WsIcon name={w.icon} />
+            </Link>
+          ))}
+          <span
+            title="Case Prep: coming soon"
+            className="flex h-9 w-9 cursor-default items-center justify-center rounded-lg text-[#bcb8a5] dark:text-neutral-600"
+          >
+            <WsIcon name="caseprep" />
+          </span>
+        </aside>
       )}
       {sidebarOpen && (
         <aside className="hidden w-64 shrink-0 flex-col border-r border-[#e8e6dc] bg-[#f5f4ee] dark:border-neutral-800 dark:bg-[#1f1e1b] md:flex">
