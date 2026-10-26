@@ -134,9 +134,9 @@ Full AD decade (85K) + Supreme Court remain the Supabase Pro unlock.
 ## Case Prep build (approved 2026-10-24, mockup on canvas)
 1. ✅ Phase 1 workspace shell: hub + /app/<ws> URLs, shallow-history
    switching, per-workspace empty states — V-2.14.0 (+ Next RCE patch)
-2. ⬜ Phase 2: Case Prep engine (/caseprep/stream; objective selector;
-   tabs Overview/Supporting/Counterarguments/Ruling paths/Sources;
-   missing facts; appeal exposure; deterministic authority meter)
-3. ⬜ Phase 3: what-if scenario chips
-4. ⬜ Phase 4: opt-in saved matters + confidentiality copy sweep
-   ("nothing stored unless you save it to a matter")
+2. ✅ Phase 2: Case Prep engine + tabbed workspace UI — V-2.15.0
+3. ✅ Phase 3: what-if scenario chips (stipulated-fact re-runs) — V-2.15.0
+4. ✅ Phase 4: opt-in saved matters + confidentiality copy sweep — V-2.15.0
+Post-ship decision: Case Prep is Professional-only (trial covers the
+other four workspaces). Next: attorney field test; case-comparison
+(v1.2) when she validates the core.
