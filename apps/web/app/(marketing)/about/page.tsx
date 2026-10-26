@@ -39,8 +39,10 @@ export default function About() {
           The second design decision is confidentiality by architecture. Your questions are
           not stored on our servers; research history lives only in your own browser, and
           nothing you type trains any model. Documents you check are processed in memory
-          and never saved. We built it this way because what we do not hold cannot leak
-          and cannot be demanded from us.
+          and never saved. The single exception is a choice you make: saving a Case Prep
+          analysis to a matter stores that analysis under your account until you delete it.
+          We built it this way because what we do not hold cannot leak and cannot be
+          demanded from us.
         </p>
         <p>
           We are early, and we build in close conversation with the attorneys who use the

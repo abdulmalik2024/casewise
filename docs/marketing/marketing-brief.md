@@ -46,7 +46,9 @@ don't trust, or expensive Westlaw/Lexis subscriptions they underuse.
   exportable to Word with a verification appendix. No competitor brands this.
 - **Confidential by architecture:** questions are never stored on our servers —
   research history lives only in the attorney's own browser. Nothing is used to
-  train any model. Documents checked are processed in memory, never saved.
+  train any model. Documents checked are processed in memory, never saved. One
+  explicit exception: saving a Case Prep analysis to a matter stores it under the
+  attorney's account until they delete it (opt-in, never silent).
 - **Point-in-time research:** answer as of a past date (decisions after it
   excluded, amended statutes flagged).
 - **Check cites:** paste or upload any brief/motion/memo (yours or opposing
@@ -196,7 +198,8 @@ going back to the 1800s (measured: the catalog spans 1714-2026, with
 - Never say "hallucination-free", "always accurate", or "unlimited".
 - Don't disparage Westlaw/Lexis by name beyond price/fit comparisons.
 - Confidentiality claims must match reality exactly as stated above (no storage
-  of questions; browser-only history; no training on user data).
+  of questions; browser-only history; no training on user data; the sole
+  exception is opt-in saved matters, and any copy touching storage must say so).
 
 ## Assets
 

@@ -385,6 +385,10 @@ function Home() {
   const [showAsOf, setShowAsOf] = useState(false);
   const [scenario, setScenario] = useState("");
   const [activeScenario, setActiveScenario] = useState("");
+  const [matters, setMatters] = useState<{ id: string; title: string; dispute: string }[]>([]);
+  const [showSaveMatter, setShowSaveMatter] = useState(false);
+  const [matterTitle, setMatterTitle] = useState("");
+  const [savedMatter, setSavedMatter] = useState("");
   const [auditResult, setAuditResult] = useState<AuditResponse | null>(null);
   const [auditFile, setAuditFile] = useState<File | null>(null);
   const [auditTab, setAuditTab] = useState<"paste" | "upload">("paste");
@@ -459,6 +463,14 @@ function Home() {
   }, []);
 
   const isGuest = authChecked && !authToken;
+
+  useEffect(() => {
+    if (!authToken) return;
+    fetch(`${API_URL}/matters`, { headers: { Authorization: `Bearer ${authToken}` } })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => Array.isArray(d) && setMatters(d))
+      .catch(() => {});
+  }, [authToken]);
 
   useEffect(() => {
     if (!authToken) return;
@@ -761,6 +773,8 @@ function Home() {
           setStreamText("");
           setPrepTab("Overview");
           setActiveScenario(scenarioText ?? "");
+          setSavedMatter("");
+          setShowSaveMatter(false);
           const id = `caseprep::${dispute}`;
           threadIdRef.current = id;
           recordHistory({
@@ -1452,6 +1466,68 @@ function Home() {
     return qs.slice(0, 3);
   }
 
+  async function saveMatter() {
+    const a = thread[0]?.answer;
+    if (!a || matterTitle.trim().length < 2) return;
+    try {
+      const res = await fetch(`${API_URL}/matters`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({
+          title: matterTitle.trim(),
+          dispute: thread[0].question,
+          objective,
+          scenario: activeScenario || null,
+          facts: facts.trim(),
+          analysis: a,
+        }),
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      setSavedMatter(matterTitle.trim());
+      setShowSaveMatter(false);
+      setMatterTitle("");
+      const list = await fetch(`${API_URL}/matters`, { headers: authHeaders() }).then((r) =>
+        r.ok ? r.json() : matters
+      );
+      if (Array.isArray(list)) setMatters(list);
+    } catch {
+      setError("Could not save the matter; try again.");
+      setStatus("error");
+    }
+  }
+
+  async function openMatter(id: string) {
+    try {
+      const res = await fetch(`${API_URL}/matters/${id}`, { headers: authHeaders() });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const m = await res.json();
+      setMobileNavOpen(false);
+      goWorkspace("/app/case-prep");
+      setFacts(m.facts ?? "");
+      setObjective(m.objective ?? "evaluate-claim");
+      setActiveScenario(m.scenario ?? "");
+      setQuery(m.dispute ?? "");
+      setThread([{ question: m.dispute, answer: m.analysis as AskResponse }]);
+      setPrepTab("Overview");
+      setSavedMatter(m.title ?? "");
+      setStatus("done");
+      setError("");
+    } catch {
+      setError("Could not open that matter.");
+      setStatus("error");
+    }
+  }
+
+  async function removeMatter(e: React.MouseEvent, id: string) {
+    e.stopPropagation();
+    try {
+      await fetch(`${API_URL}/matters/${id}`, { method: "DELETE", headers: authHeaders() });
+      setMatters((prev) => prev.filter((m) => m.id !== id));
+    } catch {
+      /* best-effort */
+    }
+  }
+
   const casePrepView = (x: Exchange, idx: number) => {
     const a = x.answer!;
     const sections = splitSections(a.answer);
@@ -1529,10 +1605,44 @@ function Home() {
           >
             Export record
           </button>
+          {savedMatter ? (
+            <span className="text-xs text-[#1f6b45] dark:text-emerald-400">Saved to &quot;{savedMatter}&quot; ✓</span>
+          ) : (
+            <button
+              onClick={() => setShowSaveMatter((v) => !v)}
+              className="rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300"
+            >
+              Save to matter
+            </button>
+          )}
           <span className="text-[11px] text-[#a39f8d] dark:text-neutral-500">
             Qualitative analysis; verify every authority before relying on it.
           </span>
         </div>
+        {showSaveMatter && !savedMatter && (
+          <div className="mt-3 rounded-2xl border border-[#e3e1d5] bg-white p-4 dark:border-neutral-700 dark:bg-[#30302e]">
+            <div className="flex gap-2">
+              <input
+                value={matterTitle}
+                onChange={(e) => setMatterTitle(e.target.value)}
+                placeholder='Matter name, e.g. "Rodriguez deposit dispute"'
+                className="flex-1 rounded-lg border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs outline-none placeholder:text-[#a39f8d] focus:border-[#1e3a5a] dark:border-neutral-700 dark:bg-[#262624]"
+              />
+              <button
+                onClick={saveMatter}
+                disabled={matterTitle.trim().length < 2}
+                className="rounded-lg bg-[#1e3a5a] px-3.5 py-1.5 text-xs font-medium text-white disabled:opacity-50"
+              >
+                Save
+              </button>
+            </div>
+            <p className="mt-2 text-[11px] leading-snug text-[#8a8571] dark:text-neutral-400">
+              Saving stores this analysis on our servers: the dispute, facts, scenario, and
+              the result, under your account, until you delete it. Nothing else you do in
+              Casewise is stored.
+            </p>
+          </div>
+        )}
         <div className="mt-4 rounded-2xl border border-[#e3e1d5] bg-white p-4 dark:border-neutral-700 dark:bg-[#30302e]">
           <div className="text-[10px] uppercase tracking-[0.14em] text-[#a39f8d] dark:text-neutral-500">
             Explore scenarios
@@ -1857,6 +1967,32 @@ function Home() {
               </Link>
             ))}
           </nav>
+          {authToken && matters.length > 0 && (
+            <>
+              <div className="mt-3 px-5 pb-1 text-[10px] uppercase tracking-[0.14em] text-[#bcb8a5] dark:text-neutral-600">
+                Matters
+              </div>
+              <div className="flex flex-col gap-0.5 px-3">
+                {matters.slice(0, 8).map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => openMatter(m.id)}
+                    title={m.dispute}
+                    className="group flex items-center justify-between rounded-lg px-3 py-1.5 text-left text-[13px] text-[#5d5848] hover:bg-[#eae8dc] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  >
+                    <span className="truncate">{m.title}</span>
+                    <span
+                      onClick={(e) => removeMatter(e, m.id)}
+                      title="Delete this matter"
+                      className="hidden pl-2 text-[#a39f8d] hover:text-[#b13333] group-hover:inline"
+                    >
+                      ✕
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
 
           <div className="mt-4 flex-1 overflow-y-auto px-3 pb-4">
             {pinned.length > 0 && (
@@ -1979,7 +2115,7 @@ function Home() {
             )}
             <div className="mt-3 border-t border-[#e8e6dc] pt-2 text-[11px] leading-snug text-[#a39f8d] dark:border-neutral-800 dark:text-neutral-500">
               <div className="font-medium text-[#8a8571] dark:text-neutral-400">Private by design</div>
-              Questions stay in this browser. They are not stored on our servers.
+              Questions stay in this browser. Nothing is stored on our servers unless you save it to a matter.
             </div>
           </div>
     </>

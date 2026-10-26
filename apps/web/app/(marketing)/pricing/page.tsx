@@ -176,7 +176,9 @@ export default function Pricing() {
           <p className="mt-1 text-[#5d5848] dark:text-neutral-300">
             Your questions are not used to train any model, and we do not keep a central log
             of questions; research history lives in your own browser. Documents you audit
-            are processed in memory and not retained.
+            are processed in memory and not retained. The one exception is explicit: a Case
+            Prep analysis is stored only if you save it to a matter, under your account,
+            until you delete it.
           </p>
         </div>
         <div>

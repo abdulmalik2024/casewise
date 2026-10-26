@@ -286,6 +286,39 @@ def caseprep_stream_endpoint(body: CasePrepIn, user: dict = Depends(gated)):
     )
 
 
+from .matters import MatterIn, delete_matter, get_matter, list_matters, save_matter
+
+
+@app.post("/matters", status_code=201)
+def create_matter_endpoint(body: MatterIn, user: dict = Depends(gated)):
+    return {"id": save_matter(app.state.pool, user["id"], body)}
+
+
+@app.get("/matters")
+def list_matters_endpoint(user: dict = Depends(validate_token)):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    return list_matters(app.state.pool, user["id"])
+
+
+@app.get("/matters/{matter_id}")
+def get_matter_endpoint(matter_id: str, user: dict = Depends(validate_token)):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    m = get_matter(app.state.pool, user["id"], matter_id)
+    if m is None:
+        raise HTTPException(404, "matter not found")
+    return m
+
+
+@app.delete("/matters/{matter_id}", status_code=204)
+def delete_matter_endpoint(matter_id: str, user: dict = Depends(validate_token)):
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    if not delete_matter(app.state.pool, user["id"], matter_id):
+        raise HTTPException(404, "matter not found")
+
+
 class AuditIn(BaseModel):
     text: str = Field(min_length=50, max_length=300_000)
 
