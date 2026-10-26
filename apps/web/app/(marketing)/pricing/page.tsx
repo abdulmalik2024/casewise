@@ -71,7 +71,7 @@ export default function Pricing() {
           </div>
           <p className="mt-1 text-xs text-[#8a8571]">Every feature, no commitment</p>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
-            <li>✓ Full access to everything below</li>
+            <li>✓ Ask, Search, Check cites, and Draft IRAC in full</li>
             <li>✓ No credit card required</li>
             <li>✓ 5 questions free before that, with no sign-up at all</li>
             <li>✓ Cancel by simply walking away</li>
@@ -121,6 +121,7 @@ export default function Pricing() {
           </p>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">
             <li>✓ Everything in Starter</li>
+            <li>✓ Case Prep: both sides of your dispute, ruling paths, saved matters</li>
             <li>✓ Check cites: audit any brief against 5.1M official records</li>
             <li>✓ Draft IRAC: issue + facts to a structured, cited analysis</li>
             <li>✓ Word memo exports with verification appendix</li>

@@ -124,3 +124,15 @@ def require_active(pool: ConnectionPool, user: dict) -> dict:
             "early adopters lock the launch rate.",
         )
     return status
+
+
+def require_paid(pool: ConnectionPool, user: dict) -> dict:
+    """Professional-plan gate (trial does not qualify)."""
+    status = trial_status(pool, user["id"])
+    if status["plan"] != "paid":
+        raise HTTPException(
+            402,
+            "Case Prep is part of the Professional plan. Upgrade at casewise.si/pricing; "
+            "your trial covers Ask, Search, Check cites, and Draft IRAC.",
+        )
+    return status

@@ -168,6 +168,8 @@ going back to the 1800s (measured: the catalog spans 1714-2026, with
   pricing — early subscribers lock the rate.
 - Never say "unlimited." Plans are "full daily practice use" under fair
   professional use; a higher-volume plan for busy firms is coming.
+- Case Prep is Professional-only (not trial, not Starter). The trial covers
+  Ask, Search, Check cites, and Draft IRAC; say so when marketing the trial.
 
 ## Voice & design
 

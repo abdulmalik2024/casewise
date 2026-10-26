@@ -13,6 +13,7 @@ from fastapi.responses import Response
 from .audit import AuditResponse, audit_text
 from .auth import (
     GUEST_LIMIT,
+    require_paid,
     guest_remaining,
     record_guest_question,
     require_active,
@@ -60,6 +61,14 @@ def gated(user: dict = Depends(validate_token)) -> dict:
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
     require_active(app.state.pool, user)
+    return user
+
+
+def paid_gated(user: dict = Depends(validate_token)) -> dict:
+    """Signed in AND on the Professional (paid) plan."""
+    if app.state.pool is None:
+        raise HTTPException(503, "database is not configured")
+    require_paid(app.state.pool, user)
     return user
 
 
@@ -255,7 +264,7 @@ class CasePrepIn(BaseModel):
 
 
 @app.post("/caseprep/stream")
-def caseprep_stream_endpoint(body: CasePrepIn, user: dict = Depends(gated)):
+def caseprep_stream_endpoint(body: CasePrepIn, user: dict = Depends(paid_gated)):
     if app.state.pool is None or not settings.voyage_api_key:
         raise HTTPException(503, "search is not configured (DATABASE_URL / VOYAGE_API_KEY)")
     if not settings.anthropic_api_key:
@@ -290,7 +299,7 @@ from .matters import MatterIn, delete_matter, get_matter, list_matters, save_mat
 
 
 @app.post("/matters", status_code=201)
-def create_matter_endpoint(body: MatterIn, user: dict = Depends(gated)):
+def create_matter_endpoint(body: MatterIn, user: dict = Depends(paid_gated)):
     return {"id": save_matter(app.state.pool, user["id"], body)}
 
 

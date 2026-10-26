@@ -412,6 +412,7 @@ function Home() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [authEmail, setAuthEmail] = useState("");
   const [daysLeft, setDaysLeft] = useState<number | null>(null);
+  const [plan, setPlan] = useState<string>("");
   const [authChecked, setAuthChecked] = useState(false);
   const [guestLeft, setGuestLeft] = useState<number | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -478,6 +479,7 @@ function Home() {
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d && d.plan === "trial") setDaysLeft(d.days_left);
+        if (d && d.plan) setPlan(d.plan);
       })
       .catch(() => {});
   }, [authToken]);
@@ -2279,6 +2281,41 @@ function Home() {
                   for search, cite checking, and memo export.
                 </p>
               )}
+            </div>
+          </div>
+        ) : mode === "caseprep" && authChecked && plan !== "paid" ? (
+          <div className="flex h-full flex-col items-center justify-center px-4">
+            <div className="w-full max-w-xl text-center">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/owl/casewise-owl-256.webp" alt="" className="mx-auto mb-4 h-16 w-16" />
+              <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.18em] text-[#a39f8d] dark:text-neutral-500">
+                Case Prep · Professional
+              </p>
+              <h1 className="mb-3 text-balance text-3xl leading-snug tracking-tight [font-family:var(--font-serif)]">
+                Prepare both sides of your dispute
+              </h1>
+              <p className="mb-6 text-sm leading-relaxed text-[#8a8571] dark:text-neutral-400">
+                Your facts in; out comes the strongest case for each side with verified
+                citations, ruling paths, appeal exposure, the facts you still need, and
+                what-if scenarios. Saved to named matters you control. Case Prep is part
+                of the Professional plan{isGuest ? "" : "; your trial covers Ask, Search, Check cites, and Draft IRAC"}.
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                <Link
+                  href="/pricing"
+                  className="rounded-full bg-[#1e3a5a] px-6 py-2.5 text-sm font-medium text-white hover:bg-[#16304b]"
+                >
+                  {isGuest ? "See plans" : "Upgrade to Professional"}
+                </Link>
+                {isGuest && (
+                  <Link href="/signup" className="text-sm text-[#1e3a5a] hover:underline dark:text-blue-400">
+                    Start the free trial
+                  </Link>
+                )}
+              </div>
+              <p className="mt-4 text-[11px] text-[#a39f8d] dark:text-neutral-500">
+                Qualitative analysis with verified citations; no win percentages, ever.
+              </p>
             </div>
           </div>
         ) : !hasContent ? (
