@@ -171,8 +171,18 @@ def ask_stream(
     question: str,
     history: list[dict] | None = None,
     as_of: str | None = None,
+    _skip_demo: bool = False,
 ):
     """Yield SSE-able events: status -> delta* -> done. Real pipeline stages."""
+    # common-question chips replay a cached answer (full pipeline theater,
+    # zero model cost); only for fresh questions with default settings
+    if not _skip_demo and not history and not as_of:
+        from .demo import get_demo, replay
+
+        cached = get_demo(pool, question)
+        if cached:
+            yield from replay(cached)
+            return
     yield {"type": "status", "message": "Reading your question…"}
     # follow-ups often lean on the prior exchange ("what if rent-stabilized?"),
     # so retrieval sees the previous question too

@@ -291,7 +291,36 @@ const EXAMPLE_QUESTIONS = [
     label: "Security deposits",
     q: "How quickly must a landlord return a security deposit, and what can be deducted?",
   },
+  {
+    label: "Rent increase notice",
+    q: "How much notice must a landlord give before raising the rent in New York?",
+  },
 ];
+
+const EXAMPLE_SEARCHES = [
+  { label: '"warranty of habitability"', q: '"warranty of habitability"' },
+  { label: "Holdover notice requirements", q: "notice required before a holdover proceeding" },
+  { label: "Succession rights", q: "succession rights family member rent stabilized" },
+];
+
+const EXAMPLE_AUDIT = (
+  "Respondent relies on the warranty of habitability under Real Property Law " +
+  "§ 235-b and the rent demand requirement of RPAPL § 711. See Park West Mgt. " +
+  "Corp. v. Mitchell, 47 N.Y.2d 316 (1979). Petitioner's reliance on RPL § 999-z " +
+  "and Matter of Nobody v. Nowhere, 999 Misc 2d 12345, is misplaced. See also " +
+  "22 NYCRR § 208.42 and General Business Law § 352-c."
+);
+
+const EXAMPLE_DRAFT = {
+  issue: "Can the tenant assert a warranty-of-habitability defense to this nonpayment petition?",
+  facts:
+    "Rent-stabilized apartment in the Bronx, $1,850/month. No consistent heat or hot water from " +
+    "November 2025 through February 2026; tenant recorded indoor temperatures of 48-55F on 14 days. " +
+    "HPD issued violations for inadequate heat (class C), a collapsed bathroom ceiling (class B), and " +
+    "mice (class B). Written notice to the landlord on November 10 and January 5. No repairs until " +
+    "March 2026, after the nonpayment petition was filed. Tenant stopped paying rent in December 2025; " +
+    "landlord seeks $5,550 in arrears.",
+};
 
 function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -1923,7 +1952,7 @@ function Home() {
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
-              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.2</span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.0</span>
             </Link>
             <button
               onClick={toggleSidebar}
@@ -2192,7 +2221,7 @@ function Home() {
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
-            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.2</span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.0</span>
           </Link>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -2381,6 +2410,54 @@ function Home() {
                       <div className="mt-1 leading-snug text-[#6b6450] dark:text-neutral-400">{b}</div>
                     </div>
                   ))}
+                </div>
+              )}
+              {mode === "search" && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                    Try a search
+                  </span>
+                  {EXAMPLE_SEARCHES.map((ex) => (
+                    <button
+                      key={ex.label}
+                      onClick={() => setQuery(ex.q)}
+                      className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                    >
+                      {ex.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+              {mode === "audit" && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                    No brief handy?
+                  </span>
+                  <button
+                    onClick={() => {
+                      setAuditTab("paste");
+                      setQuery(EXAMPLE_AUDIT);
+                    }}
+                    className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  >
+                    Paste a sample with one fabricated citation
+                  </button>
+                </div>
+              )}
+              {mode === "draft" && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <span className="text-[11px] uppercase tracking-wide text-[#bcb8a5] dark:text-neutral-600">
+                    See it on a sample
+                  </span>
+                  <button
+                    onClick={() => {
+                      setQuery(EXAMPLE_DRAFT.issue);
+                      setFacts(EXAMPLE_DRAFT.facts);
+                    }}
+                    className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
+                  >
+                    Fill a habitability fact pattern
+                  </button>
                 </div>
               )}
               {mode === "ask" && (
