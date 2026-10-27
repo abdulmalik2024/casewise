@@ -1923,7 +1923,7 @@ function Home() {
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
-              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.0</span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.1</span>
             </Link>
             <button
               onClick={toggleSidebar}
@@ -2192,7 +2192,7 @@ function Home() {
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
-            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.0</span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.15.1</span>
           </Link>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -2294,11 +2294,30 @@ function Home() {
               <h1 className="mb-3 text-balance text-3xl leading-snug tracking-tight [font-family:var(--font-serif)]">
                 Prepare both sides of your dispute
               </h1>
-              <p className="mb-6 text-sm leading-relaxed text-[#8a8571] dark:text-neutral-400">
-                Your facts in; out comes the strongest case for each side with verified
-                citations, ruling paths, appeal exposure, the facts you still need, and
-                what-if scenarios. Saved to named matters you control. Case Prep is part
-                of the Professional plan{isGuest ? "" : "; your trial covers Ask, Search, Check cites, and Draft IRAC"}.
+              <p className="mb-5 text-sm text-[#8a8571] dark:text-neutral-400">
+                Your facts in. Both sides of the dispute out.
+              </p>
+              <div className="mb-5 grid gap-2.5 text-left sm:grid-cols-2">
+                {[
+                  ["Both sides argued", "Your strongest case, and the other side's, with verified citations"],
+                  ["Ruling paths", "A conditional analysis per plausible outcome, never a prediction"],
+                  ["Appeal exposure", "The grounds the loser would most plausibly raise"],
+                  ["Missing facts", "Direct questions about what could change the analysis"],
+                  ["What-if scenarios", "Re-run the analysis with one fact stipulated"],
+                  ["Saved matters", "Store an analysis under your account, reopen anytime, delete anytime"],
+                ].map(([h, b]) => (
+                  <div
+                    key={h}
+                    className="rounded-xl border border-[#e3e1d5] bg-white p-3.5 dark:border-neutral-700 dark:bg-[#30302e]"
+                  >
+                    <div className="text-[13px] font-semibold text-[#3d3929] dark:text-neutral-100">{h}</div>
+                    <div className="mt-0.5 text-xs leading-snug text-[#8a8571] dark:text-neutral-400">{b}</div>
+                  </div>
+                ))}
+              </div>
+              <p className="mb-6 text-xs text-[#a39f8d] dark:text-neutral-500">
+                Case Prep is part of the Professional plan
+                {isGuest ? "." : "; your trial covers Ask, Search, Check cites, and Draft IRAC."}
               </p>
               <div className="flex items-center justify-center gap-3">
                 <Link
