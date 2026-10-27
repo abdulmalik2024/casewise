@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: **Version: **Version: V-2.16.0** (2026-10-27)
+**Version: V-2.16.1** (2026-10-27)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -187,8 +187,11 @@ point-in-time questions ("what was the law when this lease was signed").
   Phase D: niche landing hero ("Verified legal research for NY
   landlord-tenant and real estate litigation attorneys", Try 5 questions
   free). Marketing expansion: nav dropdowns (Features, Who it's for) +
-  How it works page + Who it's for page + Blog (first post: verification
-  architecture) + Features gains Draft IRAC card/anchors + About refresh
+  How it works page + Who it's for page + Blog (5 SEO posts: seller
+  disclosure RPL § 462, security deposits GOL § 7-108, fabricated
+  citations, habitability § 235-b, citation checking; V-2.16.1 also adds
+  the cleared law-student testimonial to the landing page) + Features
+  gains Draft IRAC card/anchors + About refresh
   (12 laws, landmarks, confidentiality-by-architecture paragraph).
   Pricing: four tiers — NEW Starter $49.99/mo (research only: Ask/Search/
   phrase/buildings/point-in-time; solo attorneys, paralegals, law

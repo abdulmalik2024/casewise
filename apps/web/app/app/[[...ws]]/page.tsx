@@ -1952,7 +1952,7 @@ function Home() {
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
-              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.0</span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.1</span>
             </Link>
             <button
               onClick={toggleSidebar}
@@ -2221,7 +2221,7 @@ function Home() {
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
-            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.0</span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.16.1</span>
           </Link>
           <button
             onClick={() => setMobileNavOpen(true)}

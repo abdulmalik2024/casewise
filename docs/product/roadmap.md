@@ -140,3 +140,10 @@ Full AD decade (85K) + Supreme Court remain the Supabase Pro unlock.
 Post-ship decision: Case Prep is Professional-only (trial covers the
 other four workspaces). Next: attorney field test; case-comparison
 (v1.2) when she validates the core.
+
+## Corpus demand signals (steering which partial area deepens next)
+1. Purchases/residential transactions — law student tester (2026-10-27):
+   "I wish it covered purchases." Partially closed already (GOL, UCC,
+   RPL 462, AD contract/specific-performance cases); deepening would mean
+   title/escrow materials + more contract-of-sale decisions, and promoting
+   Residential Real Estate out of the partial tier. Watch for a second vote.

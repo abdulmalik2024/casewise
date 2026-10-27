@@ -172,6 +172,17 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* Testimonial */}
+      <section className="mx-auto max-w-3xl px-6 pb-4 text-center">
+        <blockquote className="text-balance text-xl leading-relaxed text-[#3d3929] [font-family:var(--font-serif)] dark:text-neutral-200">
+          &ldquo;I like the certainty and direct linking to sources. I like the direct
+          quoting word for word.&rdquo;
+        </blockquote>
+        <p className="mt-3 text-xs uppercase tracking-wide text-[#a39f8d]">
+          Law student, New York
+        </p>
+      </section>
+
       {/* Showcases */}
       {showcases.map((s, i) => (
         <section key={s.eyebrow} className="mx-auto max-w-5xl px-6 py-20">

@@ -191,6 +191,12 @@ going back to the 1800s (measured: the catalog spans 1714-2026, with
   meritorious claims won abatements vs 27% with representation — structured,
   well-cited work wins cases.
 
+## Testimonials (cleared for use)
+
+- "I like the certainty and direct linking to sources. I like the direct
+  quoting word for word." — Law student, New York (2026-10; attribution
+  "Law student, New York" approved by Abdul; no name).
+
 ## Hard rules (compliance — never violate in any post)
 
 - Casewise is a research tool FOR licensed attorneys. It is NOT legal advice and

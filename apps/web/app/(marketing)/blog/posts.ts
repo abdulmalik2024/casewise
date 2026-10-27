@@ -9,6 +9,60 @@ export type Post = {
 
 export const POSTS: Post[] = [
   {
+    slug: "ny-seller-disclosure-rpl-462-concealed-defects",
+    title: "New York's Seller Disclosure Law (RPL § 462): The $500 Escape Hatch Is Gone",
+    date: "2026-10-27",
+    excerpt:
+      "Since March 2024, sellers of 1-4 family homes must actually deliver the Property Condition Disclosure Statement, flood questions included. What buyer's counsel should check when damage looks concealed.",
+    keywords: [
+      "seller disclosure New York",
+      "RPL 462 property condition disclosure",
+      "concealed defects home purchase NY",
+      "property condition disclosure statement",
+      "flood disclosure New York",
+    ],
+    body: [
+      "For two decades, New York's seller disclosure regime had a famous escape hatch: rather than complete the Property Condition Disclosure Statement required by Real Property Law § 462, a seller could simply credit the buyer $500 at closing and skip the questionnaire. Nearly every seller took the deal. A 2023 amendment ended that practice: for contracts signed on or after March 20, 2024, sellers of one-to-four family residential properties must actually deliver the completed statement, and the form now includes specific flood questions, including whether the property is in a FEMA flood zone and whether it has experienced flood damage.",
+      "## What the statement covers",
+      "The PCDS runs through the property's condition in the seller's actual knowledge: structural matters, water and rot damage, mechanical systems, environmental conditions, and now flood history and flood insurance claims. It is a disclosure of what the seller knows, not a warranty of condition, and it does not substitute for the buyer's own inspection.",
+      "## Who is outside the statute",
+      "The regime covers one-to-four family dwellings. Condominium and cooperative units are outside it, as are vacant land and most estate, foreclosure, and other fiduciary sales. For those transactions, the buyer's protections come from the contract, the inspection, and the common law.",
+      "## Where the real fights happen: concealment",
+      "New York remains a caveat emptor state for what the disclosure regime does not reach, but that doctrine has a hard edge: a seller may not actively conceal a defect. The recurring fact pattern is familiar to any real estate litigator: water damage behind fresh paint, a finished basement marketed as dry, a flood the neighbors remember but the listing forgot. Where the buyer can show affirmative steps to hide the condition, as-is clauses and merger clauses stop being the end of the analysis, and remedies from contract rescission to deposit recovery come into play.",
+      "## What buyer's counsel should pin down early",
+      "The questions that decide these disputes are concrete. When did the damage occur relative to contract signing? What does the delivered PCDS actually say, and is a flood answer false? What did the inspection report note, and was access to the affected area impeded? Were there prior insurance claims or permit applications that show knowledge? The timeline usually matters more than the adjectives.",
+      "Casewise now carries the statutes and the appellate case law these disputes turn on: RPL § 462, the General Obligations Law, and Appellate Division decisions on concealment, deposit forfeiture, and specific performance. Its Case Prep workspace takes your facts and argues both sides with verified citations. Five free questions, no sign-up, at casewise.si.",
+    ],
+  },
+  {
+    slug: "ny-security-deposit-law-gol-7-108",
+    title: "Security Deposits in New York (GOL § 7-108): The 14-Day Rule and What Landlords Can Deduct",
+    date: "2026-10-27",
+    excerpt:
+      "One month's rent, a 14-day deadline with an itemized statement, and forfeiture for missing it. The security deposit rules practitioners cite daily, with the statute quoted rather than paraphrased.",
+    keywords: [
+      "security deposit law New York",
+      "GOL 7-108",
+      "14 day security deposit return NY",
+      "security deposit deductions New York",
+      "landlord keep security deposit",
+    ],
+    body: [
+      "Since the 2019 Housing Stability and Tenant Protection Act rewrote General Obligations Law § 7-108, New York's residential security deposit rules have real teeth, and the deadlines are short enough that cases are often won or lost on the calendar alone.",
+      "## The one-month cap",
+      "For covered residential tenancies, the deposit or advance cannot exceed one month's rent. Demands for first month, last month, and a deposit together exceed the cap; the last-month demand is the usual offender.",
+      "## The 14-day rule",
+      "After the tenant vacates, the landlord has fourteen days to return the deposit. If anything is withheld, the landlord must provide an itemized statement of the basis within that same window. The consequence for missing it is the part practitioners quote: the landlord forfeits any right to retain any portion of the deposit. Courts have applied the forfeiture as written, which makes the mailing date of the itemized statement a dispositive fact worth establishing early in any deposit dispute.",
+      "## What may be deducted",
+      "The permissible bases are narrow: unpaid rent, damage beyond ordinary wear and tear, moving and storage of the tenant's belongings, and unpaid utility charges owed to the landlord. Ordinary wear is not damage; repainting after a multi-year tenancy and worn carpet in traffic paths belong to the landlord's cost of doing business, while broken fixtures and holes in walls do not.",
+      "## The walk-through rights",
+      "The statute also gives tenants process: on request, an inspection before move-out, with notice of what the landlord intends to claim and an opportunity to cure before vacating. Skipped process strengthens the tenant's hand in the ensuing dispute.",
+      "## Willful violations",
+      "A knowing violation of the deposit provisions can expose the landlord to punitive damages of up to twice the deposit. Between forfeiture and the punitive exposure, the economics of wrongly withholding a deposit have inverted since 2019.",
+      "Ask Casewise about a deposit dispute and the answer quotes § 7-108's actual text, word-for-word verified against the statute, with the decisions applying it. It is one of our free sample questions: no sign-up needed, at casewise.si.",
+    ],
+  },
+  {
     slug: "ny-warranty-of-habitability-rpl-235-b",
     title: "The Warranty of Habitability in New York (RPL § 235-b): Elements, Proof, and Rent Abatement",
     date: "2026-10-21",
