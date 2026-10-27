@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: **Version: **Version: V-2.15.1** (2026-10-27)
+**Version: **Version: **Version: V-2.15.2** (2026-10-27)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
