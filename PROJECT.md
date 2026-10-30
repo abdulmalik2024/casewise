@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.16.1** (2026-10-27)
+**Version: V-2.17.0** (2026-10-30)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -98,6 +98,9 @@ point-in-time questions ("what was the law when this lease was signed").
 ## Features (V-2.0.0)
 
 **Platform (V-2.4.0):**
+- Traffic analytics: Vercel Web Analytics (V-2.17.0; cookieless,
+  `<Analytics />` in the root layout; page views/visitors/referrers in
+  the Vercel dashboard once Web Analytics is enabled on the project).
 - Domain: casewise.si on Vercel (Namecheap nameservers delegated to
   ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
