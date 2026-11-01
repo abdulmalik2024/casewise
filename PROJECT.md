@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.17.0** (2026-10-30)
+**Version: V-2.17.1** (2026-11-01)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -107,7 +107,10 @@ point-in-time questions ("what was the law when this lease was signed").
 - Marketing site: landing (chatgpt.com/overview-style: framed real
   screenshots, alternating showcases, confidentiality section), Features
   (single column, real captures), Pricing (7-day no-card trial, $99.99/mo
-  early-adopter placeholder), About. Screenshots regenerate via
+  early-adopter placeholder), About, Privacy Policy + Terms of Service
+  (V-2.17.1; footer-linked; written to match the actual storage posture;
+  also required by Google OAuth consent-screen publishing). Screenshots
+  regenerate via
   `scripts/capture_marketing_shots.py` (runs real flows against prod).
 - Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
   palette; green/red/amber reserved for semantic states.

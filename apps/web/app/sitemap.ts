@@ -11,6 +11,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/pricing", priority: 0.9 },
     { path: "/blog", priority: 0.7 },
     { path: "/about", priority: 0.5 },
+    { path: "/privacy", priority: 0.2 },
+    { path: "/terms", priority: 0.2 },
   ].map((p) => ({
     url: `${base}${p.path}`,
     lastModified: new Date(),
