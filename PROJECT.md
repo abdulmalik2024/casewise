@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.17.1** (2026-11-01)
+**Version: V-2.18.0** (2026-11-01)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -115,9 +115,12 @@ point-in-time questions ("what was the law when this lease was signed").
 - Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
   palette; green/red/amber reserved for semantic states.
 - Auth (V-2.5.0): Supabase Auth — email/password live. Google OAuth
-  button is shown DISABLED ("coming soon", V-2.6.1) until the provider
-  is configured in Google Cloud + Supabase dashboard; re-enable by
-  restoring signInWithOAuth in login/signup pages (see git history).
+  live (V-2.18.0): GCP project "casewise-511822" (owner
+  malikahmady@gmail.com), consent screen published (no logo: adding one
+  triggers Google verification review; needs privacy+terms links, now
+  available, plus Search Console domain verification), provider enabled
+  in Supabase; signInWithOAuth(google) → redirectTo /app on both
+  login/signup pages.
   /login + /signup pages; marketing CTAs route to /signup.
   The app at /app requires a session (redirects to /login signed out)
   and sends the Supabase access token on every API call.

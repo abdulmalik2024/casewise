@@ -21,7 +21,7 @@ as items ship; move completed items to the log at the bottom.
    Pricing, About; navy theme; capture script) — V-2.4.0
 3. ✅ Auth: Supabase email/password + 7-day trial enforced in the API
    (402 after expiry); /login + /signup; session-gated app — V-2.5.0.
-   Remaining: Google OAuth provider config (button shipped).
+   Google OAuth live (V-2.18.0, 2026-11-01).
 4. ✅ Guest preview: 5 free Ask questions without login (server-tracked
    by guest id + IP); Search/cite-check/memo require an account — V-2.6.0
 5. ✅ Billing: Stripe Checkout — $99.99/mo + $999.99/yr (2 months free), upgrade any time
