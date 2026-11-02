@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Verified Legal Research for NY Landlord-Tenant Attorneys",
   description:
-    "AI legal research for New York landlord-tenant and real estate litigation attorneys. Cited, quoted, and verified against NY statutes, court decisions, and DHCR guidance. Try 5 questions free.",
+    "AI legal research for New York landlord-tenant and real estate litigation attorneys. Cited, quoted, and verified against NY statutes, court decisions, and DHCR guidance. Try it free.",
 };
 
 import Link from "next/link";
@@ -93,7 +93,7 @@ export default function Landing() {
             href="/app"
             className="rounded-full bg-[#3d3929] px-7 py-3 font-medium text-[#faf9f5] transition-colors hover:bg-[#2a271c] dark:bg-neutral-100 dark:text-neutral-900"
           >
-            Try 5 questions free
+            Try it free
           </Link>
           <Link
             href="/features"

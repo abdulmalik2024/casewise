@@ -68,7 +68,7 @@ export default function HowItWorks() {
           href="/app"
           className="rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
         >
-          Try 5 questions free
+          Try it free
         </Link>
         <span className="text-xs text-[#a39f8d]">No sign-up required.</span>
       </div>

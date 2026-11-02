@@ -63,7 +63,7 @@ export default async function Post({ params }: { params: Promise<{ slug: string 
           href="/app"
           className="rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
         >
-          Try 5 questions free
+          Try it free
         </Link>
       </div>
     </main>
