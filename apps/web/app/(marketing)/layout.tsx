@@ -1,4 +1,5 @@
 import Link from "next/link";
+import AuthHashRedirect from "./AuthHashRedirect";
 
 const FEATURE_LINKS = [
   ["Ask: cited answers", "/features#ask"],
@@ -90,6 +91,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </Link>
         </nav>
       </header>
+      <AuthHashRedirect />
       {children}
       <footer className="mx-auto max-w-5xl border-t border-[#e8e6dc] px-6 py-8 text-xs text-[#a39f8d] dark:border-neutral-800 dark:text-neutral-500">
         <div className="flex flex-wrap items-center justify-between gap-3">
