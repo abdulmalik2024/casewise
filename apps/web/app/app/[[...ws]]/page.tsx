@@ -851,7 +851,7 @@ function Home() {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
       setError(
-        "Search, Check cites, Draft, and Case Prep need a free account: 7-day trial, no credit card. " +
+        "Search, Check cites, Draft, and Case Prep need a free account: 30-day trial, no credit card. " +
           "Guest preview covers Ask."
       );
       setStatus("error");
@@ -1952,7 +1952,7 @@ function Home() {
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
-              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.18.2</span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.19.0</span>
             </Link>
             <button
               onClick={toggleSidebar}
@@ -2221,7 +2221,7 @@ function Home() {
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
-            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.18.2</span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.19.0</span>
           </Link>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -2305,7 +2305,7 @@ function Home() {
                 <p className="mt-2 text-center text-xs text-[#8a8571] dark:text-neutral-400">
                   Guest preview: ask up to {GUEST_LIMIT} questions free, no sign-up.{" "}
                   <Link href="/signup" className="text-[#1e3a5a] hover:underline dark:text-blue-400">
-                    Start your 7-day trial
+                    Start your 30-day free trial
                   </Link>{" "}
                   for search, cite checking, and memo export.
                 </p>
@@ -2487,7 +2487,7 @@ function Home() {
                     href="/signup"
                     className="text-[#1e3a5a] hover:underline dark:text-blue-400"
                   >
-                    Start your 7-day trial
+                    Start your 30-day free trial
                   </Link>{" "}
                   for search, cite checking, and memo export.
                 </p>

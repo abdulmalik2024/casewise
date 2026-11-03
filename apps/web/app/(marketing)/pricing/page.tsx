@@ -67,7 +67,7 @@ export default function Pricing() {
         <div className="rounded-2xl border border-[#e3e1d5] bg-white p-7 dark:border-neutral-700 dark:bg-[#30302e]">
           <h3 className="text-lg font-semibold [font-family:var(--font-serif)]">Free trial</h3>
           <div className="mt-2 text-3xl font-semibold [font-family:var(--font-serif)]">
-            $0 <span className="text-sm font-normal text-[#8a8571]">for 7 days</span>
+            $0 <span className="text-sm font-normal text-[#8a8571]">for 30 days</span>
           </div>
           <p className="mt-1 text-xs text-[#8a8571]">Every feature, no commitment</p>
           <ul className="mt-4 space-y-2 text-sm text-[#5d5848] dark:text-neutral-300">

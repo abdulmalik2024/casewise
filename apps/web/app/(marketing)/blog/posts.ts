@@ -111,7 +111,7 @@ export const POSTS: Post[] = [
       "The same check works on opposing counsel's filings, and that is where it gets interesting. A citation that matches nothing in the official records is either a typo or a problem, and either way it belongs in your opposition. In the AI era, checking the other side's citations is no longer paranoia; it is diligence courts have started to expect.",
       "## The document never leaves memory",
       "Briefs are work product. Casewise processes the document in memory for the duration of the check and does not save it; nothing you check is stored on our servers or used to train anything. That is a design decision, not a settings toggle.",
-      "Check your next filing in two minutes at casewise.si: five free questions as a guest, and document checking on the 7-day free trial, no credit card.",
+      "Check your next filing in two minutes at casewise.si: five free questions as a guest, and document checking on the 30-day free trial, no credit card.",
     ],
   },
   {

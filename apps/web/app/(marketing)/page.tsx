@@ -103,7 +103,7 @@ export default function Landing() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-[#a39f8d]">
-          For licensed attorneys · No sign-up required · 7-day trial, no credit card
+          For licensed attorneys · No sign-up required · One month free, no credit card
         </p>
 
         <div className="mx-auto mt-14 max-w-4xl">
@@ -282,7 +282,7 @@ export default function Landing() {
           </Link>
         </div>
         <p className="mt-4 text-xs text-[#a39f8d]">
-          7-day trial · no credit card · for licensed attorneys
+          One month free · no credit card · for licensed attorneys
         </p>
       </section>
     </main>

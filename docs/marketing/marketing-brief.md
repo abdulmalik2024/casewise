@@ -163,7 +163,7 @@ going back to the 1800s (measured: the catalog spans 1714-2026, with
 ## Pricing & funnel (current)
 
 - Try 5 questions free as a guest — no sign-up, straight from the homepage.
-- Free 7-day trial — no credit card.
+- Free 30-day trial, no credit card (one month free).
 - Professional: $99.99/month, or $999.99/year (2 months free). Early-adopter
   pricing — early subscribers lock the rate.
 - Never say "unlimited." Plans are "full daily practice use" under fair

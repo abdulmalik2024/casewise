@@ -41,7 +41,7 @@ export default function Signup() {
         </h1>
         <p className="mt-3 text-sm text-[#5d5848] dark:text-neutral-300">
           We sent a confirmation link to <strong>{email}</strong>. Click it and you&apos;ll
-          land in Casewise with your 7-day trial running.
+          land in Casewise with your 30-day trial running.
         </p>
       </main>
     );
@@ -53,7 +53,7 @@ export default function Signup() {
         Start your free trial
       </h1>
       <p className="mt-1 text-sm text-[#8a8571] dark:text-neutral-400">
-        7 days, full access, no credit card. For licensed attorneys.
+        One month free, full access, no credit card. For licensed attorneys.
       </p>
       <form onSubmit={signUp} className="mt-8 space-y-3">
         <input

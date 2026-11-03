@@ -3,7 +3,7 @@
 Tokens are Supabase Auth access tokens sent as `Authorization: Bearer …`.
 Validation delegates to Supabase's /auth/v1/user endpoint (no JWT secret to
 manage) with a short in-process cache. The trial clock lives in
-public.profiles (created by a signup trigger): 7 days from created_at,
+public.profiles (created by a signup trigger): 30 days from created_at,
 unless plan = 'paid'. plan = 'blocked' always denies.
 """
 
@@ -17,7 +17,7 @@ from psycopg_pool import ConnectionPool
 
 from .config import settings
 
-TRIAL_DAYS = 7
+TRIAL_DAYS = 30
 GUEST_LIMIT = 5
 _cache: dict[str, tuple[float, dict]] = {}
 _CACHE_TTL = 300
@@ -120,7 +120,7 @@ def require_active(pool: ConnectionPool, user: dict) -> dict:
     if not status["active"]:
         raise HTTPException(
             402,
-            "Your 7-day free trial has ended. Visit casewise.si/pricing to continue; "
+            "Your 30-day free trial has ended. Visit casewise.si/pricing to continue; "
             "early adopters lock the launch rate.",
         )
     return status

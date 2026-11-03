@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.18.2** (2026-11-01)
+**Version: V-2.19.0** (2026-11-03)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -106,7 +106,7 @@ point-in-time questions ("what was the law when this lease was signed").
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
 - Marketing site: landing (chatgpt.com/overview-style: framed real
   screenshots, alternating showcases, confidentiality section), Features
-  (single column, real captures), Pricing (7-day no-card trial, $99.99/mo
+  (single column, real captures), Pricing (30-day no-card trial, $99.99/mo
   early-adopter placeholder), About, Privacy Policy + Terms of Service
   (V-2.17.1; footer-linked; written to match the actual storage posture;
   also required by Google OAuth consent-screen publishing). Screenshots
@@ -126,7 +126,7 @@ point-in-time questions ("what was the law when this lease was signed").
   and sends the Supabase access token on every API call.
 - Trial enforcement (V-2.5.0): API validates tokens against Supabase
   (`auth.py`, 300s cache, no JWT secret needed); `public.profiles` row
-  auto-created by `handle_new_user()` trigger; 7-day free trial, then
+  auto-created by `handle_new_user()` trigger; 30-day free trial (V-2.19.0, was 7), then
   product endpoints return 402 pointing at casewise.si/pricing. `/me`
   returns plan + days left; sidebar shows account, trial countdown,
   Sign out. Env: SUPABASE_URL/SUPABASE_ANON_KEY (API, Railway) and
