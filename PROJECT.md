@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.20.1** (2026-11-04)
+**Version: V-2.21.0** (2026-11-04)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -121,6 +121,21 @@ point-in-time questions ("what was the law when this lease was signed").
 - Domain: casewise.si on Vercel (Namecheap nameservers delegated to
   ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
+- Marketing redesign (V-2.21.0, 2026-11-04): homepage leads with the
+  distrust thesis ("AI legal research that assumes the AI is wrong"),
+  problem-first § numbered sections (Mata v. Avianca framing, five
+  contrasts table, honest-trade line), credibility line "Built and
+  tested with a practicing New York attorney", question-form closing CTA
+  with condensed confidentiality strip. how-it-works rebuilt as the
+  5-stage verification pipeline ("What happens to an answer before you
+  see it"). Motion (all prefers-reduced-motion safe): staggered hero
+  entrance, scroll-reveal sections (Reveal.tsx), stat count-ups
+  (CountUp.tsx), CTA hover lift + arrow slide + periodic sheen
+  (globals.css cw-* classes), sticky blurred header. Screenshots use
+  ShotFrame.tsx: scroll-linked pan inside the browser frame + click
+  to open a full-size lightbox (portal to body; transformed ancestors
+  break position:fixed otherwise). Inspiration: foundational.works
+  (distrust positioning, numbered sections, italic serif accents).
 - Marketing site: landing (chatgpt.com/overview-style: framed real
   screenshots, alternating showcases, confidentiality section), Features
   (single column, real captures), Pricing (30-day no-card trial, $99.99/mo

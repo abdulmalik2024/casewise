@@ -157,7 +157,7 @@ export default function Landing() {
       <section className="mx-auto max-w-5xl px-6 py-16">
         <Reveal>
           <h3 className="mx-auto max-w-2xl text-center text-xl tracking-tight text-[#6b6450] [font-family:var(--font-serif)] dark:text-neutral-400">
-            So we built the opposite, five choices at a time.
+            So we built the opposite. Five deliberate choices.
           </h3>
         </Reveal>
         <Reveal delay={100}>
