@@ -21,6 +21,7 @@ from .auth import (
     validate_token,
 )
 from .memo import MemoIn, build_memo
+from .notify import notify_signup_once
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from psycopg_pool import ConnectionPool
@@ -144,6 +145,7 @@ def me_endpoint(user: dict = Depends(validate_token)):
     if app.state.pool is None:
         raise HTTPException(503, "database is not configured")
     status = trial_status(app.state.pool, user["id"])
+    notify_signup_once(app.state.pool, user["id"])
     return {"email": user.get("email"), **status}
 
 

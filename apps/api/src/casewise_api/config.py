@@ -25,6 +25,8 @@ class Settings(BaseSettings):
     stripe_price_monthly: str = ""
     stripe_price_yearly: str = ""
     stripe_price_starter: str = ""
+    # admin signup/upgrade notifications (Resend API, sends to info@)
+    resend_api_key: str = ""
 
 
 settings = Settings()

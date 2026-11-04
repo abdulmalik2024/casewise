@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.19.0** (2026-11-03)
+**Version: V-2.20.0** (2026-11-04)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -127,6 +127,11 @@ point-in-time questions ("what was the law when this lease was signed").
   = daily cron + Resend API over profiles.created_at; newsletter needs
   opt-in checkbox first (CASL). Pending: real-inbox spam test before
   LinkedIn ads.
+- Admin notifications (V-2.20.0): email to info@casewise.si on every
+  new signup (claimed atomically via profiles.notified_at on first /me;
+  existing accounts backfilled) and on every Stripe upgrade to paid.
+  notify.py -> Resend API; needs RESEND_API_KEY on Railway; silently
+  disabled without it, failures never break the request.
 - Auth (V-2.5.0): Supabase Auth — email/password live. Google OAuth
   live (V-2.18.0): GCP project "casewise-511822" (owner
   malikahmady@gmail.com), consent screen published (no logo: adding one

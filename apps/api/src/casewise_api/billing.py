@@ -126,6 +126,9 @@ def handle_event(pool: ConnectionPool, event: dict) -> None:
                 "    stripe_subscription = excluded.stripe_subscription",
                 (user_id, obj.get("customer"), obj.get("subscription")),
             )
+        from .notify import notify_upgrade
+
+        notify_upgrade(pool, user_id)
     elif kind == "customer.subscription.deleted":
         customer = obj.get("customer")
         if not customer:
