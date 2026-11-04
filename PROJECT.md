@@ -98,6 +98,23 @@ point-in-time questions ("what was the law when this lease was signed").
 ## Features (V-2.0.0)
 
 **Platform (V-2.4.0):**
+- Search engines (2026-11-04, config, no code): Google Search Console
+  verified as a DOMAIN property for casewise.si under
+  malikahmady@gmail.com (TXT google-site-verification=6cn7... in Vercel
+  DNS via `vercel dns add`); sitemap.xml submitted; indexing requested
+  for all 12 key URLs (homepage, marketing pages, 5 blog posts).
+  Bing Webmaster Tools: imported from GSC, sitemap submitted, all 14
+  sitemap URLs submitted via URL Submission (quota 100/day). Status at
+  setup: casewise.si entirely unindexed by Google ("Discovered -
+  currently not indexed" is the expected new-domain state; first
+  indexing typically days-to-2-weeks). On-page SEO complete as of
+  V-2.20.1: canonicals on every page, Organization+WebSite JSON-LD
+  site-wide, BlogPosting JSON-LD per post. GSC domain verification also
+  unblocks Google brand verification (owl logo + "to continue to
+  Casewise" on the OAuth consent screen; re-upload logo in GCP
+  Branding). Next SEO levers: backlinks (LinkedIn company page is the
+  first), blog cadence; bare brand word "Casewise" SERP is crowded by
+  unrelated products, so strategy = long-tail NY-statute queries.
 - Traffic analytics: Vercel Web Analytics (V-2.17.0; cookieless,
   `<Analytics />` in the root layout; page views/visitors/referrers in
   the Vercel dashboard once Web Analytics is enabled on the project).
@@ -192,8 +209,8 @@ point-in-time questions ("what was the law when this lease was signed").
   per-post generateMetadata with keywords + article OG. New posts:
   'Warranty of Habitability (RPL 235-b)' and 'Check Every Citation
   Before Filing' (use-case + keyword targeted; h2 subheadings now
-  supported via '## ' prefix in posts.ts). Pending user action: Google
-  Search Console verification + sitemap submission.
+  supported via '## ' prefix in posts.ts). GSC verification + sitemap
+  submission completed 2026-11-04 (see Platform > Search engines).
 - V-2.12.1 (2026-10-20): marketing screenshots regenerated against the
   new UI (capture script: signs in via CASEWISE_TEST_EMAIL/_PASSWORD env
   since Check cites/Search are gated; panel-scoped selectors; new
