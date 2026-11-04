@@ -26,6 +26,53 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Marketing motion */
+@keyframes cw-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.cw-hero-in { opacity: 0; animation: cw-rise 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.cw-d1 { animation-delay: 0.05s; }
+.cw-d2 { animation-delay: 0.16s; }
+.cw-d3 { animation-delay: 0.28s; }
+.cw-d4 { animation-delay: 0.4s; }
+.cw-d5 { animation-delay: 0.52s; }
+.cw-d6 { animation-delay: 0.68s; }
+
+.cw-reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cw-reveal.cw-in { opacity: 1; transform: translateY(0); }
+
+@keyframes cw-draw { to { transform: scaleX(1); } }
+.cw-underline { position: relative; display: inline-block; }
+.cw-underline::after {
+  content: "";
+  position: absolute;
+  left: 0.02em; right: 0.02em; bottom: 0.02em;
+  height: 0.055em;
+  background: currentColor;
+  opacity: 0.3;
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: cw-draw 0.9s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+}
+
+.cw-cta { transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease; }
+.cw-cta:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(30, 58, 90, 0.25); }
+.cw-cta .cw-arrow { display: inline-block; transition: transform 0.25s ease; }
+.cw-cta:hover .cw-arrow { transform: translateX(4px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .cw-hero-in { animation: none; opacity: 1; }
+  .cw-reveal { opacity: 1; transform: none; transition: none; }
+  .cw-underline::after { animation: none; transform: scaleX(1); }
+  .cw-cta, .cw-cta .cw-arrow { transition: none; }
+  .cw-cta:hover { transform: none; }
+}
+
 /* Casewise owl loader (files/wise-owl pack) */
 @keyframes cw-owl-bob {
   0%, 100% { transform: translateY(0) rotate(-3deg); }
