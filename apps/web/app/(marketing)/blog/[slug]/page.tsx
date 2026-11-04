@@ -19,6 +19,7 @@ export async function generateMetadata({
     title: post.title,
     description: post.excerpt,
     keywords: post.keywords,
+    alternates: { canonical: `/blog/${post.slug}` },
     openGraph: {
       type: "article",
       title: post.title,
@@ -35,6 +36,23 @@ export default async function Post({ params }: { params: Promise<{ slug: string 
   if (!post) notFound();
   return (
     <main className="mx-auto max-w-3xl px-6 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BlogPosting",
+            headline: post.title,
+            description: post.excerpt,
+            datePublished: post.date,
+            keywords: post.keywords.join(", "),
+            url: `https://casewise.si/blog/${post.slug}`,
+            author: { "@type": "Organization", name: "Casewise", url: "https://casewise.si" },
+            publisher: { "@id": "https://casewise.si/#org" },
+            mainEntityOfPage: `https://casewise.si/blog/${post.slug}`,
+          }),
+        }}
+      />
       <p className="pt-10 text-xs text-[#a39f8d]">
         <Link href="/blog" className="hover:underline">
           ← Blog

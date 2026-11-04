@@ -20,6 +20,7 @@ const sourceSerif = Source_Serif_4({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://casewise.si"),
+  alternates: { canonical: "./" },
   title: {
     default: "Casewise: Verified Legal Research for New York Attorneys",
     template: "%s · Casewise",
@@ -59,6 +60,33 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         {children}
         <Analytics />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://casewise.si/#org",
+                  name: "Casewise",
+                  url: "https://casewise.si",
+                  logo: "https://casewise.si/brand/og.png",
+                  email: "info@casewise.si",
+                  description:
+                    "Verified AI legal research for New York landlord-tenant and real estate litigation attorneys.",
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://casewise.si/#site",
+                  name: "Casewise",
+                  url: "https://casewise.si",
+                  publisher: { "@id": "https://casewise.si/#org" },
+                },
+              ],
+            }),
+          }}
+        />
       </body>
     </html>
   );
