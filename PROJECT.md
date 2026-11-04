@@ -114,6 +114,19 @@ point-in-time questions ("what was the law when this lease was signed").
   `scripts/capture_marketing_shots.py` (runs real flows against prod).
 - Theme: judicial navy accent (#1e3a5a) on parchment/ink — two-color
   palette; green/red/amber reserved for semantic states.
+- Email infrastructure (2026-11-03, config, no code): receiving = Zoho
+  Mail free plan, mailbox info@casewise.si (signup identity for new
+  vendor accounts; web/mobile only). Sending = Resend free tier (3,000
+  emails/mo), domain casewise.si verified, wired into Supabase SMTP
+  (sender no-reply@casewise.si); "Confirm email" ON for email/password
+  signups (Google signups skip it, pre-verified). DNS (all in Vercel,
+  added via `vercel dns add`): Zoho MX x3 + SPF + zmail._domainkey
+  DKIM; Resend send/rsend CNAMEs + resend._domainkey DKIM; DMARC
+  p=none rua=info@. E2E-verified 2026-11-04: signup -> Resend email ->
+  confirm link -> app with 30-day trial. Future drip emails (day 0/7/30)
+  = daily cron + Resend API over profiles.created_at; newsletter needs
+  opt-in checkbox first (CASL). Pending: real-inbox spam test before
+  LinkedIn ads.
 - Auth (V-2.5.0): Supabase Auth — email/password live. Google OAuth
   live (V-2.18.0): GCP project "casewise-511822" (owner
   malikahmady@gmail.com), consent screen published (no logo: adding one
