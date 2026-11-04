@@ -105,7 +105,7 @@ export default function HowItWorks() {
         <div className="mt-10 flex flex-wrap items-center gap-3">
           <Link
             href="/app"
-            className="cw-cta rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
+            className="cw-cta cw-sheen rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
           >
             Ask your first question <span className="cw-arrow">→</span>
           </Link>

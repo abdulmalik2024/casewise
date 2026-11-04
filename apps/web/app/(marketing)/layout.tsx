@@ -56,7 +56,8 @@ function Dropdown({
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-[#faf9f5] text-[#3d3929] dark:bg-[#262624] dark:text-neutral-200">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-6 py-5">
+      <header className="sticky top-0 z-30 border-b border-[#e8e6dc]/70 bg-[#faf9f5]/85 backdrop-blur-md dark:border-neutral-800/70 dark:bg-[#262624]/85">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
         <Link
           href="/"
           className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]"
@@ -85,11 +86,12 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
           </Link>
           <Link
             href="/app"
-            className="rounded-xl bg-[#1e3a5a] px-4 py-2 font-medium text-white transition-colors hover:bg-[#16304b]"
+            className="cw-cta rounded-xl bg-[#1e3a5a] px-4 py-2 font-medium text-white hover:bg-[#16304b]"
           >
             Open Casewise
           </Link>
         </nav>
+        </div>
       </header>
       <AuthHashRedirect />
       {children}

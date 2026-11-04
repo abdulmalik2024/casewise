@@ -9,23 +9,7 @@ export const metadata: Metadata = {
 import Link from "next/link";
 import Reveal from "./Reveal";
 import CountUp from "./CountUp";
-
-function BrowserFrame({ src, alt }: { src: string; alt: string }) {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-[#e3e1d5] bg-white shadow-[0_8px_40px_rgba(61,57,41,0.12)] dark:border-neutral-700 dark:bg-[#30302e]">
-      <div className="flex items-center gap-2 border-b border-[#efede3] bg-[#faf9f5] px-4 py-2.5 dark:border-neutral-800 dark:bg-[#262624]">
-        <span className="h-2.5 w-2.5 rounded-full bg-[#e8b4ab]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#e8d5ab]" />
-        <span className="h-2.5 w-2.5 rounded-full bg-[#b4cdb2]" />
-        <span className="ml-3 rounded-md bg-white px-3 py-0.5 text-xs text-[#a39f8d] dark:bg-neutral-800 dark:text-neutral-500">
-          casewise.si/app
-        </span>
-      </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={src} alt={alt} className="w-full" loading="lazy" />
-    </div>
-  );
-}
+import ShotFrame from "./ShotFrame";
 
 function SectionMark({ n, label }: { n: string; label: string }) {
   return (
@@ -109,7 +93,7 @@ export default function Landing() {
         <div className="cw-hero-in cw-d4 mt-8 flex flex-wrap items-center justify-center gap-3">
           <Link
             href="/app"
-            className="cw-cta rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
+            className="cw-cta cw-sheen rounded-full bg-[#1e3a5a] px-7 py-3 font-medium text-white hover:bg-[#16304b]"
           >
             Ask your first question <span className="cw-arrow">→</span>
           </Link>
@@ -128,12 +112,11 @@ export default function Landing() {
         </p>
 
         <div className="cw-hero-in cw-d6 mx-auto mt-14 max-w-4xl">
-          <div className="max-h-[560px] overflow-hidden rounded-2xl">
-            <BrowserFrame
-              src="/shots/ask-verified.png"
-              alt="Casewise answering a warranty of habitability question with inline citations"
-            />
-          </div>
+          <ShotFrame
+            src="/shots/ask-verified.png"
+            alt="Casewise answering a warranty of habitability question with inline citations"
+            height={560}
+          />
         </div>
       </section>
 
@@ -275,9 +258,7 @@ export default function Landing() {
               </p>
             </Reveal>
             <Reveal delay={120} className="md:w-3/5">
-              <div className="max-h-[520px] overflow-hidden rounded-2xl">
-                <BrowserFrame src={s.img} alt={s.alt} />
-              </div>
+              <ShotFrame src={s.img} alt={s.alt} height={520} />
             </Reveal>
           </div>
         </section>
@@ -358,7 +339,7 @@ export default function Landing() {
           <div className="mt-8">
             <Link
               href="/app"
-              className="cw-cta rounded-full bg-[#1e3a5a] px-8 py-3.5 font-medium text-white hover:bg-[#16304b]"
+              className="cw-cta cw-sheen rounded-full bg-[#1e3a5a] px-8 py-3.5 font-medium text-white hover:bg-[#16304b]"
             >
               Try Casewise free <span className="cw-arrow">→</span>
             </Link>
