@@ -45,7 +45,7 @@ export default async function Post({ params }: { params: Promise<{ slug: string 
             headline: post.title,
             description: post.excerpt,
             datePublished: post.date,
-            keywords: post.keywords.join(", "),
+            keywords: (post.keywords ?? []).join(", "),
             url: `https://casewise.si/blog/${post.slug}`,
             author: { "@type": "Organization", name: "Casewise", url: "https://casewise.si" },
             publisher: { "@id": "https://casewise.si/#org" },
