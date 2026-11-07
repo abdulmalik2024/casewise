@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.21.0** (2026-11-04)
+**Version: V-2.22.0** (2026-11-07)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -121,6 +121,17 @@ point-in-time questions ("what was the law when this lease was signed").
 - Domain: casewise.si on Vercel (Namecheap nameservers delegated to
   ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
+- Citation challenge page (V-2.22.0, 2026-11-07): /challenge is a standing
+  public offer — if Casewise ever marks a nonexistent authority or an
+  inaccurate quote as verified, the reporter gets 6 months free. Tone is
+  deliberately a dare ("A made-up citation cannot reach you"), NOT a bug
+  hunt; covers verified-marked items only, excludes flagged items,
+  reasoning quality, and corpus completeness (stated on the page, aligned
+  with the footer disclaimer). Reports go to info@casewise.si; outcomes
+  documented either way; no deadline. Linked from the footer ("The
+  challenge") and sitemap. Intended as the organic-post and future
+  LinkedIn-ad landing page (utm_campaign=citation-challenge). Wording
+  reviewed by Abdul; prize = 6 months free.
 - Marketing redesign (V-2.21.0, 2026-11-04): homepage leads with the
   distrust thesis ("AI legal research that assumes the AI is wrong"),
   problem-first § numbered sections (Mata v. Avianca framing, five

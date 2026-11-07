@@ -103,6 +103,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
             <Link href="/features" className="hover:text-[#5d5848]">Features</Link>
             <Link href="/who-its-for" className="hover:text-[#5d5848]">Who it&apos;s for</Link>
             <Link href="/blog" className="hover:text-[#5d5848]">Blog</Link>
+            <Link href="/challenge" className="hover:text-[#5d5848]">The challenge</Link>
             <Link href="/pricing" className="hover:text-[#5d5848]">Pricing</Link>
             <Link href="/about" className="hover:text-[#5d5848]">About</Link>
             <Link href="/privacy" className="hover:text-[#5d5848]">Privacy</Link>
