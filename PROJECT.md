@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.22.0** (2026-11-07)
+**Version: V-2.22.1** (2026-11-09)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -131,7 +131,9 @@ point-in-time questions ("what was the law when this lease was signed").
   documented either way; no deadline. Linked from the footer ("The
   challenge") and sitemap. Intended as the organic-post and future
   LinkedIn-ad landing page (utm_campaign=citation-challenge). Wording
-  reviewed by Abdul; prize = 6 months free.
+  reviewed by Abdul; prize = 6 months free. V-2.22.1 adds the companion
+  blog post (slug citation-challenge-6-months-free), bringing the blog
+  to 6 posts.
 - Marketing redesign (V-2.21.0, 2026-11-04): homepage leads with the
   distrust thesis ("AI legal research that assumes the AI is wrong"),
   problem-first § numbered sections (Mata v. Avianca framing, five

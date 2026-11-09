@@ -9,6 +9,35 @@ export type Post = {
 
 export const POSTS: Post[] = [
   {
+    slug: "citation-challenge-6-months-free",
+    title: "The Citation Challenge: If a Verified Citation Is Ever Wrong, 6 Months Free",
+    date: "2026-11-09",
+    excerpt:
+      "Chatbots invent cases, and courts sanction the attorneys who cite them. Casewise is built so a fabricated citation cannot reach you, and we are putting a standing offer behind that claim.",
+    keywords: [
+      "AI hallucinated citations lawyer",
+      "fake case citations sanctions",
+      "AI legal research verified citations",
+      "Mata v Avianca AI sanctions",
+      "citation verification legal AI",
+    ],
+    body: [
+      "We have made a standing public offer: if Casewise ever marks a citation as verified and the authority does not exist, or marks a quote as verified and it differs from the official text, the person who shows us gets 6 months of Casewise free. No deadline. The terms live at casewise.si/challenge. This post explains why we can afford that bet.",
+      "## The problem is not hypothetical",
+      "In Mata v. Avianca, attorneys submitted a brief citing cases that a chatbot had simply invented, complete with plausible captions, reporter numbers, and quotations. The court sanctioned them, and similar orders have followed around the country since. The failure was not laziness about the law; it was trusting a tool that writes citations the same way it writes everything else, as plausible text.",
+      "## Why chatbots invent citations",
+      "A general-purpose model answers from patterns learned in training. When it needs a citation, it produces something citation-shaped: a believable case name, a real-looking reporter volume, a pin cite. Nothing in that process touches an actual document, so there is no difference, from the model's side, between a real case and a convincing one. Asking it to double-check does not help, because the check runs on the same memory that produced the error.",
+      "## What we built instead",
+      "Casewise does not let the model cite from memory at all. Every question runs against a closed library of New York primary sources: statutes, court decisions, agency guidance, court rules, all ingested from the official publishers. The model may cite only the documents actually retrieved for your question, so a citation is a reference into that retrieved set, never free text. An invented case name has nothing to attach to.",
+      "Then, before you read a single line, verification runs. Every citation in the draft is mapped back to its real source document. Every quoted passage is compared word for word against the official text. Exact matches are marked verified. Anything else is flagged next to the answer for your review, and when a check cannot be completed, Casewise says so instead of papering over it.",
+      "## The bet, plainly",
+      "The challenge covers what the architecture guarantees: citations and quotes that Casewise marks verified. Show us a verified citation whose authority does not exist, or a verified quote that differs from the official text of the cited source, and you get 6 months free. We check every report against the official source and document the outcome either way. It is open to anyone, including guest questions, and it stands for as long as Casewise runs. This is not a bug hunt, and we are not asking for help testing; the checks already ran before you read a word. We expect to never pay it.",
+      "## What we are not claiming",
+      "Verification guarantees that citations are real and quotes are exact. It does not guarantee that an analysis weighs authorities the way you would, or that the library contains every document relevant to your matter. That part is your judgment, and the product is built to support it: every source links to the official text, one click from answer to authority. Casewise is a research tool for licensed attorneys and does not provide legal advice.",
+      "The best way to test the claim is to ask about the law you know best: the warranty of habitability under RPL § 235-b, the 14-day security deposit rule in GOL § 7-108, the notice requirements you litigate every month. Ask a question you already know the answer to, and read the citations with the skepticism they deserve. Five free questions, no sign-up, at casewise.si.",
+    ],
+  },
+  {
     slug: "ny-seller-disclosure-rpl-462-concealed-defects",
     title: "New York's Seller Disclosure Law (RPL § 462): The $500 Escape Hatch Is Gone",
     date: "2026-10-27",
