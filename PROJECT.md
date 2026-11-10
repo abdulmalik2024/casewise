@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.22.1** (2026-11-09)
+**Version: V-2.22.2** (2026-11-10)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -121,6 +121,27 @@ point-in-time questions ("what was the law when this lease was signed").
 - Domain: casewise.si on Vercel (Namecheap nameservers delegated to
   ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
+- Search/retrieval performance (V-2.22.2, 2026-11-10): corpus had grown to
+  32,243 chunks (240 MB) with NO vector index, so every /search and /ask
+  retrieval seq-scanned all embeddings: 12-20s per query. Fix in three
+  parts. (1) HNSW index `chunks_embedding_hnsw` (vector_cosine_ops) on
+  Supabase; small-instance build gotchas: parallel build dies on shared
+  memory (set max_parallel_maintenance_workers=0), default statement
+  timeout kills the serial build (set statement_timeout=0), keep
+  maintenance_work_mem modest (64MB; it spills to disk and still works),
+  and each failed CREATE INDEX CONCURRENTLY leaves an INVALID index to
+  drop before retrying. (2) retrieval.py sets per-txn GUCs: iterative_scan
+  relaxed_order (filtered queries would under-return through the index),
+  and for phrase queries max_scan_tuples=2000 + enable_seqscan=off (the
+  planner otherwise ILIKE-scans the whole corpus; quoted phrases come from
+  the user's own query so matches sit among the nearest vectors). (3)
+  SEARCH_SQL restructured: vector ordering + filters in a CTE over chunks
+  alone (joins push the planner off the HNSW path onto a 4s full-index
+  scan), source-table joins only for the k winners, as_of as EXISTS
+  subqueries. Measured: plain semantic 0.9s, quoted phrase 1.5s (was
+  12-20s), worst cases (no-match phrase, type-filtered phrase) 4-7s.
+  DB is ~600 MB; a pg_trgm GIN index would fix the worst cases but costs
+  another 100-200 MB on disk, deferred.
 - Citation challenge page (V-2.22.0, 2026-11-07): /challenge is a standing
   public offer — if Casewise ever marks a nonexistent authority or an
   inaccurate quote as verified, the reporter gets 6 months free. Tone is
