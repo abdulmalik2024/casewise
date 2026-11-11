@@ -847,7 +847,7 @@ function Home() {
     }
   }
 
-  async function run(e: React.FormEvent) {
+  async function run(e: { preventDefault: () => void }, qOverride?: string) {
     e.preventDefault();
     if (!authToken && mode !== "ask") {
       setError(
@@ -857,7 +857,7 @@ function Home() {
       setStatus("error");
       return;
     }
-    const q = query.trim();
+    const q = (qOverride ?? query).trim();
     if (mode !== "audit" && q.length < 3) return;
     if ((mode === "draft" || mode === "caseprep") && q.length < 10) {
       setError("Frame the legal issue in a sentence (at least 10 characters).");
@@ -1952,7 +1952,7 @@ function Home() {
               <span className="text-xl font-semibold tracking-tight [font-family:var(--font-serif)]">
                 Casewise
               </span>
-              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.22.2</span>
+              <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.23.0</span>
             </Link>
             <button
               onClick={toggleSidebar}
@@ -2221,7 +2221,7 @@ function Home() {
             <span className="text-lg font-semibold tracking-tight [font-family:var(--font-serif)]">
               Casewise
             </span>
-            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.22.2</span>
+            <span className="text-[10px] text-[#a39f8d] dark:text-neutral-500">V-2.23.0</span>
           </Link>
           <button
             onClick={() => setMobileNavOpen(true)}
@@ -2420,7 +2420,10 @@ function Home() {
                   {EXAMPLE_SEARCHES.map((ex) => (
                     <button
                       key={ex.label}
-                      onClick={() => setQuery(ex.q)}
+                      onClick={(e) => {
+                        setQuery(ex.q);
+                        void run(e, ex.q);
+                      }}
                       className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
                     >
                       {ex.label}
@@ -2468,7 +2471,10 @@ function Home() {
                   {EXAMPLE_QUESTIONS.map((ex) => (
                     <button
                       key={ex.label}
-                      onClick={() => setQuery(ex.q)}
+                      onClick={(e) => {
+                        setQuery(ex.q);
+                        void run(e, ex.q);
+                      }}
                       className="rounded-full border border-[#e3e1d5] bg-white px-3 py-1.5 text-xs text-[#5d5848] hover:bg-[#f5f4ee] dark:border-neutral-700 dark:bg-[#30302e] dark:text-neutral-300 dark:hover:bg-neutral-800"
                     >
                       {ex.label}
