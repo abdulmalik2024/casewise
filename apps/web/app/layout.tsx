@@ -73,6 +73,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                   url: "https://casewise.si",
                   logo: "https://casewise.si/brand/og.png",
                   email: "info@casewise.si",
+                  sameAs: [
+                    "https://www.linkedin.com/company/casewise-si/",
+                    "https://www.facebook.com/profile.php?id=61595222507621",
+                  ],
                   description:
                     "Verified AI legal research for New York landlord-tenant and real estate litigation attorneys.",
                 },

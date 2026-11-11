@@ -1,6 +1,6 @@
 # Casewise — Project Reference
 
-**Version: V-2.23.0** (2026-11-11)
+**Version: V-2.23.1** (2026-11-11)
 
 > Maintenance rule: this document is versioned with the product. When the
 > version shown in the app sidebar changes, update this file in the same
@@ -121,6 +121,12 @@ point-in-time questions ("what was the law when this lease was signed").
 - Domain: casewise.si on Vercel (Namecheap nameservers delegated to
   ns1/ns2.vercel-dns.com; SSL auto; app at /app). Deploy quirk: the live
   domain sometimes needs a SECOND `vercel deploy --prod` to pick up changes.
+- Social links (V-2.23.1, 2026-11-11): LinkedIn
+  (linkedin.com/company/casewise-si) and Facebook
+  (facebook.com/profile.php?id=61595222507621) icons in the marketing
+  footer next to the copyright line, and both URLs in the Organization
+  JSON-LD `sameAs` (root layout) for SEO entity linking. Both pages
+  verified live before adding.
 - Starter chips auto-submit (V-2.23.0, 2026-11-11): the example-question
   chips in Ask mode and example-search chips in Search mode now submit
   immediately on click instead of only filling the input (funnel data
